@@ -1,25 +1,33 @@
 
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
-import { WashingMachine, Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { WashingMachine } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { EmailInput } from '@/components/auth/EmailInput';
+import { PasswordInput } from '@/components/auth/PasswordInput';
+import { useAuthForm } from '@/hooks/use-auth-form';
 
 export default function Auth() {
-  const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const { signIn, signUp, user } = useAuth();
-  const { toast } = useToast();
-  const navigate = useNavigate();
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const expectedRole = location.state?.role || 'user';
+  
+  const {
+    isLogin,
+    email,
+    password,
+    showPassword,
+    loading,
+    setIsLogin,
+    setEmail,
+    setPassword,
+    setShowPassword,
+    handleSubmit,
+  } = useAuthForm(expectedRole);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -27,111 +35,20 @@ export default function Auth() {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         console.log("Session found, redirecting based on role");
-        redirectBasedOnRole(session.user.id);
+        navigate('/');
       } else {
         console.log("No session found");
       }
     };
     checkSession();
-  }, []);
+  }, [navigate]);
 
-  // Add an effect to check user value changes
   useEffect(() => {
     if (user) {
       console.log("User object changed in Auth page:", user.id);
-      redirectBasedOnRole(user.id);
-    }
-  }, [user]);
-
-  const redirectBasedOnRole = async (userId: string) => {
-    try {
-      console.log("Checking role for user:", userId);
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error("Error fetching role:", error);
-        throw error;
-      }
-
-      console.log("User role data:", data);
-      console.log("Expected role:", expectedRole);
-
-      // First check if we're specifically trying to log in as a role type
-      if (expectedRole === 'admin' && data?.role === 'admin') {
-        console.log("Admin role verified, redirecting to admin");
-        navigate('/admin');
-        return;
-      } 
-      
-      if (expectedRole === 'business' && data?.role === 'business') {
-        console.log("Business owner role verified, redirecting to owner dashboard");
-        navigate('/owner');
-        return;
-      }
-
-      // If no specific expected role or no match with expected role, 
-      // redirect based on what the user actually is
-      if (data?.role === 'admin') {
-        console.log("Admin detected, redirecting to admin dashboard");
-        navigate('/admin');
-      } else if (data?.role === 'business') {
-        console.log("Business owner detected, redirecting to owner dashboard");
-        navigate('/owner');
-      } else {
-        console.log("Regular user or unknown role, redirecting to home");
-        navigate('/');
-      }
-    } catch (error) {
-      console.error('Error checking user role:', error);
-      toast({
-        variant: "destructive",
-        title: "Erro ao verificar permissões",
-        description: "Não foi possível verificar seu perfil de usuário."
-      });
       navigate('/');
     }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      if (isLogin) {
-        console.log("Attempting login with email:", email);
-        await signIn(email, password);
-        // Redirection will be handled by useEffect that watches the user state
-        
-        // Also check session directly to ensure we have latest data
-        setTimeout(async () => {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (session && !user) {
-            console.log("Session exists but user state not updated yet, redirecting manually");
-            redirectBasedOnRole(session.user.id);
-          }
-        }, 500);
-      } else {
-        await signUp(email, password);
-        toast({
-          title: "Registro realizado com sucesso!",
-          description: "Verifique seu email para confirmar o cadastro.",
-        });
-        setLoading(false);
-      }
-    } catch (error) {
-      console.error("Auth error:", error);
-      setLoading(false);
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: error instanceof Error ? error.message : "Ocorreu um erro durante a autenticação",
-      });
-    }
-  };
+  }, [user, navigate]);
 
   console.log("Auth page loaded with role:", expectedRole);
 
@@ -152,41 +69,15 @@ export default function Auth() {
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <div className="relative">
-                <Input
-                  type="email"
-                  placeholder="Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="pl-10"
-                />
-                <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-              </div>
+              <EmailInput value={email} onChange={setEmail} />
             </div>
             <div className="space-y-2">
-              <div className="relative">
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Senha"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="pl-10 pr-10"
-                />
-                <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5" />
-                  ) : (
-                    <Eye className="h-5 w-5" />
-                  )}
-                </button>
-              </div>
+              <PasswordInput
+                value={password}
+                onChange={setPassword}
+                showPassword={showPassword}
+                onToggleShow={() => setShowPassword(!showPassword)}
+              />
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
