@@ -34,7 +34,7 @@ export const useAuthForm = (expectedRole: string = 'user') => {
             .select('contact_email, contact_phone, owner_id')
             .eq('contact_email', email)
             .eq('contact_phone', password)
-            .single();
+            .maybeSingle(); // Use maybeSingle() instead of single()
           
           console.log("Laundry check result:", laundryCheck, laundryError);
           
