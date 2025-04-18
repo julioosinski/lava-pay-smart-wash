@@ -8,25 +8,31 @@ export const useMachines = (laundryId?: string) => {
     queryKey: ['machines', laundryId],
     queryFn: async () => {
       try {
-        const query = supabase
+        console.log("Fetching machines for laundryId:", laundryId);
+        let query = supabase
           .from('machines')
           .select('*')
           .order('machine_number', { ascending: true });
 
-        if (laundryId) {
-          query.eq('laundry_id', laundryId);
+        if (laundryId && laundryId !== 'all') {
+          query = query.eq('laundry_id', laundryId);
         }
 
         const { data, error } = await query;
-        if (error) throw error;
+        
+        if (error) {
+          console.error("Error fetching machines:", error);
+          throw error;
+        }
+        
         console.log("Fetched machines:", data);
         return (data || []) as Machine[];
       } catch (error) {
-        console.error("Error fetching machines:", error);
+        console.error("Error in useMachines hook:", error);
         return [];
       }
     },
-    enabled: true // Sempre ativar a query
+    enabled: true
   });
 };
 

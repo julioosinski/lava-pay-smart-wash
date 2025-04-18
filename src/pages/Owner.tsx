@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Layout } from "@/components/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -22,13 +21,25 @@ export default function Owner() {
   
   // Filter laundries to show only those owned by the current user
   const ownerLaundries = laundries.filter(laundry => laundry.owner_id === user?.id);
+  console.log("Owner laundries:", ownerLaundries);
+  
   const [selectedLocation, setSelectedLocation] = useState<string>(
     ownerLaundries.length > 0 ? ownerLaundries[0]?.id : "all"
   );
   
-  // Get all machines for the selected laundry
+  // Get machines for the selected location or all owner's locations
   const { data: machines = [] } = useMachines(selectedLocation !== "all" ? selectedLocation : undefined);
+  console.log("Fetched machines:", machines);
   
+  // Filter machines to only show those from owner's laundries
+  const ownerLaundryIds = ownerLaundries.map(location => location.id);
+  const ownerMachines = machines.filter(machine => 
+    selectedLocation === "all" 
+      ? ownerLaundryIds.includes(machine.laundry_id) 
+      : machine.laundry_id === selectedLocation
+  );
+  console.log("Owner machines:", ownerMachines);
+
   // Get payments for selected laundry's machines
   const { data: payments = [] } = usePayments();
   const ownerLaundryIds = ownerLaundries.map(location => location.id);

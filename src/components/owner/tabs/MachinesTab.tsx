@@ -3,10 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MachineCard } from "@/components/MachineCard";
-import { AlertCircle, Plus } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { MachineForm } from "@/components/admin/MachineForm";
 import { Machine, LaundryLocation } from "@/types";
-import { useState } from "react";
 
 interface MachinesTabProps {
   machines: Machine[];
@@ -21,6 +20,10 @@ export function MachinesTab({
   selectedLocation,
   setSelectedLocation
 }: MachinesTabProps) {
+  console.log("MachinesTab - machines:", machines);
+  console.log("MachinesTab - ownerLaundries:", ownerLaundries);
+  console.log("MachinesTab - selectedLocation:", selectedLocation);
+
   return (
     <div className="space-y-6">
       <Card>
@@ -46,7 +49,10 @@ export function MachinesTab({
               </Select>
               
               {selectedLocation !== "all" && (
-                <MachineForm laundryId={selectedLocation} />
+                <MachineForm 
+                  laundryId={selectedLocation}
+                  variant="create"
+                />
               )}
             </div>
           </div>
@@ -58,6 +64,7 @@ export function MachinesTab({
                 key={machine.id} 
                 machine={machine} 
                 showActions={false}
+                showEdit={true}
               />
             ))}
             
