@@ -33,7 +33,7 @@ export default function Owner() {
     ownerLaundries.length > 0 ? ownerLaundries[0]?.id : "all"
   );
   
-  // Get all machines without filtering by laundry
+  // Get all machines without filtering by laundry in the hook
   const { data: allMachines = [] } = useMachines();
   console.log("All fetched machines:", allMachines);
   

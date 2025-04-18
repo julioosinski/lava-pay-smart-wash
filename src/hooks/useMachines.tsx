@@ -15,8 +15,12 @@ export const useMachines = (laundryId?: string) => {
           .select('*')
           .order('machine_number', { ascending: true });
 
+        // Only filter by laundry_id if provided and not 'all'
         if (laundryId && laundryId !== 'all') {
+          console.log("Filtering by laundry_id:", laundryId);
           query = query.eq('laundry_id', laundryId);
+        } else {
+          console.log("Fetching all machines (no laundry filter)");
         }
 
         const { data, error } = await query;
@@ -26,7 +30,7 @@ export const useMachines = (laundryId?: string) => {
           throw error;
         }
         
-        console.log("Fetched machines:", data);
+        console.log(`Fetched ${data?.length || 0} machines:`, data);
         return (data || []) as Machine[];
       } catch (error) {
         console.error("Error in useMachines hook:", error);
