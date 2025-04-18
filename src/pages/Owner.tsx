@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,24 +14,23 @@ import { RecentPayments } from "@/components/owner/RecentPayments";
 import { MachinesTab } from "@/components/owner/tabs/MachinesTab";
 import { LocationsTab } from "@/components/owner/tabs/LocationsTab";
 import { PaymentsTab } from "@/components/owner/tabs/PaymentsTab";
-import { supabase } from "@/integrations/supabase/client";
 
 export default function Owner() {
   const { user } = useAuth();
   const [selectedLocation, setSelectedLocation] = useState<string>("all");
   
-  // Fetch laundries that belong to the current user with more detailed logging
+  // Fetch laundries owned by the current user
   const { data: ownerLaundries = [], isLoading: isLoadingLaundries } = useLaundries({ 
     ownerId: user?.id,
     options: {
       enabled: !!user?.id,
-      retry: 3, // Retry failed queries up to 3 times
-      staleTime: 30000, // Consider data fresh for 30 seconds
+      retry: 3,
+      staleTime: 30000,
     }
   });
 
-  console.log(`Owner.tsx - Current user ID:`, user?.id);
-  console.log(`Owner.tsx - Owner laundries:`, ownerLaundries);
+  console.log("Owner.tsx - Current user:", user);
+  console.log("Owner.tsx - Owner laundries:", ownerLaundries);
   
   // Update selectedLocation when owner laundries change
   useEffect(() => {
@@ -46,22 +44,17 @@ export default function Owner() {
   const ownerLaundryIds = ownerLaundries.map(location => location.id);
   console.log("Owner laundry IDs:", ownerLaundryIds);
   
-  // Fetch all machines first, then filter them
-  const { data: allMachines = [], isLoading: isLoadingMachines } = useMachines();
-  console.log("All machines before filtering:", allMachines);
+  // Fetch machines for the owner's laundries
+  const { data: allMachines = [], isLoading: isLoadingMachines } = useMachines(selectedLocation !== "all" ? selectedLocation : undefined);
   
   // Filter machines to only show those from owner's laundries
-  const ownerMachines = allMachines.filter(machine => {
-    const belongs = ownerLaundryIds.includes(machine.laundry_id);
-    if (belongs) {
-      console.log(`Machine ${machine.id} belongs to owner's laundry ${machine.laundry_id}`);
-    }
-    return belongs;
-  });
+  const ownerMachines = allMachines.filter(machine => 
+    ownerLaundryIds.includes(machine.laundry_id)
+  );
   
-  console.log("Owner machines after filtering:", ownerMachines);
+  console.log("Owner machines:", ownerMachines);
 
-  // Get payments for selected laundry's machines
+  // Get payments for owner's machines
   const { data: allPayments = [], isLoading: isLoadingPayments } = usePayments();
   
   // Filter payments to only include those for the owner's machines
