@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Layout } from "@/components/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -233,7 +232,7 @@ export default function Owner() {
             <TableBody>
               {ownerPayments.slice(0, 5).map((payment) => {
                 const machine = ownerMachines.find(m => m.id === payment.machineId);
-                const location = machine ? ownerLocations.find(l => l.id === machine.locationId) : null;
+                const location = machine ? ownerLocations.find(l => l.id === machine.laundry_id) : null;
                 
                 return (
                   <TableRow key={payment.id}>
