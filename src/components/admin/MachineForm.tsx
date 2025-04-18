@@ -29,9 +29,10 @@ interface MachineFormProps {
   laundryId: string;
   machine?: Machine;
   variant?: "create" | "edit";
+  triggerElement?: React.ReactNode; // Add this prop to the interface
 }
 
-export function MachineForm({ laundryId, machine, variant = "create" }: MachineFormProps) {
+export function MachineForm({ laundryId, machine, variant = "create", triggerElement }: MachineFormProps) {
   const [open, setOpen] = useState(false);
   const createMachine = useCreateMachine();
   const updateMachine = useUpdateMachine();
@@ -88,19 +89,23 @@ export function MachineForm({ laundryId, machine, variant = "create" }: MachineF
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button 
-          variant={variant === "edit" ? "ghost" : "default"}
-          size={variant === "edit" ? "icon" : "default"}
-          className={variant === "create" ? "flex gap-2 items-center" : ""}
-        >
-          {variant === "edit" ? (
-            <PencilLine className="h-4 w-4" />
-          ) : (
-            <>
-              <Plus className="h-4 w-4" /> Nova Máquina
-            </>
-          )}
-        </Button>
+        {triggerElement ? (
+          triggerElement
+        ) : (
+          <Button 
+            variant={variant === "edit" ? "ghost" : "default"}
+            size={variant === "edit" ? "icon" : "default"}
+            className={variant === "create" ? "flex gap-2 items-center" : ""}
+          >
+            {variant === "edit" ? (
+              <PencilLine className="h-4 w-4" />
+            ) : (
+              <>
+                <Plus className="h-4 w-4" /> Nova Máquina
+              </>
+            )}
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
