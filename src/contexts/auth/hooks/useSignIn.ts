@@ -1,7 +1,7 @@
 
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { checkLaundryOwnership, updateLaundryOwner, updateUserRole } from '../utils/authUtils';
+import { checkLaundryOwnership, updateLaundryOwner, updateUserRole, updateUserContact } from '../utils/authUtils';
 
 interface SignInProps {
   setUser: (user: User | null) => void;
@@ -43,11 +43,14 @@ export const useSignIn = ({ setUser, setSession, setLoading }: SignInProps) => {
                 if (retryData.user) {
                   await updateLaundryOwner(laundryData.id, retryData.user.id);
                   await updateUserRole(retryData.user.id, 'business');
+                  
+                  // Atualiza o perfil com os dados de contato da lavanderia
+                  await updateUserContact(retryData.user.id, email, password);
+                  
+                  setUser(retryData.user);
+                  setSession(retryData.session);
+                  return;
                 }
-                
-                setUser(retryData.user);
-                setSession(retryData.session);
-                return;
               }
               throw signUpError;
             }
@@ -55,6 +58,9 @@ export const useSignIn = ({ setUser, setSession, setLoading }: SignInProps) => {
             if (signUpData.user) {
               await updateLaundryOwner(laundryData.id, signUpData.user.id);
               await updateUserRole(signUpData.user.id, 'business');
+              
+              // Atualiza o perfil com os dados de contato da lavanderia
+              await updateUserContact(signUpData.user.id, email, password);
               
               const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({ 
                 email, 
@@ -97,6 +103,7 @@ export const useSignIn = ({ setUser, setSession, setLoading }: SignInProps) => {
             
             if (laundryCheck) {
               await updateUserRole(data.user.id, 'business');
+              await updateUserContact(data.user.id, email, password);
             }
           }
         }
