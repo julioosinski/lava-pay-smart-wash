@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -18,23 +18,39 @@ import { PaymentsTab } from "@/components/owner/tabs/PaymentsTab";
 
 export default function Owner() {
   const { user } = useAuth();
-  const { data: laundries = [] } = useLaundries();
   
-  console.log("All laundries:", laundries);
+  // Fetch ALL laundries first
+  const { data: allLaundries = [] } = useLaundries();
+  console.log("All laundries fetched:", allLaundries);
+  
+  // Get user profile from supabase profiles table for checking roles
+  const [ownerLaundries, setOwnerLaundries] = useState(allLaundries);
+  
   console.log("Current user:", user);
   
   // Filter laundries to show only those owned by the current user
-  const ownerLaundries = laundries.filter(laundry => {
-    const isOwner = laundry.owner_id === user?.id;
-    console.log(`Checking laundry ${laundry.id} (owner: ${laundry.owner_id}) against user ${user?.id}: ${isOwner}`);
-    return isOwner;
-  });
+  useEffect(() => {
+    if (user && allLaundries.length > 0) {
+      console.log(`Filtering laundries for user ${user.id}`);
+      const filtered = allLaundries.filter(laundry => {
+        const isOwner = laundry.owner_id === user.id;
+        console.log(`Checking laundry ${laundry.id} (owner: ${laundry.owner_id}) against user ${user?.id}: ${isOwner}`);
+        return isOwner;
+      });
+      
+      console.log("Owner laundries after filtering:", filtered);
+      setOwnerLaundries(filtered);
+    }
+  }, [user, allLaundries]);
   
-  console.log("Owner laundries after filtering:", ownerLaundries);
+  const [selectedLocation, setSelectedLocation] = useState<string>("all");
   
-  const [selectedLocation, setSelectedLocation] = useState<string>(
-    ownerLaundries.length > 0 ? ownerLaundries[0]?.id : "all"
-  );
+  // Update selectedLocation when owner laundries change
+  useEffect(() => {
+    if (ownerLaundries.length > 0 && selectedLocation === "all") {
+      setSelectedLocation(ownerLaundries[0]?.id || "all");
+    }
+  }, [ownerLaundries]);
   
   // Fetch ALL machines without filtering by laundry ID
   const { data: allMachines = [] } = useMachines();

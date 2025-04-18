@@ -33,20 +33,30 @@ const convertToLaundry = (dbLaundry: LaundryDB): LaundryLocation => ({
   updated_at: dbLaundry.updated_at
 });
 
-export function useLaundries() {
+export function useLaundries(ownerId?: string) {
   return useQuery({
-    queryKey: ['laundries'],
+    queryKey: ['laundries', ownerId],
     queryFn: async () => {
       try {
-        const { data, error } = await supabase
+        console.log("Fetching laundries, filtered by ownerId:", ownerId);
+        let query = supabase
           .from('laundries')
           .select('*');
+          
+        // Only filter by owner_id if provided
+        if (ownerId) {
+          console.log(`Filtering laundries by owner_id: ${ownerId}`);
+          query = query.eq('owner_id', ownerId);
+        }
+        
+        const { data, error } = await query;
         
         if (error) {
           console.error("Error fetching laundries:", error);
           throw error;
         }
         
+        console.log(`Fetched ${data?.length || 0} laundries:`, data);
         return (data || []).map(laundry => convertToLaundry(laundry as LaundryDB));
       } catch (error) {
         console.error("Error in useLaundries hook:", error);
