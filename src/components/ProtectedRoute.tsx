@@ -11,12 +11,17 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const checkRole = async () => {
+      if (authLoading) {
+        // Wait for auth to complete before checking roles
+        return;
+      }
+      
       if (!user) {
         console.log(`ProtectedRoute: No user found, role required: ${requiredRole}`);
         setLoading(false);
@@ -52,13 +57,15 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     };
 
     checkRole();
-  }, [user, requiredRole]);
+  }, [user, requiredRole, authLoading]);
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-lavapay-600" />
-        <span className="ml-2 text-lg">Carregando...</span>
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-lavapay-600 mx-auto mb-3" />
+          <span className="block text-lg">Verificando permissões...</span>
+        </div>
       </div>
     );
   }
