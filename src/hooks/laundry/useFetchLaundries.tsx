@@ -13,15 +13,17 @@ export function useFetchLaundries(options?: {
     queryKey: ['laundries', options?.ownerId, options?.forceShowAll],
     queryFn: async () => {
       try {
+        console.log("Fetching laundries with options:", options);
         let query = supabase
           .from('laundries')
           .select('*');
           
+        // Only filter by owner_id if provided and not forcing to show all
         if (options?.ownerId && !options?.forceShowAll) {
           console.log(`Filtering laundries by owner_id: ${options.ownerId}`);
           query = query.eq('owner_id', options.ownerId);
         } else {
-          console.log("Fetching all laundries (no owner filter)");
+          console.log("Fetching all laundries (no owner filter or force show all)");
         }
         
         const { data, error } = await query;
@@ -31,7 +33,7 @@ export function useFetchLaundries(options?: {
           throw error;
         }
         
-        console.log(`Fetched ${data?.length || 0} laundries:`, data);
+        console.log(`Fetched ${data?.length || 0} laundries for owner ${options?.ownerId}:`, data);
         return (data || []).map(laundry => convertToLaundry(laundry as LaundryDB));
       } catch (error) {
         console.error("Error in useFetchLaundries hook:", error);

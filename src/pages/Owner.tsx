@@ -21,29 +21,34 @@ export default function Owner() {
   const { user } = useAuth();
   const [selectedLocation, setSelectedLocation] = useState<string>("all");
   
-  // Fetch laundries that belong to the current user
-  const { data: ownerLaundries = [], isLoading } = useLaundries({ 
+  // Fetch laundries that belong to the current user with more detailed logging
+  const { data: ownerLaundries = [], isLoading: isLoadingLaundries } = useLaundries({ 
     ownerId: user?.id,
     options: {
-      enabled: !!user?.id
+      enabled: !!user?.id,
+      retry: 3, // Retry failed queries up to 3 times
+      staleTime: 30000, // Consider data fresh for 30 seconds
     }
   });
 
-  console.log(`Owner laundries for user ${user?.id}:`, ownerLaundries);
+  console.log(`Owner.tsx - Current user ID:`, user?.id);
+  console.log(`Owner.tsx - Owner laundries:`, ownerLaundries);
   
   // Update selectedLocation when owner laundries change
   useEffect(() => {
-    if (ownerLaundries.length > 0 && selectedLocation === "all") {
+    if (ownerLaundries.length > 0 && (selectedLocation === "all" || !selectedLocation)) {
+      console.log(`Setting selected location to first laundry: ${ownerLaundries[0]?.id}`);
       setSelectedLocation(ownerLaundries[0]?.id || "all");
     }
-  }, [ownerLaundries]);
+  }, [ownerLaundries, selectedLocation]);
   
   // Get laundry IDs owned by the current user
   const ownerLaundryIds = ownerLaundries.map(location => location.id);
   console.log("Owner laundry IDs:", ownerLaundryIds);
   
   // Fetch all machines first, then filter them
-  const { data: allMachines = [] } = useMachines();
+  const { data: allMachines = [], isLoading: isLoadingMachines } = useMachines();
+  console.log("All machines before filtering:", allMachines);
   
   // Filter machines to only show those from owner's laundries
   const ownerMachines = allMachines.filter(machine => {
@@ -57,13 +62,15 @@ export default function Owner() {
   console.log("Owner machines after filtering:", ownerMachines);
 
   // Get payments for selected laundry's machines
-  const { data: allPayments = [] } = usePayments();
+  const { data: allPayments = [], isLoading: isLoadingPayments } = usePayments();
   
   // Filter payments to only include those for the owner's machines
   const ownerMachineIds = ownerMachines.map(machine => machine.id);
   const ownerPayments = allPayments.filter(payment => 
     ownerMachineIds.includes(payment.machine_id)
   );
+
+  console.log("Owner payments:", ownerPayments);
 
   // Dashboard calculations
   const totalRevenue = ownerPayments
@@ -90,11 +97,28 @@ export default function Owner() {
     { day: 'Dom', amount: 390 },
   ];
 
+  const isLoading = isLoadingLaundries || isLoadingMachines || isLoadingPayments;
+
   if (isLoading) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-8 text-center">
           <div className="animate-pulse">Carregando dados do proprietário...</div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // If no laundries found for this owner, show a message
+  if (ownerLaundries.length === 0 && !isLoading) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-8">
+          <h1 className="text-3xl font-bold mb-4">Painel do Proprietário</h1>
+          <div className="bg-amber-100 border-l-4 border-amber-500 text-amber-700 p-4 mb-4">
+            <p className="font-bold">Nenhuma lavanderia encontrada</p>
+            <p>Você não possui lavanderias cadastradas. Por favor, contate o administrador do sistema.</p>
+          </div>
         </div>
       </Layout>
     );

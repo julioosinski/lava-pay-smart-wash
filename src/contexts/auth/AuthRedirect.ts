@@ -5,21 +5,23 @@ export async function redirectBasedOnRole(userId: string, navigate: (path: strin
   try {
     console.log("Checking role for user ID:", userId);
     
-    // First check if the user is a laundry owner
+    // First check if the user is a laundry owner by querying the laundries table
     const { data: laundryCheck, error: laundryError } = await supabase
       .from('laundries')
       .select('id')
       .eq('owner_id', userId)
-      .maybeSingle();
+      .limit(1);
     
-    if (laundryCheck && !laundryError) {
-      console.log("User is a laundry owner, redirecting to /owner");
+    if (laundryCheck && laundryCheck.length > 0) {
+      console.log(`User ${userId} is a laundry owner, found laundry: ${laundryCheck[0].id}`);
       await updateUserRoleIfNeeded(userId, 'business');
       navigate('/owner', { replace: true });
       return;
+    } else {
+      console.log(`User ${userId} is not a laundry owner, no laundries found with owner_id = ${userId}`);
     }
     
-    // Then check the profile role
+    // If no laundries found, check the profile role
     const { data, error } = await supabase
       .from('profiles')
       .select('role')
@@ -53,24 +55,30 @@ export async function redirectBasedOnRole(userId: string, navigate: (path: strin
 
 // Helper function to update user role if needed
 async function updateUserRoleIfNeeded(userId: string, role: 'business' | 'user' | 'admin') {
-  const { data } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', userId)
-    .maybeSingle();
-    
-  if (data?.role !== role) {
-    console.log(`Updating user ${userId} role from ${data?.role} to ${role}`);
-    
-    const { error } = await supabase
+  try {
+    const { data } = await supabase
       .from('profiles')
-      .update({ role })
-      .eq('id', userId);
+      .select('role')
+      .eq('id', userId)
+      .single();
       
-    if (error) {
-      console.error("Error updating user role:", error);
+    if (data?.role !== role) {
+      console.log(`Updating user ${userId} role from ${data?.role} to ${role}`);
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role })
+        .eq('id', userId);
+        
+      if (error) {
+        console.error("Error updating user role:", error);
+      } else {
+        console.log("Role successfully updated to", role);
+      }
     } else {
-      console.log("Role successfully updated");
+      console.log(`User ${userId} already has role: ${role}, no update needed`);
     }
+  } catch (error) {
+    console.error("Error in updateUserRoleIfNeeded:", error);
   }
 }
