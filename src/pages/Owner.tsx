@@ -1,12 +1,9 @@
+
 import { useState } from "react";
 import { Layout } from "@/components/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MachineCard } from "@/components/MachineCard";
-import { ChevronDown, Plus, AlertCircle } from "lucide-react";
-import { LaundryForm } from "@/components/admin/LaundryForm";
-import { MachineForm } from "@/components/admin/MachineForm";
+import { ChevronDown } from "lucide-react";
 import { useLaundries } from "@/hooks/useLaundries";
 import { useMachines } from "@/hooks/useMachines";
 import { usePayments } from "@/hooks/usePayments";
@@ -15,6 +12,9 @@ import { DashboardStats } from "@/components/owner/DashboardStats";
 import { RevenueChart } from "@/components/owner/RevenueChart";
 import { MachineStatus } from "@/components/owner/MachineStatus";
 import { RecentPayments } from "@/components/owner/RecentPayments";
+import { MachinesTab } from "@/components/owner/tabs/MachinesTab";
+import { LocationsTab } from "@/components/owner/tabs/LocationsTab";
+import { PaymentsTab } from "@/components/owner/tabs/PaymentsTab";
 
 export default function Owner() {
   const { user } = useAuth();
@@ -101,181 +101,6 @@ export default function Owner() {
     </div>
   );
 
-  const renderMachines = () => (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <CardTitle>Gerenciamento de Máquinas</CardTitle>
-              <CardDescription>Visualizar e gerenciar suas máquinas</CardDescription>
-            </div>
-            <div className="flex items-center gap-3">
-              <Select value={selectedLocation} onValueChange={setSelectedLocation}>
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Selecionar lavanderia" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas as lavanderias</SelectItem>
-                  {ownerLaundries.map(location => (
-                    <SelectItem key={location.id} value={location.id}>
-                      {location.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              
-              {selectedLocation !== "all" && (
-                <MachineForm laundryId={selectedLocation} />
-              )}
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {ownerMachines.map(machine => (
-              <MachineCard 
-                key={machine.id} 
-                machine={machine} 
-                showActions={false}
-              />
-            ))}
-            
-            {ownerMachines.length === 0 && (
-              <div className="col-span-full flex items-center justify-center py-8">
-                <div className="text-center">
-                  <AlertCircle className="h-10 w-10 text-gray-400 mx-auto mb-3" />
-                  <p className="text-gray-500">
-                    {selectedLocation === "all"
-                      ? "Nenhuma máquina encontrada. Selecione uma lavanderia específica para adicionar máquinas."
-                      : "Nenhuma máquina encontrada para esta lavanderia. Adicione uma nova máquina."}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-
-  const renderLocations = () => (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between">
-          <div>
-            <CardTitle>Suas Lavanderias</CardTitle>
-            <CardDescription>Gerenciamento de locais</CardDescription>
-          </div>
-          <LaundryForm />
-        </CardHeader>
-        <CardContent>
-          {ownerLaundries.length === 0 ? (
-            <div className="text-center py-8">
-              <AlertCircle className="h-10 w-10 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-500">Você ainda não possui lavanderias cadastradas.</p>
-            </div>
-          ) : (
-            ownerLaundries.map(location => {
-              const locationMachines = machines.filter(m => m.laundry_id === location.id);
-              const availableCount = locationMachines.filter(m => m.status === 'available').length;
-              const totalCount = locationMachines.length;
-              
-              return (
-                <Card key={location.id} className="mb-4 overflow-hidden">
-                  <div className="flex flex-col md:flex-row">
-                    <div className="flex-1 p-6">
-                      <h3 className="text-lg font-semibold mb-1">{location.name}</h3>
-                      <p className="text-gray-500 mb-4">{location.address}</p>
-                      
-                      <div className="flex flex-wrap gap-4">
-                        <div className="flex items-center">
-                          <WashingMachine className="h-4 w-4 mr-2 text-lavapay-600" />
-                          <span>{totalCount} máquinas</span>
-                        </div>
-                        
-                        <div className="flex items-center">
-                          <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
-                          <span>{availableCount} disponíveis</span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="bg-gray-50 p-6 flex items-center justify-center md:justify-end">
-                      <div className="flex gap-2">
-                        <Button 
-                          variant="outline"
-                          onClick={() => setSelectedLocation(location.id)}
-                        >
-                          Gerenciar
-                        </Button>
-                        <Button variant="outline" className="text-red-500 hover:text-red-700">Remover</Button>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              );
-            })
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
-
-  const renderPayments = () => (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between">
-          <div>
-            <CardTitle>Histórico de Pagamentos</CardTitle>
-            <CardDescription>Transações financeiras das suas máquinas</CardDescription>
-          </div>
-          <Button variant="outline" className="mt-4 sm:mt-0">
-            <RefreshCcw className="h-4 w-4 mr-2" /> Atualizar
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Máquina</TableHead>
-                <TableHead>Valor</TableHead>
-                <TableHead>Método</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Data/Hora</TableHead>
-                <TableHead>ID Transação</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {ownerPayments.map((payment) => {
-                const machine = ownerMachines.find(m => m.id === payment.machine_id);
-                const location = machine ? ownerLaundries.find(l => l.id === machine.laundry_id) : null;
-                
-                return (
-                  <TableRow key={payment.id}>
-                    <TableCell className="font-medium">{payment.id}</TableCell>
-                    <TableCell>
-                      {machine ? `${machine.type === 'washer' ? 'Lavadora' : 'Secadora'} #${machine.id}` : "N/A"}
-                      {location && <div className="text-xs text-gray-500">{location.name}</div>}
-                    </TableCell>
-                    <TableCell>{formatCurrency(payment.amount)}</TableCell>
-                    <TableCell className="capitalize">{payment.method}</TableCell>
-                    <TableCell>
-                      <StatusBadge status={payment.status} />
-                    </TableCell>
-                    <TableCell>{formatDate(payment.created_at)}</TableCell>
-                    <TableCell>{payment.transaction_id || "—"}</TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    </div>
-  );
-
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
@@ -303,15 +128,28 @@ export default function Owner() {
           </TabsContent>
 
           <TabsContent value="machines">
-            {renderMachines()}
+            <MachinesTab 
+              machines={ownerMachines}
+              ownerLaundries={ownerLaundries}
+              selectedLocation={selectedLocation}
+              setSelectedLocation={setSelectedLocation}
+            />
           </TabsContent>
 
           <TabsContent value="locations">
-            {renderLocations()}
+            <LocationsTab 
+              ownerLaundries={ownerLaundries}
+              machines={ownerMachines}
+              onSelectLocation={setSelectedLocation}
+            />
           </TabsContent>
 
           <TabsContent value="payments">
-            {renderPayments()}
+            <PaymentsTab 
+              payments={ownerPayments}
+              machines={ownerMachines}
+              laundries={ownerLaundries}
+            />
           </TabsContent>
         </Tabs>
       </div>

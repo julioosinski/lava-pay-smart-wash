@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -33,12 +32,9 @@ export const usePayments = (laundryId?: string) => {
   return useQuery({
     queryKey: ['payments', laundryId],
     queryFn: async () => {
-      let query = supabase.from('payments').select('*').order('created_at', { ascending: false });
+      const query = supabase.from('payments').select('*').order('created_at', { ascending: false });
       
-      // Execute the query with or without the filter
-      const { data, error } = laundryId 
-        ? await query.eq('laundry_id', laundryId)
-        : await query;
+      const { data, error } = await query;
       
       if (error) {
         console.error("Error fetching payments:", error);
