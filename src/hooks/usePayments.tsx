@@ -52,7 +52,7 @@ export const usePayments = (laundryId?: string) => {
         return [];
       }
     },
-    enabled: !laundryId || !!laundryId
+    enabled: true // Replace the problematic condition with a simple boolean value
   });
 };
 
