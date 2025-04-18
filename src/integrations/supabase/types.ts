@@ -84,6 +84,124 @@ export type Database = {
         }
         Relationships: []
       }
+      laundries: {
+        Row: {
+          address: string
+          created_at: string
+          id: string
+          latitude: number | null
+          longitude: number | null
+          name: string
+          owner_id: string
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          created_at?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          owner_id: string
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          owner_id?: string
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      machines: {
+        Row: {
+          created_at: string
+          id: string
+          laundry_id: string
+          price: number
+          status: string | null
+          time_minutes: number
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          laundry_id: string
+          price: number
+          status?: string | null
+          time_minutes: number
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          laundry_id?: string
+          price?: number
+          status?: string | null
+          time_minutes?: number
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "machines_laundry_id_fkey"
+            columns: ["laundry_id"]
+            isOneToOne: false
+            referencedRelation: "laundries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          machine_id: string | null
+          method: string
+          status: string | null
+          transaction_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          machine_id?: string | null
+          method: string
+          status?: string | null
+          transaction_id?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          machine_id?: string | null
+          method?: string
+          status?: string | null
+          transaction_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_machine_id_fkey"
+            columns: ["machine_id"]
+            isOneToOne: false
+            referencedRelation: "machines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -111,11 +229,56 @@ export type Database = {
         }
         Relationships: []
       }
+      subscriptions: {
+        Row: {
+          amount: number
+          billing_day: number
+          created_at: string
+          id: string
+          laundry_id: string
+          next_billing_date: string
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          billing_day: number
+          created_at?: string
+          id?: string
+          laundry_id: string
+          next_billing_date: string
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          billing_day?: number
+          created_at?: string
+          id?: string
+          laundry_id?: string
+          next_billing_date?: string
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_laundry_id_fkey"
+            columns: ["laundry_id"]
+            isOneToOne: false
+            referencedRelation: "laundries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      has_laundry_access: {
+        Args: { laundry_id: string; user_id: string }
+        Returns: boolean
+      }
       is_admin: {
         Args: { user_id: string }
         Returns: boolean
