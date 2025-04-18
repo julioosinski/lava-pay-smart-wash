@@ -23,6 +23,11 @@ export function MachinesTab({
   console.log("MachinesTab - machines:", machines);
   console.log("MachinesTab - ownerLaundries:", ownerLaundries);
   console.log("MachinesTab - selectedLocation:", selectedLocation);
+  
+  // Filter machines based on selected location
+  const filteredMachines = selectedLocation === "all" 
+    ? machines 
+    : machines.filter(machine => machine.laundry_id === selectedLocation);
 
   return (
     <div className="space-y-6">
@@ -59,7 +64,7 @@ export function MachinesTab({
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {machines.map(machine => (
+            {filteredMachines.map(machine => (
               <MachineCard 
                 key={machine.id} 
                 machine={machine} 
@@ -68,7 +73,7 @@ export function MachinesTab({
               />
             ))}
             
-            {machines.length === 0 && (
+            {filteredMachines.length === 0 && (
               <div className="col-span-full flex items-center justify-center py-8">
                 <div className="text-center">
                   <AlertCircle className="h-10 w-10 text-gray-400 mx-auto mb-3" />

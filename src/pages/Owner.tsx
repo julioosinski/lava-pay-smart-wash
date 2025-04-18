@@ -27,16 +27,14 @@ export default function Owner() {
     ownerLaundries.length > 0 ? ownerLaundries[0]?.id : "all"
   );
   
-  // Get machines for the selected location or all owner's locations
-  const { data: machines = [] } = useMachines(selectedLocation !== "all" ? selectedLocation : undefined);
-  console.log("Fetched machines:", machines);
+  // Get all machines - we'll filter them in the component
+  const { data: allMachines = [] } = useMachines();
+  console.log("Fetched machines:", allMachines);
   
   // Filter machines to only show those from owner's laundries
   const ownerLaundryIds = ownerLaundries.map(location => location.id);
-  const ownerMachines = machines.filter(machine => 
-    selectedLocation === "all" 
-      ? ownerLaundryIds.includes(machine.laundry_id) 
-      : machine.laundry_id === selectedLocation
+  const ownerMachines = allMachines.filter(machine => 
+    ownerLaundryIds.includes(machine.laundry_id)
   );
   console.log("Owner machines:", ownerMachines);
 
