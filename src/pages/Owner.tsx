@@ -7,7 +7,7 @@ import { ChevronDown } from "lucide-react";
 import { useLaundries } from "@/hooks/useLaundries";
 import { useMachines } from "@/hooks/useMachines";
 import { usePayments } from "@/hooks/usePayments";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { DashboardStats } from "@/components/owner/DashboardStats";
 import { RevenueChart } from "@/components/owner/RevenueChart";
 import { MachineStatus } from "@/components/owner/MachineStatus";
