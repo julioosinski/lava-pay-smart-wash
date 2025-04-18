@@ -26,7 +26,7 @@ export const useMachines = (laundryId?: string) => {
         return [];
       }
     },
-    enabled: !laundryId || !!laundryId
+    enabled: true // Simplified the enabled condition
   });
 };
 
@@ -40,13 +40,19 @@ export const useCreateMachine = () => {
       laundry_id: string;
       time_minutes: number;
     }) => {
+      console.log("Creating machine with data:", machine);
       const { data, error } = await supabase
         .from('machines')
         .insert(machine)
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error creating machine:", error);
+        throw error;
+      }
+      
+      console.log("Machine created successfully:", data);
       return data as Machine;
     },
     onSuccess: (_, variables) => {

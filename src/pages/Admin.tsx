@@ -14,6 +14,7 @@ import { usePayments } from "@/hooks/usePayments";
 
 export default function Admin() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("dashboard");
   const { data: machines = [], isLoading: machinesLoading } = useMachines();
   const { data: payments = [], isLoading: paymentsLoading } = usePayments();
   
@@ -25,7 +26,11 @@ export default function Admin() {
           <p className="text-gray-500">Gerencie lavanderias, máquinas e usuários do sistema</p>
         </div>
 
-        <Tabs defaultValue="dashboard">
+        <Tabs 
+          defaultValue="dashboard" 
+          value={activeTab}
+          onValueChange={setActiveTab}
+        >
           <TabsList className="mb-6">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <BarChart className="h-4 w-4" /> Dashboard

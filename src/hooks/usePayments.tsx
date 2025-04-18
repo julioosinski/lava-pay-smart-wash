@@ -14,6 +14,7 @@ interface PaymentDB {
   user_id: string;
   created_at: string;
   transaction_id?: string;
+  laundry_id?: string;
 }
 
 // Convert database payment to application payment
@@ -52,7 +53,7 @@ export const usePayments = (laundryId?: string) => {
         return [];
       }
     },
-    enabled: true // Replace the problematic condition with a simple boolean value
+    enabled: true
   });
 };
 
