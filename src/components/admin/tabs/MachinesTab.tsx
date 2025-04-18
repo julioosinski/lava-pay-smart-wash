@@ -5,15 +5,25 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Plus, Edit, Trash } from "lucide-react";
 import { SearchBar } from "../SearchBar";
 import { StatusBadge } from "@/components/StatusBadge";
-import { Machine } from "@/types";
+import { MachineForm } from "../MachineForm";
+
+interface Machine {
+  id: string;
+  type: 'washer' | 'dryer';
+  status: 'available' | 'in-use' | 'maintenance';
+  price: number;
+  time_minutes: number;
+  laundry_id: string;
+}
 
 interface MachinesTabProps {
   machines: Machine[];
   searchQuery: string;
   onSearchChange: (value: string) => void;
+  laundryId?: string;
 }
 
-export function MachinesTab({ machines, searchQuery, onSearchChange }: MachinesTabProps) {
+export function MachinesTab({ machines, searchQuery, onSearchChange, laundryId }: MachinesTabProps) {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -29,9 +39,7 @@ export function MachinesTab({ machines, searchQuery, onSearchChange }: MachinesT
           value={searchQuery}
           onChange={onSearchChange}
         />
-        <Button className="bg-lavapay-500 hover:bg-lavapay-600">
-          <Plus className="mr-2 h-4 w-4" /> Nova Máquina
-        </Button>
+        {laundryId && <MachineForm laundryId={laundryId} />}
       </div>
 
       <Card>
@@ -58,8 +66,8 @@ export function MachinesTab({ machines, searchQuery, onSearchChange }: MachinesT
                   <StatusBadge status={machine.status} />
                 </TableCell>
                 <TableCell>{formatCurrency(machine.price)}</TableCell>
-                <TableCell>{machine.timeMinutes} min</TableCell>
-                <TableCell>{machine.locationId}</TableCell>
+                <TableCell>{machine.time_minutes} min</TableCell>
+                <TableCell>{machine.laundry_id}</TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="icon" className="h-8 w-8 mr-1">
                     <Edit className="h-4 w-4" />

@@ -34,7 +34,7 @@ export function MachineCard({ machine, onSelect, showActions = true }: MachineCa
             <span className="text-sm text-gray-500 flex items-center gap-1">
               <Timer className="h-4 w-4" /> Duração
             </span>
-            <span className="font-medium">{machine.timeMinutes} minutos</span>
+            <span className="font-medium">{machine.time_minutes} minutos</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-500 flex items-center gap-1">

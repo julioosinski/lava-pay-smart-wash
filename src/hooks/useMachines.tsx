@@ -29,7 +29,12 @@ export const useCreateMachine = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (machine: Omit<Machine, 'id'>) => {
+    mutationFn: async (machine: {
+      type: 'washer' | 'dryer';
+      price: number;
+      laundry_id: string;
+      time_minutes: number;
+    }) => {
       const { data, error } = await supabase
         .from('machines')
         .insert(machine)
@@ -40,7 +45,7 @@ export const useCreateMachine = () => {
       return data;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['machines', variables.locationId] });
+      queryClient.invalidateQueries({ queryKey: ['machines', variables.laundry_id] });
       toast.success('Máquina adicionada com sucesso');
     },
     onError: (error: Error) => {

@@ -21,8 +21,8 @@ export interface Machine {
   type: 'washer' | 'dryer';
   status: 'available' | 'in-use' | 'maintenance';
   price: number;
-  timeMinutes: number;
-  locationId: string;
+  time_minutes: number; // Changed from timeMinutes to time_minutes to match DB
+  laundry_id: string;   // Changed from locationId to laundry_id to match DB
 }
 
 export interface Payment {
