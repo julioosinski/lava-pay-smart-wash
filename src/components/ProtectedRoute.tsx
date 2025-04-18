@@ -25,6 +25,10 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
 
       try {
         console.log(`ProtectedRoute: Checking role for user ${user.id}, required role: ${requiredRole}`);
+        
+        // Log the user object to debug
+        console.log("ProtectedRoute: User object:", JSON.stringify(user));
+        
         const { data, error } = await supabase
           .from('profiles')
           .select('role')
@@ -38,7 +42,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
         }
 
         const userRole = data?.role || null;
-        console.log(`ProtectedRoute: User ${user.id} has role: ${userRole}`);
+        console.log(`ProtectedRoute: User ${user.id} has role from database:`, userRole);
         setRole(userRole);
       } catch (error) {
         console.error("ProtectedRoute: Error checking role:", error);

@@ -37,8 +37,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       
+      // Log the complete data object for debugging
+      console.log("Profile data from database:", JSON.stringify(data));
+      
       const role = data?.role;
-      console.log("User role detected:", role);
+      console.log("User role detected from database:", role);
       
       if (role === 'business') {
         console.log("Business role detected, redirecting to /owner");
@@ -147,7 +150,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={{ user, session, signIn, signUp, signOut }}>
-      {children}
+      {loading ? <div>Loading auth...</div> : children}
     </AuthContext.Provider>
   );
 }
