@@ -4,12 +4,13 @@ import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Edit, Phone, Mail, Trash, Plus, Building2 } from "lucide-react";
 import { SearchBar } from "../SearchBar";
-import { useLaundries } from "@/hooks/useLaundries";
+import { useLaundries, useDeleteLaundry } from "@/hooks/useLaundries";
 import { LaundryForm } from "@/components/admin/LaundryForm";
 import { useMachines } from "@/hooks/useMachines";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { EditLaundryDialog } from "../EditLaundryDialog";
+import { DeleteLaundryDialog } from "../DeleteLaundryDialog";
 import { LaundryLocation } from "@/types";
 
 interface LaundryTabProps {
@@ -31,7 +32,10 @@ export function LaundryTab({ searchQuery, onSearchChange, laundries: externalLau
   
   const { data: allMachines = [] } = useMachines();
   const [selectedLaundry, setSelectedLaundry] = useState<LaundryLocation | null>(null);
+  const [laundryToDelete, setLaundryToDelete] = useState<LaundryLocation | null>(null);
   const navigate = useNavigate();
+  
+  const deleteLaundry = useDeleteLaundry();
 
   const filteredLaundries = laundries.filter(laundry =>
     laundry.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -47,6 +51,21 @@ export function LaundryTab({ searchQuery, onSearchChange, laundries: externalLau
 
   const handleEdit = (laundry: LaundryLocation) => {
     setSelectedLaundry(laundry);
+  };
+  
+  const handleDelete = (laundry: LaundryLocation) => {
+    setLaundryToDelete(laundry);
+  };
+  
+  const confirmDelete = async () => {
+    if (laundryToDelete) {
+      try {
+        await deleteLaundry.mutateAsync(laundryToDelete.id);
+        setLaundryToDelete(null);
+      } catch (error) {
+        console.error("Error deleting laundry:", error);
+      }
+    }
   };
 
   if (isLoading && !externalLaundries) {
@@ -123,7 +142,15 @@ export function LaundryTab({ searchQuery, onSearchChange, laundries: externalLau
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-red-500"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(laundry);
+                      }}
+                    >
                       <Trash className="h-4 w-4" />
                     </Button>
                   </TableCell>
@@ -139,6 +166,14 @@ export function LaundryTab({ searchQuery, onSearchChange, laundries: externalLau
           open={!!selectedLaundry}
           onOpenChange={(open) => !open && setSelectedLaundry(null)}
           laundry={selectedLaundry}
+        />
+      )}
+      
+      {laundryToDelete && (
+        <DeleteLaundryDialog
+          laundry={laundryToDelete}
+          onClose={() => setLaundryToDelete(null)}
+          onConfirm={confirmDelete}
         />
       )}
     </div>
