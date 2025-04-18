@@ -15,7 +15,7 @@ import { LaundryLocation } from "@/types";
 interface LaundryTabProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
-  laundries?: LaundryLocation[]; // Make laundries optional
+  laundries?: LaundryLocation[]; // Added this prop to match what's being passed from Admin.tsx
 }
 
 export function LaundryTab({ searchQuery, onSearchChange, laundries: externalLaundries }: LaundryTabProps) {
