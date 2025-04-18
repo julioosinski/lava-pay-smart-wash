@@ -24,9 +24,35 @@ export const useAuthForm = (expectedRole: string = 'user') => {
     try {
       if (isLogin) {
         console.log("Attempting login with email:", email);
-        await signIn(email, password);
-        // The redirection is now handled directly in the AuthContext's signIn function
-        // No need for additional redirection logic here
+        
+        // Verificar se o usuário é um proprietário tentando fazer login com telefone como senha
+        if (expectedRole === 'business') {
+          console.log("Checking business login with phone as password");
+          
+          // Primeiro, verificar se existe uma lavanderia com esse email e telefone
+          const { data: laundryData, error: laundryError } = await supabase
+            .from('laundries')
+            .select('contact_email, contact_phone, owner_id')
+            .eq('contact_email', email)
+            .eq('contact_phone', password)
+            .single();
+          
+          if (laundryData) {
+            console.log("Found laundry with matching email and phone:", laundryData);
+            // Se encontramos a lavanderia, tentamos fazer login com credenciais padrão
+            // Assumindo que durante o cadastro da lavanderia, criou-se um usuário com:
+            // - email = email de contato da lavanderia
+            // - senha = telefone de contato da lavanderia
+            await signIn(email, password);
+          } else {
+            console.log("No matching laundry found, trying regular login");
+            // Se não encontrar, tenta o login normal
+            await signIn(email, password);
+          }
+        } else {
+          // Login normal para outros tipos de usuário
+          await signIn(email, password);
+        }
       } else {
         await signUp(email, password);
         toast({
