@@ -132,15 +132,20 @@ export const useAuthForm = (expectedRole: string = 'user') => {
           
           // Adicionar role baseado no contexto da tela de autenticação
           if (expectedRole) {
+            // Fix: Cast the expectedRole to the appropriate union type
+            const validRole = (expectedRole === 'admin' || expectedRole === 'business' || expectedRole === 'user') 
+              ? expectedRole as 'admin' | 'business' | 'user'
+              : 'user'; // Default to 'user' if not one of the expected values
+            
             const { error: roleError } = await supabase
               .from('profiles')
-              .update({ role: expectedRole })
+              .update({ role: validRole })
               .eq('id', user?.id || '');
               
             if (roleError) {
               console.error("Error setting user role:", roleError);
             } else {
-              console.log(`Role set to ${expectedRole} for new user`);
+              console.log(`Role set to ${validRole} for new user`);
             }
           }
           
