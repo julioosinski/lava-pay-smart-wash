@@ -132,34 +132,36 @@ export const updateUserContact = async (userId: string, email: string, phone: st
       console.log("Contact columns might not exist in profiles table, adding them");
       
       try {
-        // Try to add columns to profiles table
-        // Use a direct SQL query instead of rpc to avoid TypeScript errors
-        const { error: alterError } = await supabase
+        // Call the helper table that triggers the function to add columns
+        const { error: insertError } = await supabase
           .from('add_contact_fields_to_profiles_call')
-          .insert({ dummy: true })
-          .select();
+          .insert({ dummy: true });
         
-        if (alterError) {
-          console.error("Error adding contact fields to profiles:", alterError);
+        if (insertError) {
+          console.error("Error triggering add_contact_fields_to_profiles function:", insertError);
         } else {
+          console.log("Successfully triggered add_contact_fields_to_profiles function");
+          
           // Try update again
-          const { error: retryError } = await supabase
-            .from('profiles')
-            .update({
-              contact_email: email,
-              contact_phone: phone,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', userId);
-            
-          if (retryError) {
-            console.error("Error in retry of updating user contact:", retryError);
-          } else {
-            console.log("Successfully added fields and updated user contact");
-          }
+          setTimeout(async () => {
+            const { error: retryError } = await supabase
+              .from('profiles')
+              .update({
+                contact_email: email,
+                contact_phone: phone,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', userId);
+              
+            if (retryError) {
+              console.error("Error in retry of updating user contact:", retryError);
+            } else {
+              console.log("Successfully added fields and updated user contact");
+            }
+          }, 1000); // Give it a second for the function to complete
         }
       } catch (e) {
-        console.error("Error in add_contact_fields_to_profiles function:", e);
+        console.error("Error triggering add_contact_fields_to_profiles function:", e);
       }
     } else {
       throw error;
