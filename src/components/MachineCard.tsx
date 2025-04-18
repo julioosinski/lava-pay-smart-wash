@@ -1,8 +1,9 @@
+
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "./StatusBadge";
 import { Machine } from "@/types";
-import { WashingMachine, Loader, Timer } from "lucide-react";
+import { WashingMachine, Loader, Timer, Hash, Barcode } from "lucide-react";
 import { MachineForm } from "./admin/MachineForm";
 
 interface MachineCardProps {
@@ -53,6 +54,18 @@ export function MachineCard({ machine, onSelect, showActions = true, showEdit = 
               <Loader className="h-4 w-4" /> Preço
             </span>
             <span className="font-medium text-lavapay-700">{formattedPrice}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-500 flex items-center gap-1">
+              <Hash className="h-4 w-4" /> ID Loja
+            </span>
+            <span className="font-medium">{machine.store_id}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-500 flex items-center gap-1">
+              <Barcode className="h-4 w-4" /> Serial
+            </span>
+            <span className="font-medium">{machine.machine_serial}</span>
           </div>
         </div>
       </CardContent>

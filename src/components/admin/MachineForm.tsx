@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
@@ -17,7 +18,9 @@ const machineSchema = z.object({
   }),
   price: z.coerce.number().positive({ message: "O preço deve ser maior que zero" }),
   time_minutes: z.coerce.number().int().positive({ message: "O tempo deve ser maior que zero" }),
-  machine_number: z.coerce.number().int().positive({ message: "O número da máquina deve ser maior que zero" })
+  machine_number: z.coerce.number().int().positive({ message: "O número da máquina deve ser maior que zero" }),
+  store_id: z.string().min(1, { message: "ID da loja é obrigatório" }),
+  machine_serial: z.string().min(1, { message: "Número serial da máquina é obrigatório" })
 });
 
 type MachineFormValues = z.infer<typeof machineSchema>;
@@ -44,11 +47,15 @@ export function MachineForm({ laundryId, machine, variant = "create" }: MachineF
       type: machine.type,
       price: machine.price,
       time_minutes: machine.time_minutes,
-      machine_number: machine.machine_number
+      machine_number: machine.machine_number,
+      store_id: machine.store_id,
+      machine_serial: machine.machine_serial
     } : {
       price: 0,
       time_minutes: 0,
-      machine_number: nextMachineNumber
+      machine_number: nextMachineNumber,
+      store_id: `STORE-${nextMachineNumber}`,
+      machine_serial: `SERIAL-${nextMachineNumber}`
     }
   });
 
@@ -66,7 +73,9 @@ export function MachineForm({ laundryId, machine, variant = "create" }: MachineF
           price: data.price,
           laundry_id: laundryId,
           time_minutes: data.time_minutes,
-          machine_number: data.machine_number
+          machine_number: data.machine_number,
+          store_id: data.store_id,
+          machine_serial: data.machine_serial
         });
       }
       setOpen(false);
@@ -141,6 +150,34 @@ export function MachineForm({ laundryId, machine, variant = "create" }: MachineF
                   <FormLabel>Número da Máquina</FormLabel>
                   <FormControl>
                     <Input type="number" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="store_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>ID da Loja</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="machine_serial"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Número Serial da Máquina</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

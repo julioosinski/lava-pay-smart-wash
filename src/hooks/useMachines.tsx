@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -46,6 +47,8 @@ type MachineInput = {
   laundry_id: string;
   time_minutes: number;
   machine_number: number;
+  store_id: string;
+  machine_serial: string;
 };
 
 export const useCreateMachine = () => {
@@ -56,7 +59,8 @@ export const useCreateMachine = () => {
       console.log("Creating machine with data:", machine);
       
       // Validate required fields
-      if (!machine.type || !machine.price || !machine.laundry_id || !machine.time_minutes || machine.machine_number === undefined) {
+      if (!machine.type || !machine.price || !machine.laundry_id || !machine.time_minutes || 
+          machine.machine_number === undefined || !machine.store_id || !machine.machine_serial) {
         throw new Error('Missing required fields');
       }
       
@@ -67,7 +71,9 @@ export const useCreateMachine = () => {
           price: machine.price,
           laundry_id: machine.laundry_id,
           time_minutes: machine.time_minutes,
-          machine_number: machine.machine_number
+          machine_number: machine.machine_number,
+          store_id: machine.store_id,
+          machine_serial: machine.machine_serial
         })
         .select()
         .single();
@@ -130,7 +136,9 @@ export const useUpdateMachine = () => {
           type: machine.type,
           price: machine.price,
           time_minutes: machine.time_minutes,
-          machine_number: machine.machine_number
+          machine_number: machine.machine_number,
+          store_id: machine.store_id,
+          machine_serial: machine.machine_serial
         })
         .eq('id', machine.id)
         .select()
