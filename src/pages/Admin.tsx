@@ -2,14 +2,15 @@
 import { useState } from "react";
 import { Layout } from "@/components/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart, MapPin, WashingMachine, Users, Receipt } from "lucide-react";
+import { BarChart, MapPin, WashingMachine, Users, Receipt, Calendar } from "lucide-react";
 import { DashboardStats } from "@/components/admin/DashboardStats";
 import { LaundryTab } from "@/components/admin/tabs/LaundryTab";
 import { MachinesTab } from "@/components/admin/tabs/MachinesTab";
 import { PaymentsTab } from "@/components/admin/tabs/PaymentsTab";
 import { UsersTab } from "@/components/admin/tabs/UsersTab";
+import { SubscriptionsTab } from "@/components/admin/tabs/SubscriptionsTab";
 import { useMachines } from "@/hooks/useMachines";
-import { mockPayments, mockUsers } from "@/lib/mockData";
+import { mockUsers } from "@/lib/mockData";
 import { usePayments } from "@/hooks/usePayments";
 
 export default function Admin() {
@@ -44,6 +45,9 @@ export default function Admin() {
             <TabsTrigger value="payments" className="flex items-center gap-2">
               <Receipt className="h-4 w-4" /> Pagamentos
             </TabsTrigger>
+            <TabsTrigger value="subscriptions" className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" /> Mensalidades
+            </TabsTrigger>
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="h-4 w-4" /> Usuários
             </TabsTrigger>
@@ -71,6 +75,13 @@ export default function Admin() {
           <TabsContent value="payments">
             <PaymentsTab
               payments={paymentsLoading ? [] : payments}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+            />
+          </TabsContent>
+
+          <TabsContent value="subscriptions">
+            <SubscriptionsTab
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
             />

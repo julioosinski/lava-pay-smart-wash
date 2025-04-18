@@ -11,6 +11,8 @@ type LaundryDB = {
   address: string;
   owner_id: string;
   status?: string;
+  contact_phone?: string;
+  contact_email?: string;
   created_at?: string;
   updated_at?: string;
   latitude?: number | null;
@@ -23,6 +25,8 @@ const convertToLaundry = (dbLaundry: LaundryDB): LaundryLocation => ({
   name: dbLaundry.name,
   address: dbLaundry.address,
   owner_id: dbLaundry.owner_id,
+  contact_phone: dbLaundry.contact_phone,
+  contact_email: dbLaundry.contact_email,
   status: dbLaundry.status,
   created_at: dbLaundry.created_at,
   updated_at: dbLaundry.updated_at
@@ -55,7 +59,7 @@ export function useCreateLaundry() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (laundry: Pick<LaundryLocation, 'name' | 'address' | 'owner_id'>) => {
+    mutationFn: async (laundry: Pick<LaundryLocation, 'name' | 'address' | 'owner_id' | 'contact_phone' | 'contact_email'>) => {
       console.log("Creating laundry with data:", laundry);
       
       // Validate required fields before sending to the database

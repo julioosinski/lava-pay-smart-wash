@@ -53,7 +53,7 @@ export const usePayments = (laundryId?: string) => {
         return [];
       }
     },
-    enabled: true // Simplify this to avoid excessive type instantiation
+    enabled: true
   });
 };
 

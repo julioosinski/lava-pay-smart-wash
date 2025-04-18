@@ -2,13 +2,12 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Edit, Trash, Plus } from "lucide-react";
+import { Edit, Phone, Mail, Trash, Plus, Building2 } from "lucide-react";
 import { SearchBar } from "../SearchBar";
 import { useLaundries } from "@/hooks/useLaundries";
 import { LaundryForm } from "@/components/admin/LaundryForm";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useMachines } from "@/hooks/useMachines";
+import { useState } from "react";
 
 interface LaundryTabProps {
   searchQuery: string;
@@ -18,21 +17,24 @@ interface LaundryTabProps {
 export function LaundryTab({ searchQuery, onSearchChange }: LaundryTabProps) {
   const { data: laundries = [], isLoading } = useLaundries();
   const { data: allMachines = [] } = useMachines();
-  const navigate = useNavigate();
+  const [selectedLaundry, setSelectedLaundry] = useState<string | null>(null);
 
   const filteredLaundries = laundries.filter(laundry =>
     laundry.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    laundry.address.toLowerCase().includes(searchQuery.toLowerCase())
+    laundry.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (laundry.contact_phone && laundry.contact_phone.includes(searchQuery)) ||
+    (laundry.contact_email && laundry.contact_email.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   // Function to view machines for a specific laundry
   const viewMachines = (laundryId: string) => {
-    // Here we would navigate to a machines page with the laundry ID
-    console.log(`Viewing machines for laundry: ${laundryId}`);
-    // For now, we'll just open the machines tab
+    // Navigate to machines tab with the laundry ID
     const machinesTab = document.querySelector("[data-state='inactive'][value='machines']") as HTMLElement;
     if (machinesTab) {
       machinesTab.click();
+      // Set the selected laundry in the URL or state for machines tab to filter
+      setSelectedLaundry(laundryId);
+      // The machines tab should pick this up somehow - typically with URL params or state management
     }
   };
 
@@ -62,6 +64,7 @@ export function LaundryTab({ searchQuery, onSearchChange }: LaundryTabProps) {
             <TableRow>
               <TableHead>Nome</TableHead>
               <TableHead>Endereço</TableHead>
+              <TableHead>Contato</TableHead>
               <TableHead>Proprietário</TableHead>
               <TableHead>Máquinas</TableHead>
               <TableHead className="text-right">Ações</TableHead>
@@ -70,7 +73,7 @@ export function LaundryTab({ searchQuery, onSearchChange }: LaundryTabProps) {
           <TableBody>
             {filteredLaundries.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                <TableCell colSpan={6} className="text-center py-8 text-gray-500">
                   Nenhuma lavanderia encontrada
                 </TableCell>
               </TableRow>
@@ -79,14 +82,28 @@ export function LaundryTab({ searchQuery, onSearchChange }: LaundryTabProps) {
                 <TableRow key={laundry.id}>
                   <TableCell className="font-medium">{laundry.name}</TableCell>
                   <TableCell>{laundry.address}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-col">
+                      {laundry.contact_phone && (
+                        <div className="flex items-center gap-1">
+                          <Phone className="h-3 w-3" /> {laundry.contact_phone}
+                        </div>
+                      )}
+                      {laundry.contact_email && (
+                        <div className="flex items-center gap-1">
+                          <Mail className="h-3 w-3" /> {laundry.contact_email}
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell>{laundry.owner_id.substring(0, 8)}...</TableCell>
                   <TableCell>
                     <Button 
                       variant="link" 
                       onClick={() => viewMachines(laundry.id)}
-                      className="p-0 h-auto font-normal"
+                      className="p-0 h-auto font-normal flex items-center gap-1"
                     >
-                      {getMachineCount(laundry.id)} máquinas
+                      <Building2 className="h-3 w-3" /> {getMachineCount(laundry.id)} máquinas
                     </Button>
                   </TableCell>
                   <TableCell className="text-right">

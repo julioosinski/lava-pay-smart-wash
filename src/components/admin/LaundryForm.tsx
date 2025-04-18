@@ -15,6 +15,8 @@ import { Plus } from "lucide-react";
 const laundrySchema = z.object({
   name: z.string().min(3, { message: "Nome deve ter pelo menos 3 caracteres" }),
   address: z.string().min(5, { message: "Endereço deve ter pelo menos 5 caracteres" }),
+  contact_phone: z.string().optional(),
+  contact_email: z.string().email({ message: "Email inválido" }).optional().or(z.literal('')),
   owner_id: z.string().default("00000000-0000-0000-0000-000000000000") // Default UUID for testing
 });
 
@@ -30,6 +32,8 @@ export function LaundryForm() {
     defaultValues: {
       name: "",
       address: "",
+      contact_phone: "",
+      contact_email: "",
       owner_id: "00000000-0000-0000-0000-000000000000" // Default UUID for testing
     }
   });
@@ -39,7 +43,9 @@ export function LaundryForm() {
       console.log("Submitting laundry data:", data);
       await createLaundry.mutateAsync({
         name: data.name,
-        address: data.address, 
+        address: data.address,
+        contact_phone: data.contact_phone,
+        contact_email: data.contact_email,
         owner_id: data.owner_id
       });
       setOpen(false);
@@ -56,7 +62,7 @@ export function LaundryForm() {
           <Plus className="h-4 w-4" /> Nova Lavanderia
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Adicionar Nova Lavanderia</DialogTitle>
           <DialogDescription>
@@ -93,6 +99,36 @@ export function LaundryForm() {
                 </FormItem>
               )}
             />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="contact_phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Telefone</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="(00) 00000-0000" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="contact_email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="email" placeholder="contato@exemplo.com" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <Button 
               type="submit" 
