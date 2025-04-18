@@ -1,27 +1,14 @@
 
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Edit, Trash, Plus } from "lucide-react";
 import { SearchBar } from "../SearchBar";
-import { StatusBadge } from "@/components/StatusBadge";
-import { MachineForm } from "../machines/MachineForm";
 import { Machine } from "@/types";
 import { useLaundries } from "@/hooks/useLaundries";
 import { useDeleteMachine } from "@/hooks/useMachines";
 import { useState } from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { MachineTable } from "../machines/MachineTable";
+import { DeleteMachineDialog } from "../machines/DeleteMachineDialog";
+import { MachinesFilter } from "../machines/MachinesFilter";
 
 interface MachinesTabProps {
   machines: Machine[];
@@ -34,13 +21,6 @@ export function MachinesTab({ machines, searchQuery, onSearchChange }: MachinesT
   const [selectedLaundryId, setSelectedLaundryId] = useState<string>("all");
   const deleteMachine = useDeleteMachine();
   const [machineToDelete, setMachineToDelete] = useState<Machine | null>(null);
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value);
-  };
 
   // Filter machines based on search and selected laundry
   const filteredMachines = machines.filter(machine => {
@@ -56,16 +36,6 @@ export function MachinesTab({ machines, searchQuery, onSearchChange }: MachinesT
     
     return matchesSearch;
   });
-
-  console.log("All machines:", machines);
-  console.log("Filtered machines:", filteredMachines);
-  console.log("Selected laundry:", selectedLaundryId);
-
-  // Get laundry name by id
-  const getLaundryName = (id: string) => {
-    const laundry = laundries.find(l => l.id === id);
-    return laundry ? laundry.name : id.substring(0, 8) + '...';
-  };
 
   const handleDeleteConfirm = async () => {
     if (!machineToDelete) return;
@@ -87,116 +57,31 @@ export function MachinesTab({ machines, searchQuery, onSearchChange }: MachinesT
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
-        <div className="flex items-center gap-4 flex-grow">
-          <SearchBar
-            placeholder="Buscar máquinas..."
-            value={searchQuery}
-            onChange={onSearchChange}
-          />
-          
-          <div className="min-w-[200px]">
-            <Select value={selectedLaundryId} onValueChange={setSelectedLaundryId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filtrar por lavanderia" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as lavanderias</SelectItem>
-                {laundries.map(laundry => (
-                  <SelectItem key={laundry.id} value={laundry.id}>
-                    {laundry.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+        <SearchBar
+          placeholder="Buscar máquinas..."
+          value={searchQuery}
+          onChange={onSearchChange}
+        />
         
-        {selectedLaundryId && selectedLaundryId !== "all" && (
-          <MachineForm laundryId={selectedLaundryId} />
-        )}
+        <MachinesFilter 
+          selectedLaundryId={selectedLaundryId}
+          onLaundryChange={setSelectedLaundryId}
+          laundries={laundries}
+        />
       </div>
 
       <Card>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Número</TableHead>
-              <TableHead>ID</TableHead>
-              <TableHead>Tipo</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Preço</TableHead>
-              <TableHead>Tempo</TableHead>
-              <TableHead>Lavanderia</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredMachines.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-gray-500">
-                  {selectedLaundryId !== "all" 
-                    ? "Nenhuma máquina encontrada para esta lavanderia. Adicione uma nova máquina."
-                    : "Selecione uma lavanderia para adicionar máquinas"}
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredMachines.map((machine) => (
-                <TableRow key={machine.id}>
-                  <TableCell className="font-medium">{machine.machine_number || "-"}</TableCell>
-                  <TableCell className="font-mono text-xs">{machine.id.substring(0, 8)}...</TableCell>
-                  <TableCell className="capitalize">
-                    {machine.type === 'washer' ? 'Lavadora' : 'Secadora'}
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge status={machine.status} />
-                  </TableCell>
-                  <TableCell>{formatCurrency(machine.price)}</TableCell>
-                  <TableCell>{machine.time_minutes} min</TableCell>
-                  <TableCell>{getLaundryName(machine.laundry_id)}</TableCell>
-                  <TableCell className="text-right">
-                    <MachineForm
-                      laundryId={machine.laundry_id}
-                      machine={machine}
-                      variant="edit"
-                      triggerElement={
-                        <Button variant="ghost" size="icon" className="h-8 w-8 mr-1">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      }
-                    />
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 text-red-500"
-                      onClick={() => setMachineToDelete(machine)}
-                    >
-                      <Trash className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+        <MachineTable 
+          machines={filteredMachines}
+          onDeleteMachine={setMachineToDelete}
+        />
       </Card>
 
-      {/* Confirmation Dialog for Delete */}
-      <AlertDialog open={!!machineToDelete} onOpenChange={(open) => !open && setMachineToDelete(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir esta máquina? Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-red-600 hover:bg-red-700">
-              Excluir
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteMachineDialog
+        machine={machineToDelete}
+        onClose={() => setMachineToDelete(null)}
+        onConfirm={handleDeleteConfirm}
+      />
     </div>
   );
 }
