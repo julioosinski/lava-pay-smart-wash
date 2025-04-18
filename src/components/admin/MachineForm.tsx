@@ -39,8 +39,10 @@ export function MachineForm({ laundryId }: { laundryId: string }) {
     try {
       console.log("Submitting machine data:", { ...data, laundry_id: laundryId });
       await createMachine.mutateAsync({
-        ...data,
-        laundry_id: laundryId
+        type: data.type,
+        price: data.price,
+        laundry_id: laundryId,
+        time_minutes: data.time_minutes
       });
       setOpen(false);
       form.reset();

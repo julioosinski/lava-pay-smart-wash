@@ -11,7 +11,7 @@ export interface LaundryLocation {
   name: string;
   address: string;
   owner_id: string;
-  machines: Machine[];
+  machines?: Machine[]; // Make machines optional
   status?: string;
   created_at?: string;
   updated_at?: string;

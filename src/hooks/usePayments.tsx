@@ -53,15 +53,20 @@ export const usePayments = (laundryId?: string) => {
         return [];
       }
     },
-    enabled: true
+    enabled: true // Simplify this to avoid excessive type instantiation
   });
+};
+
+// Type for creating a new payment that doesn't include id or created_at
+type PaymentInput = Omit<Payment, "id" | "created_at"> & {
+  created_at?: string; // Optional created_at string for database
 };
 
 export const useCreatePayment = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (payment: Omit<Payment, "id" | "created_at">) => {
+    mutationFn: async (payment: PaymentInput) => {
       // Create a payment object compatible with the database schema
       const paymentForDB = {
         machine_id: payment.machine_id,

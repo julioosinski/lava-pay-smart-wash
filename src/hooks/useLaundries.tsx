@@ -4,6 +4,30 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LaundryLocation } from "@/types";
 
+// DB type to match what's coming from the database
+type LaundryDB = {
+  id: string;
+  name: string;
+  address: string;
+  owner_id: string;
+  status?: string;
+  created_at?: string;
+  updated_at?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+};
+
+// Convert database laundry to app laundry
+const convertToLaundry = (dbLaundry: LaundryDB): LaundryLocation => ({
+  id: dbLaundry.id,
+  name: dbLaundry.name,
+  address: dbLaundry.address,
+  owner_id: dbLaundry.owner_id,
+  status: dbLaundry.status,
+  created_at: dbLaundry.created_at,
+  updated_at: dbLaundry.updated_at
+});
+
 export function useLaundries() {
   return useQuery({
     queryKey: ['laundries'],
@@ -18,7 +42,7 @@ export function useLaundries() {
           throw error;
         }
         
-        return data as LaundryLocation[];
+        return (data || []).map(laundry => convertToLaundry(laundry as LaundryDB));
       } catch (error) {
         console.error("Error in useLaundries hook:", error);
         return [];
@@ -31,8 +55,14 @@ export function useCreateLaundry() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (laundry: Omit<LaundryLocation, 'id' | 'machines'>) => {
+    mutationFn: async (laundry: Pick<LaundryLocation, 'name' | 'address' | 'owner_id'>) => {
       console.log("Creating laundry with data:", laundry);
+      
+      // Validate required fields before sending to the database
+      if (!laundry.name || !laundry.address || !laundry.owner_id) {
+        throw new Error('Missing required fields');
+      }
+      
       const { data, error } = await supabase
         .from('laundries')
         .insert(laundry)
@@ -45,7 +75,7 @@ export function useCreateLaundry() {
       }
       
       console.log("Laundry created successfully:", data);
-      return data as LaundryLocation;
+      return convertToLaundry(data as LaundryDB);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['laundries'] });

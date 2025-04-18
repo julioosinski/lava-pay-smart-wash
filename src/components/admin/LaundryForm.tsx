@@ -37,7 +37,11 @@ export function LaundryForm() {
   const onSubmit = async (data: LaundryFormValues) => {
     try {
       console.log("Submitting laundry data:", data);
-      await createLaundry.mutateAsync(data);
+      await createLaundry.mutateAsync({
+        name: data.name,
+        address: data.address, 
+        owner_id: data.owner_id
+      });
       setOpen(false);
       form.reset();
     } catch (error) {

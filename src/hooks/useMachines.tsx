@@ -26,21 +26,29 @@ export const useMachines = (laundryId?: string) => {
         return [];
       }
     },
-    enabled: true // Simplified the enabled condition
+    enabled: !!true // Fix the excessive type instantiation by using a simple boolean
   });
+};
+
+type MachineInput = {
+  type: 'washer' | 'dryer';
+  price: number;
+  laundry_id: string;
+  time_minutes: number;
 };
 
 export const useCreateMachine = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (machine: {
-      type: 'washer' | 'dryer';
-      price: number;
-      laundry_id: string;
-      time_minutes: number;
-    }) => {
+    mutationFn: async (machine: MachineInput) => {
       console.log("Creating machine with data:", machine);
+      
+      // Validate required fields
+      if (!machine.type || !machine.price || !machine.laundry_id || !machine.time_minutes) {
+        throw new Error('Missing required fields');
+      }
+      
       const { data, error } = await supabase
         .from('machines')
         .insert(machine)
