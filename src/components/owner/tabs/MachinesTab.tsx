@@ -20,7 +20,7 @@ export function MachinesTab({
   selectedLocation,
   setSelectedLocation
 }: MachinesTabProps) {
-  console.log("MachinesTab - machines:", machines);
+  console.log("MachinesTab - machines received:", machines);
   console.log("MachinesTab - ownerLaundries:", ownerLaundries);
   console.log("MachinesTab - selectedLocation:", selectedLocation);
   
@@ -33,7 +33,7 @@ export function MachinesTab({
         return matches;
       });
   
-  console.log("MachinesTab - filteredMachines:", filteredMachines);
+  console.log("MachinesTab - filteredMachines after filtering:", filteredMachines);
 
   return (
     <div className="space-y-6">
