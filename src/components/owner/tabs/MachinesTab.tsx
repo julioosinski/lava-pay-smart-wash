@@ -28,6 +28,8 @@ export function MachinesTab({
   const filteredMachines = selectedLocation === "all" 
     ? machines 
     : machines.filter(machine => machine.laundry_id === selectedLocation);
+  
+  console.log("MachinesTab - filteredMachines:", filteredMachines);
 
   return (
     <div className="space-y-6">

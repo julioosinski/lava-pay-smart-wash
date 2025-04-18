@@ -22,6 +22,7 @@ export default function Owner() {
   // Filter laundries to show only those owned by the current user
   const ownerLaundries = laundries.filter(laundry => laundry.owner_id === user?.id);
   console.log("Owner laundries:", ownerLaundries);
+  console.log("Current user:", user);
   
   const [selectedLocation, setSelectedLocation] = useState<string>(
     ownerLaundries.length > 0 ? ownerLaundries[0]?.id : "all"
@@ -29,14 +30,15 @@ export default function Owner() {
   
   // Get all machines - we'll filter them in the component
   const { data: allMachines = [] } = useMachines();
-  console.log("Fetched machines:", allMachines);
+  console.log("All fetched machines:", allMachines);
   
   // Filter machines to only show those from owner's laundries
   const ownerLaundryIds = ownerLaundries.map(location => location.id);
   const ownerMachines = allMachines.filter(machine => 
     ownerLaundryIds.includes(machine.laundry_id)
   );
-  console.log("Owner machines:", ownerMachines);
+  console.log("Owner machines after filtering:", ownerMachines);
+  console.log("Owner laundry IDs:", ownerLaundryIds);
 
   // Get payments for selected laundry's machines
   const { data: payments = [] } = usePayments();
