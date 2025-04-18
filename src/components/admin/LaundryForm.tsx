@@ -10,6 +10,7 @@ import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useCreateLaundry, useUpdateLaundry } from "@/hooks/useLaundries";
 import { LaundryLocation } from "@/types";
+import { toast } from "sonner";
 
 const formSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
@@ -62,6 +63,7 @@ export function LaundryForm({ initialData, mode = "create" }: LaundryFormProps) 
       }
     } catch (error) {
       console.error("Error in form submission:", error);
+      // Error is now handled by the mutation's onError callback
     }
   };
 
@@ -127,7 +129,7 @@ export function LaundryForm({ initialData, mode = "create" }: LaundryFormProps) 
         <Button 
           type="submit" 
           className="w-full"
-          disabled={createLaundry.isPending}
+          disabled={createLaundry.isPending || updateLaundry.isPending}
         >
           {mode === "create" ? "Criar Lavanderia" : "Salvar Alterações"}
         </Button>

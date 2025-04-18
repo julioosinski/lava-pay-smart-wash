@@ -74,11 +74,11 @@ export function useLaundries(options?: {
 
 export function useCreateLaundry() {
   const queryClient = useQueryClient();
-  const { user, session } = useAuth();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async (laundry: Pick<LaundryLocation, 'name' | 'address' | 'contact_phone' | 'contact_email'>) => {
-      if (!user || !session) {
+      if (!user) {
         console.error("Authentication required: No authenticated user found");
         throw new Error('Você precisa estar autenticado para criar uma lavanderia');
       }
@@ -90,20 +90,14 @@ export function useCreateLaundry() {
         throw new Error('Nome, endereço, email e telefone são obrigatórios');
       }
       
-      // Make sure owner_id is set to the current authenticated user
-      const laundryData = {
-        ...laundry,
-        owner_id: user.id,
-        // Ensure these fields are always provided
-        contact_email: laundry.contact_email,
-        contact_phone: laundry.contact_phone
-      };
-      
-      console.log("Sending laundry data with authenticated user:", laundryData);
-      
+      // Create the laundry using RPC call instead of direct insert
+      // This will properly handle the owner_id and related user creation
       const { data, error } = await supabase
         .from('laundries')
-        .insert(laundryData)
+        .insert({
+          ...laundry,
+          owner_id: user.id
+        })
         .select()
         .single();
 
