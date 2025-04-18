@@ -29,16 +29,16 @@ export const useAuthForm = (expectedRole: string = 'user') => {
           console.log("Checking business login with phone as password");
           
           // Buscar lavanderia com o email e telefone fornecidos
-          const { data: laundryCheck, error: laundryError } = await supabase
+          const { data: laundries, error: laundryError } = await supabase
             .from('laundries')
             .select('contact_email, contact_phone, owner_id')
             .eq('contact_email', email)
-            .eq('contact_phone', password)
-            .maybeSingle(); // Use maybeSingle() instead of single()
+            .eq('contact_phone', password);
           
-          console.log("Laundry check result:", laundryCheck, laundryError);
+          console.log("Laundries found:", laundries);
           
-          if (laundryCheck) {
+          if (laundries && laundries.length > 0) {
+            const laundryCheck = laundries[0];
             console.log("Found matching laundry. Attempting login or account creation");
             // Tente fazer login diretamente - se falhar, crie uma conta
             try {

@@ -29,14 +29,14 @@ export function useAuthMethods({
         console.log("Standard login failed, checking if this is a business owner", error);
         
         // Verificar se existe uma lavanderia com este email e telefone como senha
-        const { data: laundryData, error: laundryError } = await supabase
+        const { data: laundries, error: laundryError } = await supabase
           .from('laundries')
           .select('contact_email, contact_phone, owner_id')
           .eq('contact_email', email)
-          .eq('contact_phone', password)
-          .single();
+          .eq('contact_phone', password);
         
-        if (laundryData) {
+        if (laundries && laundries.length > 0) {
+          const laundryData = laundries[0];
           console.log("Found laundry with matching email/phone, creating user account");
           
           // Criar uma conta para o proprietário
