@@ -1,4 +1,5 @@
 
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -7,6 +8,7 @@ interface SignUpProps {
 }
 
 export const useSignUp = ({ setLoading }: SignUpProps) => {
+  // Initialize hooks at the top level
   const { toast } = useToast();
 
   const signUp = async (email: string, password: string) => {

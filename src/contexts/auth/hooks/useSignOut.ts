@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react';
 
 interface SignOutProps {
   setUser: (user: null) => void;
@@ -10,8 +11,9 @@ interface SignOutProps {
 }
 
 export const useSignOut = ({ setUser, setSession, setLoading, navigate }: SignOutProps) => {
+  // Important: Initialize all hooks at the top level, before any conditional logic
   const { toast } = useToast();
-
+  
   const signOut = async () => {
     setLoading(true);
     try {

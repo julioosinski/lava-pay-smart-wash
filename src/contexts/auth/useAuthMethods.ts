@@ -17,6 +17,7 @@ export function useAuthMethods({
   setLoading, 
   navigate 
 }: AuthMethodsProps) {
+  // Initialize all hooks in a consistent order
   const signIn = useSignIn({ setUser, setSession, setLoading });
   const signUp = useSignUp({ setLoading });
   const signOut = useSignOut({ setUser, setSession, setLoading, navigate });

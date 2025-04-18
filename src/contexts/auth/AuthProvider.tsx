@@ -3,18 +3,21 @@ import { useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { AuthContext, type AuthContextType } from './AuthContext';
 import { redirectBasedOnRole } from './AuthRedirect';
 import { useAuthMethods } from './useAuthMethods';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  // Initialize all state hooks first, before any other hooks
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Then initialize other hooks
   const navigate = useNavigate();
 
+  // Initialize auth methods hook last
   const { signIn, signUp, signOut } = useAuthMethods({ 
     setUser, 
     setSession, 
@@ -22,6 +25,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     navigate 
   });
 
+  // Effects come after all hooks
   useEffect(() => {
     const setupAuth = async () => {
       console.log("Setting up auth state listener");
