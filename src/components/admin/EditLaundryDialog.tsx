@@ -4,8 +4,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LaundryForm } from "./LaundryForm";
 import { MachineForm } from "./MachineForm";
-import { LaundryLocation, Machine } from "@/types";
+import { LaundryLocation } from "@/types";
 import { Building2, WashingMachine } from "lucide-react";
+import { MachineCard } from "@/components/MachineCard";
+import { useMachines } from "@/hooks/useMachines";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface EditLaundryDialogProps {
   open: boolean;
@@ -15,6 +18,7 @@ interface EditLaundryDialogProps {
 
 export function EditLaundryDialog({ open, onOpenChange, laundry }: EditLaundryDialogProps) {
   const [activeTab, setActiveTab] = useState("details");
+  const { data: machines = [] } = useMachines(laundry.id);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -40,7 +44,29 @@ export function EditLaundryDialog({ open, onOpenChange, laundry }: EditLaundryDi
           </TabsContent>
 
           <TabsContent value="machines">
-            <MachineForm laundryId={laundry.id} />
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                <CardTitle className="text-lg font-semibold">Máquinas</CardTitle>
+                <MachineForm laundryId={laundry.id} />
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {machines.length === 0 ? (
+                    <div className="col-span-full text-center py-8 text-gray-500">
+                      Nenhuma máquina cadastrada. Adicione uma nova máquina.
+                    </div>
+                  ) : (
+                    machines.map((machine) => (
+                      <MachineCard 
+                        key={machine.id} 
+                        machine={machine} 
+                        showActions={false} 
+                      />
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </DialogContent>
