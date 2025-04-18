@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Layout } from "@/components/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -44,10 +43,10 @@ const ownerMachineIds = ownerMachines.map(machine => machine.id);
 const ownerPayments = mockPayments.filter(payment => ownerMachineIds.includes(payment.machineId));
 
 export default function Owner() {
-  const [selectedLocation, setSelectedLocation] = useState<string>(ownerLocations[0]?.id || "");
+  const [selectedLocation, setSelectedLocation] = useState<string>(ownerLocations[0]?.id || "all");
 
   const filteredMachines = ownerMachines.filter(
-    machine => selectedLocation ? machine.locationId === selectedLocation : true
+    machine => selectedLocation === "all" ? true : machine.locationId === selectedLocation
   );
 
   const formatCurrency = (value: number) => {
@@ -273,7 +272,7 @@ export default function Owner() {
                   <SelectValue placeholder="Selecionar lavanderia" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas as lavanderias</SelectItem>
+                  <SelectItem value="all">Todas as lavanderias</SelectItem>
                   {ownerLocations.map(location => (
                     <SelectItem key={location.id} value={location.id}>
                       {location.name}
