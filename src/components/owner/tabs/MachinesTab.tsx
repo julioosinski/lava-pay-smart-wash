@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MachineCard } from "@/components/MachineCard";
 import { AlertCircle } from "lucide-react";
-import { MachineForm } from "@/components/admin/MachineForm";
+import { MachineForm } from "@/components/admin/machines/MachineForm";
 import { Machine, LaundryLocation } from "@/types";
 
 interface MachinesTabProps {

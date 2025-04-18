@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Edit, Trash, Plus } from "lucide-react";
 import { SearchBar } from "../SearchBar";
 import { StatusBadge } from "@/components/StatusBadge";
-import { MachineForm } from "../MachineForm";
+import { MachineForm } from "../machines/MachineForm";
 import { Machine } from "@/types";
 import { useLaundries } from "@/hooks/useLaundries";
 import { useDeleteMachine } from "@/hooks/useMachines";

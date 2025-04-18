@@ -1,8 +1,9 @@
+
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LaundryForm } from "./LaundryForm";
-import { MachineForm } from "./MachineForm";
+import { MachineForm } from "./machines/MachineForm";
 import { LaundryLocation } from "@/types";
 import { Building2, WashingMachine } from "lucide-react";
 import { MachineCard } from "@/components/MachineCard";

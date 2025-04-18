@@ -1,10 +1,9 @@
-
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "./StatusBadge";
 import { Machine } from "@/types";
 import { WashingMachine, Loader, Timer, Hash, Barcode } from "lucide-react";
-import { MachineForm } from "./admin/MachineForm";
+import { MachineForm } from "./admin/machines/MachineForm";
 
 interface MachineCardProps {
   machine: Machine;
