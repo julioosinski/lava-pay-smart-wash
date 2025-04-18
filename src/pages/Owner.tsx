@@ -22,7 +22,13 @@ export default function Owner() {
   const [selectedLocation, setSelectedLocation] = useState<string>("all");
   
   // Fetch laundries that belong to the current user
-  const { data: ownerLaundries = [] } = useLaundries({ ownerId: user?.id });
+  const { data: ownerLaundries = [], isLoading } = useLaundries({ 
+    ownerId: user?.id,
+    options: {
+      enabled: !!user?.id
+    }
+  });
+
   console.log(`Owner laundries for user ${user?.id}:`, ownerLaundries);
   
   // Update selectedLocation when owner laundries change
@@ -36,25 +42,26 @@ export default function Owner() {
   const ownerLaundryIds = ownerLaundries.map(location => location.id);
   console.log("Owner laundry IDs:", ownerLaundryIds);
   
-  // Fetch machines for all laundries owned by the current user
-  const { data: allMachines = [] } = useMachines();
-  console.log("All fetched machines:", allMachines);
+  // Fetch all machines for all laundries owned by the current user
+  const { data: allMachines = [] } = useMachines(selectedLocation !== "all" ? selectedLocation : undefined);
   
   // Filter machines to only show those from owner's laundries
   const ownerMachines = allMachines.filter(machine => {
     const belongs = ownerLaundryIds.includes(machine.laundry_id);
-    console.log(`Machine ${machine.id} (laundry: ${machine.laundry_id}) belongs to owner's laundry: ${belongs}`);
+    if (belongs) {
+      console.log(`Machine ${machine.id} belongs to owner's laundry ${machine.laundry_id}`);
+    }
     return belongs;
   });
   
   console.log("Owner machines after filtering:", ownerMachines);
 
   // Get payments for selected laundry's machines
-  const { data: payments = [] } = usePayments();
+  const { data: allPayments = [] } = usePayments();
   
   // Filter payments to only include those for the owner's machines
   const ownerMachineIds = ownerMachines.map(machine => machine.id);
-  const ownerPayments = payments.filter(payment => 
+  const ownerPayments = allPayments.filter(payment => 
     ownerMachineIds.includes(payment.machine_id)
   );
 
@@ -82,6 +89,16 @@ export default function Owner() {
     { day: 'Sáb', amount: 520 },
     { day: 'Dom', amount: 390 },
   ];
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-8 text-center">
+          <div className="animate-pulse">Carregando dados do proprietário...</div>
+        </div>
+      </Layout>
+    );
+  }
 
   const renderDashboard = () => (
     <div className="space-y-6">

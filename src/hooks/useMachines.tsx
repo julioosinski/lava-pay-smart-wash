@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -17,10 +16,8 @@ export const useMachines = (laundryId?: string) => {
 
         // Only filter by laundry_id if provided and not 'all'
         if (laundryId && laundryId !== 'all') {
-          console.log("Filtering by laundry_id:", laundryId);
+          console.log("Filtering machines by laundry_id:", laundryId);
           query = query.eq('laundry_id', laundryId);
-        } else {
-          console.log("Fetching all machines (no laundry filter)");
         }
 
         const { data, error } = await query;
@@ -36,8 +33,7 @@ export const useMachines = (laundryId?: string) => {
         console.error("Error in useMachines hook:", error);
         throw error;
       }
-    },
-    enabled: true
+    }
   });
 };
 
