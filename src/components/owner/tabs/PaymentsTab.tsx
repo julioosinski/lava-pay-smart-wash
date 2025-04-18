@@ -75,7 +75,8 @@ export function PaymentsTab({ payments, machines, laundries }: PaymentsTabProps)
                     <TableCell>{formatDate(payment.created_at)}</TableCell>
                     <TableCell>{payment.transaction_id || "—"}</TableCell>
                   </TableRow>
-                ))}
+                );
+              })}
             </TableBody>
           </Table>
         </CardContent>
