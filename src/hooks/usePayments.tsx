@@ -38,9 +38,9 @@ export const usePayments = (laundryId?: string) => {
         .select('*')
         .order('created_at', { ascending: false });
       
-      // Apply the filter if laundryId is provided, but in a way that doesn't cause TypeScript issues
+      // Execute query with or without filter to avoid TypeScript depth issues
       const { data, error } = laundryId 
-        ? await query.eq('laundry_id', laundryId) 
+        ? await query.eq('laundry_id', laundryId).select() 
         : await query;
       
       if (error) {

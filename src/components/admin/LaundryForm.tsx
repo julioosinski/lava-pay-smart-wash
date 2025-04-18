@@ -10,6 +10,8 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCreateLaundry } from "@/hooks/useLaundries";
 import { Plus } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 // Define schema for form validation
 const laundrySchema = z.object({
@@ -25,6 +27,21 @@ type LaundryFormValues = z.infer<typeof laundrySchema>;
 export function LaundryForm() {
   const [open, setOpen] = useState(false);
   const createLaundry = useCreateLaundry();
+  const [loading, setLoading] = useState(false);
+
+  // Get current user ID to use as owner_id
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // Fetch the current user on component mount
+  useState(() => {
+    const getCurrentUser = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session?.user) {
+        setUserId(data.session.user.id);
+      }
+    };
+    getCurrentUser();
+  });
 
   // Create form with react-hook-form and zod validation
   const form = useForm<LaundryFormValues>({
@@ -34,13 +51,27 @@ export function LaundryForm() {
       address: "",
       contact_phone: "",
       contact_email: "",
-      owner_id: "00000000-0000-0000-0000-000000000000" // Default UUID for testing
+      owner_id: userId || "00000000-0000-0000-0000-000000000000" // Use actual user ID if available
     }
   });
 
+  // Update owner_id when userId changes
+  useState(() => {
+    if (userId) {
+      form.setValue("owner_id", userId);
+    }
+  }, [userId]);
+
   const onSubmit = async (data: LaundryFormValues) => {
     try {
-      console.log("Submitting laundry data:", data);
+      setLoading(true);
+      console.log("Submitting laundry data with owner:", data);
+      
+      // Make sure we have a valid owner_id
+      if (!data.owner_id && userId) {
+        data.owner_id = userId;
+      }
+      
       await createLaundry.mutateAsync({
         name: data.name,
         address: data.address,
@@ -48,10 +79,13 @@ export function LaundryForm() {
         contact_email: data.contact_email,
         owner_id: data.owner_id
       });
+      
       setOpen(false);
       form.reset();
     } catch (error) {
       console.error("Error creating laundry:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -133,9 +167,9 @@ export function LaundryForm() {
             <Button 
               type="submit" 
               className="w-full"
-              disabled={createLaundry.isPending}
+              disabled={loading || createLaundry.isPending}
             >
-              {createLaundry.isPending ? "Salvando..." : "Salvar"}
+              {loading || createLaundry.isPending ? "Salvando..." : "Salvar"}
             </Button>
           </form>
         </Form>
