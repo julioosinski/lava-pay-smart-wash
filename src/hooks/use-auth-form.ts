@@ -34,20 +34,16 @@ export const useAuthForm = (expectedRole: string = 'user') => {
       
       const userRole = data?.role;
 
-      // Direct match between expected role and actual role
-      if (expectedRole === userRole) {
-        console.log(`Role match: ${userRole}, redirecting to appropriate page`);
-        if (userRole === 'admin') return '/admin';
-        if (userRole === 'business') return '/owner';
-      }
-
-      // Role-based redirect regardless of expected role
-      if (userRole === 'admin') {
-        return '/admin';
-      } else if (userRole === 'business') {
+      // Handle redirection based on role
+      if (userRole === 'business') {
+        console.log("Business user detected, redirecting to owner page");
         return '/owner';
-      }
+      } else if (userRole === 'admin') {
+        console.log("Admin user detected, redirecting to admin page");
+        return '/admin';
+      } 
       
+      // Default redirect to home
       return '/';
     } catch (error) {
       console.error('Error checking user role:', error);
@@ -75,7 +71,7 @@ export const useAuthForm = (expectedRole: string = 'user') => {
             console.log("Session exists but user state not updated yet, redirecting manually");
             const redirectPath = await redirectBasedOnRole(session.user.id);
             console.log("Redirecting to:", redirectPath);
-            navigate(redirectPath);
+            navigate(redirectPath, { replace: true });
           }
         }, 500);
       } else {

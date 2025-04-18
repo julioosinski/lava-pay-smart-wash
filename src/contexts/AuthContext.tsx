@@ -33,6 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (event === 'SIGNED_IN' && session?.user) {
           // Check user role on sign in
           try {
+            console.log("Checking user role after sign in event");
             const { data, error } = await supabase
               .from('profiles')
               .select('role')
@@ -49,10 +50,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Redirect based on role
             if (data?.role === 'business') {
               console.log("Business user signed in, redirecting to owner page");
-              navigate('/owner');
+              navigate('/owner', { replace: true });
             } else if (data?.role === 'admin') {
               console.log("Admin user signed in, redirecting to admin page");
-              navigate('/admin');
+              navigate('/admin', { replace: true });
+            } else {
+              console.log("Regular user signed in, redirecting to home page");
+              navigate('/', { replace: true });
             }
           } catch (error) {
             console.error("Error checking user role:", error);
@@ -63,12 +67,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Then check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("Checking for existing session:", session ? "Found" : "None");
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
       
       if (session?.user) {
-        console.log("Session found during initialization");
+        console.log("Session found during initialization for user:", session.user.id);
       }
     });
 
@@ -107,13 +112,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Redirect based on role
         if (profileData?.role === 'business') {
           console.log("Redirecting business user to owner page");
-          navigate('/owner');
+          navigate('/owner', { replace: true });
         } else if (profileData?.role === 'admin') {
           console.log("Redirecting admin user to admin page");
-          navigate('/admin');
+          navigate('/admin', { replace: true });
         } else {
           console.log("Redirecting regular user to home page");
-          navigate('/');
+          navigate('/', { replace: true });
         }
       } catch (error) {
         console.error("Error redirecting after sign in:", error);

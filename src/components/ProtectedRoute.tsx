@@ -18,6 +18,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
   useEffect(() => {
     const checkRole = async () => {
       if (!user) {
+        console.log("No user found in ProtectedRoute, will redirect to auth");
         setLoading(false);
         return;
       }
