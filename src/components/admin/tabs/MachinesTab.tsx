@@ -19,7 +19,7 @@ interface MachinesTabProps {
 
 export function MachinesTab({ machines, searchQuery, onSearchChange }: MachinesTabProps) {
   const { data: laundries = [] } = useLaundries();
-  const [selectedLaundryId, setSelectedLaundryId] = useState<string>("");
+  const [selectedLaundryId, setSelectedLaundryId] = useState<string>("all");
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -34,7 +34,7 @@ export function MachinesTab({ machines, searchQuery, onSearchChange }: MachinesT
       machine.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       machine.type.toLowerCase().includes(searchQuery.toLowerCase());
     
-    if (selectedLaundryId) {
+    if (selectedLaundryId !== "all") {
       return matchesSearch && machine.laundry_id === selectedLaundryId;
     }
     
@@ -63,7 +63,7 @@ export function MachinesTab({ machines, searchQuery, onSearchChange }: MachinesT
                 <SelectValue placeholder="Filtrar por lavanderia" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas as lavanderias</SelectItem>
+                <SelectItem value="all">Todas as lavanderias</SelectItem>
                 {laundries.map(laundry => (
                   <SelectItem key={laundry.id} value={laundry.id}>
                     {laundry.name}
@@ -74,7 +74,7 @@ export function MachinesTab({ machines, searchQuery, onSearchChange }: MachinesT
           </div>
         </div>
         
-        {selectedLaundryId && (
+        {selectedLaundryId && selectedLaundryId !== "all" && (
           <MachineForm laundryId={selectedLaundryId} />
         )}
       </div>
@@ -96,7 +96,7 @@ export function MachinesTab({ machines, searchQuery, onSearchChange }: MachinesT
             {filteredMachines.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                  {selectedLaundryId 
+                  {selectedLaundryId !== "all" 
                     ? "Nenhuma máquina encontrada para esta lavanderia. Adicione uma nova máquina."
                     : "Selecione uma lavanderia para adicionar máquinas"}
                 </TableCell>

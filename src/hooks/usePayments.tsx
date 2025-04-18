@@ -52,7 +52,7 @@ export const usePayments = (laundryId?: string) => {
         return [];
       }
     },
-    enabled: true // Fixed: Changed to simple boolean to avoid type instantiation issues
+    enabled: true
   });
 };
 

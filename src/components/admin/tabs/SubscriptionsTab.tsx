@@ -18,9 +18,9 @@ interface SubscriptionsTabProps {
 }
 
 export function SubscriptionsTab({ searchQuery, onSearchChange }: SubscriptionsTabProps) {
-  const [selectedLaundryId, setSelectedLaundryId] = useState<string>("");
+  const [selectedLaundryId, setSelectedLaundryId] = useState<string>("all");
   const { data: laundries = [] } = useLaundries();
-  const { data: subscriptions = [], isLoading } = useSubscriptions(selectedLaundryId || undefined);
+  const { data: subscriptions = [], isLoading } = useSubscriptions(selectedLaundryId === "all" ? undefined : selectedLaundryId);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -65,7 +65,7 @@ export function SubscriptionsTab({ searchQuery, onSearchChange }: SubscriptionsT
                 <SelectValue placeholder="Filtrar por lavanderia" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas as lavanderias</SelectItem>
+                <SelectItem value="all">Todas as lavanderias</SelectItem>
                 {laundries.map(laundry => (
                   <SelectItem key={laundry.id} value={laundry.id}>
                     {laundry.name}
@@ -76,7 +76,7 @@ export function SubscriptionsTab({ searchQuery, onSearchChange }: SubscriptionsT
           </div>
         </div>
         
-        {selectedLaundryId && (
+        {selectedLaundryId && selectedLaundryId !== "all" && (
           <SubscriptionForm laundryId={selectedLaundryId} />
         )}
       </div>
@@ -103,9 +103,9 @@ export function SubscriptionsTab({ searchQuery, onSearchChange }: SubscriptionsT
             ) : filteredSubscriptions.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                  {selectedLaundryId 
+                  {selectedLaundryId !== "all" 
                     ? "Nenhuma mensalidade cadastrada para esta lavanderia"
-                    : "Selecione uma lavanderia para adicionar mensalidade"}
+                    : "Nenhuma mensalidade encontrada"}
                 </TableCell>
               </TableRow>
             ) : (
