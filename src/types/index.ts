@@ -1,9 +1,8 @@
-
 export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'admin' | 'owner' | 'customer';
+  role: 'admin' | 'owner' | 'business' | 'customer';
 }
 
 export interface LaundryLocation {

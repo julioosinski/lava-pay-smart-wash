@@ -49,7 +49,8 @@ export default function Auth() {
 
       if (data?.role === 'admin') {
         navigate('/admin');
-      } else if (data?.role === 'business' || data?.role === 'owner') {
+      } else if (data?.role === 'business' || data?.role === 'user') {
+        // Changed 'owner' to 'user' to match the valid enum values
         navigate('/owner');
       } else {
         console.log("No specific role found, redirecting to home");
