@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -22,6 +23,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
       }
 
       try {
+        console.log("Checking role for protected route, user:", user.id);
         const { data, error } = await supabase
           .from('profiles')
           .select('role')
@@ -34,6 +36,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
           return;
         }
 
+        console.log("User role data for protected route:", data);
         setRole(data?.role || null);
       } catch (error) {
         console.error("Error checking role:", error);
@@ -46,20 +49,28 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
   }, [user]);
 
   if (loading) {
-    // Você pode criar um componente de loading melhor aqui
-    return <div className="flex items-center justify-center min-h-screen">Carregando...</div>;
+    // Show a better loading state with rotating spinner
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-lavapay-600" />
+        <span className="ml-2 text-lg">Carregando...</span>
+      </div>
+    );
   }
 
-  // Se não há usuário autenticado, redireciona para a página de login
+  // If there's no authenticated user, redirect to login page
   if (!user) {
+    console.log("No authenticated user, redirecting to auth page");
     return <Navigate to="/auth" />;
   }
 
-  // Se um papel específico é exigido, verifica se o usuário tem esse papel
+  // If a specific role is required, check if user has that role
   if (requiredRole && role !== requiredRole) {
+    console.log(`User role ${role} doesn't match required role ${requiredRole}, redirecting to home`);
     return <Navigate to="/" />;
   }
 
-  // Se passar pelas verificações, renderiza a rota protegida
+  // If user passes all checks, render the protected content
+  console.log("User authorized for protected route");
   return <>{children}</>;
 }

@@ -45,6 +45,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
             
             console.log("User role on auth state change:", data?.role);
+            
+            // Redirect based on role
+            if (data?.role === 'business') {
+              console.log("Business user signed in, redirecting to owner page");
+              navigate('/owner');
+            } else if (data?.role === 'admin') {
+              console.log("Admin user signed in, redirecting to admin page");
+              navigate('/admin');
+            }
           } catch (error) {
             console.error("Error checking user role:", error);
           }
@@ -64,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [navigate]);
 
   const signIn = async (email: string, password: string) => {
     console.log("Attempting to sign in with email:", email);
@@ -78,7 +87,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log("Sign in successful, session:", data.session?.access_token ? "Token exists" : "No token");
     setUser(data.user);
     setSession(data.session);
-    return;
+    
+    // Get user role and redirect accordingly
+    if (data.user) {
+      try {
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', data.user.id)
+          .single();
+          
+        if (profileError) {
+          console.error("Error fetching user profile:", profileError);
+          return;
+        }
+        
+        console.log("User role after sign in:", profileData?.role);
+        
+        // Redirect based on role
+        if (profileData?.role === 'business') {
+          console.log("Redirecting business user to owner page");
+          navigate('/owner');
+        } else if (profileData?.role === 'admin') {
+          console.log("Redirecting admin user to admin page");
+          navigate('/admin');
+        } else {
+          console.log("Redirecting regular user to home page");
+          navigate('/');
+        }
+      } catch (error) {
+        console.error("Error redirecting after sign in:", error);
+      }
+    }
   };
 
   const signUp = async (email: string, password: string) => {

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 
 export const useAuthForm = (expectedRole: string = 'user') => {
   const [isLogin, setIsLogin] = useState(true);
@@ -12,6 +13,7 @@ export const useAuthForm = (expectedRole: string = 'user') => {
   const [loading, setLoading] = useState(false);
   const { signIn, signUp, user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const redirectBasedOnRole = async (userId: string) => {
     try {
@@ -29,20 +31,22 @@ export const useAuthForm = (expectedRole: string = 'user') => {
 
       console.log("User role data:", data);
       console.log("Expected role:", expectedRole);
-
-      if (expectedRole === 'admin' && data?.role === 'admin') {
-        return '/admin';
-      } 
       
-      if (expectedRole === 'business' && data?.role === 'business') {
-        return '/owner';
+      const userRole = data?.role;
+
+      // Direct match between expected role and actual role
+      if (expectedRole === userRole) {
+        console.log(`Role match: ${userRole}, redirecting to appropriate page`);
+        if (userRole === 'admin') return '/admin';
+        if (userRole === 'business') return '/owner';
       }
 
-      if (data?.role === 'admin') {
+      // Role-based redirect regardless of expected role
+      if (userRole === 'admin') {
         return '/admin';
-      } else if (data?.role === 'business') {
+      } else if (userRole === 'business') {
         return '/owner';
-      } 
+      }
       
       return '/';
     } catch (error) {
@@ -70,7 +74,8 @@ export const useAuthForm = (expectedRole: string = 'user') => {
           if (session && !user) {
             console.log("Session exists but user state not updated yet, redirecting manually");
             const redirectPath = await redirectBasedOnRole(session.user.id);
-            window.location.href = redirectPath;
+            console.log("Redirecting to:", redirectPath);
+            navigate(redirectPath);
           }
         }, 500);
       } else {
