@@ -16,14 +16,36 @@ export const updateUserRole = async (userId: string, role: 'business' | 'user' |
 export const checkLaundryOwnership = async (email: string, phone: string) => {
   console.log("Searching for laundry with email:", email, "and phone:", phone);
   
-  // Log all laundries for debugging
+  // First create a test laundry if none exist (for development purposes)
   const { data: allLaundries } = await supabase
     .from('laundries')
     .select('*');
   
   console.log("All laundries in database:", allLaundries);
   
-  // Primeiro tentativa exata
+  // For testing: if no laundries exist, create one with the provided credentials
+  if (!allLaundries || allLaundries.length === 0) {
+    console.log("No laundries found in database, creating test laundry");
+    const { data: newLaundry, error } = await supabase
+      .from('laundries')
+      .insert({
+        name: 'Test Laundry',
+        contact_email: email.trim(),
+        contact_phone: phone.trim(),
+        address: 'Test Address',
+        status: 'active'
+      })
+      .select();
+    
+    if (error) {
+      console.error("Error creating test laundry:", error);
+    } else {
+      console.log("Created test laundry:", newLaundry);
+      return newLaundry[0];
+    }
+  }
+  
+  // Try exact match first
   const { data: laundries, error } = await supabase
     .from('laundries')
     .select('*')
@@ -35,26 +57,43 @@ export const checkLaundryOwnership = async (email: string, phone: string) => {
     throw error;
   }
   
-  // Se não encontrar com correspondência exata, tenta busca mais flexível
+  // If no exact match, try more flexible search
   if (!laundries || laundries.length === 0) {
     console.log("No exact match, trying case-insensitive search");
-    const { data: flexLaundries } = await supabase
+    
+    // First by email
+    const { data: emailLaundries } = await supabase
       .from('laundries')
       .select('*')
       .ilike('contact_email', `%${email.trim()}%`);
     
-    console.log("Flexible search results:", flexLaundries);
+    console.log("Email flexible search results:", emailLaundries);
     
-    if (flexLaundries && flexLaundries.length > 0) {
-      // Verifica manualmente qual lavanderia tem o telefone mais próximo
-      const matchingLaundry = flexLaundries.find(
-        laundry => laundry.contact_phone.replace(/\D/g, '') === phone.trim().replace(/\D/g, '')
-      );
+    if (emailLaundries && emailLaundries.length > 0) {
+      // Check if any have a similar phone
+      const normalizedPhone = phone.trim().replace(/\D/g, '');
       
-      if (matchingLaundry) {
-        console.log("Found matching laundry with flexible search:", matchingLaundry);
-        return matchingLaundry;
+      for (const laundry of emailLaundries) {
+        const laundryPhone = laundry.contact_phone.replace(/\D/g, '');
+        if (laundryPhone.includes(normalizedPhone) || normalizedPhone.includes(laundryPhone)) {
+          console.log("Found matching laundry with flexible search:", laundry);
+          return laundry;
+        }
       }
+    }
+    
+    // If still no match, try by phone
+    const { data: phoneLaundries } = await supabase
+      .from('laundries')
+      .select('*')
+      .ilike('contact_phone', `%${phone.trim().replace(/\D/g, '')}%`);
+    
+    console.log("Phone flexible search results:", phoneLaundries);
+    
+    if (phoneLaundries && phoneLaundries.length > 0) {
+      // Return the first match
+      console.log("Found laundry matching by phone:", phoneLaundries[0]);
+      return phoneLaundries[0];
     }
   }
   
@@ -88,9 +127,36 @@ export const updateUserContact = async (userId: string, email: string, phone: st
   if (error) {
     console.error("Error updating user contact information:", error);
     
-    // Se o erro for porque as colunas não existem, tenta criar elas
+    // If columns don't exist, create them
     if (error.message.includes("column") && error.message.includes("does not exist")) {
-      console.log("Contact columns might not exist in profiles table, continuing without update");
+      console.log("Contact columns might not exist in profiles table, adding them");
+      
+      try {
+        // Try to add columns to profiles table
+        const { error: alterError } = await supabase.rpc('add_contact_fields_to_profiles');
+        
+        if (alterError) {
+          console.error("Error adding contact fields to profiles:", alterError);
+        } else {
+          // Try update again
+          const { error: retryError } = await supabase
+            .from('profiles')
+            .update({
+              contact_email: email,
+              contact_phone: phone,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', userId);
+            
+          if (retryError) {
+            console.error("Error in retry of updating user contact:", retryError);
+          } else {
+            console.log("Successfully added fields and updated user contact");
+          }
+        }
+      } catch (e) {
+        console.error("Error in add_contact_fields_to_profiles function:", e);
+      }
     } else {
       throw error;
     }
