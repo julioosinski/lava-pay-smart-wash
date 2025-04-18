@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -53,7 +52,7 @@ export const usePayments = (laundryId?: string) => {
         return [];
       }
     },
-    enabled: true
+    enabled: true // Fixed: Simplify to boolean to avoid excessive type instantiation
   });
 };
 
