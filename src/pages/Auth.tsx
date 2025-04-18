@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { WashingMachine, Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function Auth() {
@@ -18,8 +17,9 @@ export default function Auth() {
   const { signIn, signUp } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
+  const expectedRole = location.state?.role || 'user';
 
-  // Check if user is already logged in
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -43,10 +43,8 @@ export default function Auth() {
       if (data?.role === 'admin') {
         navigate('/admin');
       } else if (data?.role === 'business') {
-        // Changed from 'owner' to 'business' to match the type
         navigate('/owner');
       } else {
-        // Caso não tenha role definido, redireciona para home
         navigate('/');
       }
     } catch (error) {
@@ -90,7 +88,7 @@ export default function Auth() {
         <CardHeader className="space-y-1 flex flex-col items-center">
           <WashingMachine className="h-12 w-12 text-lavapay-600 mb-2" />
           <CardTitle className="text-2xl font-bold text-center">
-            {isLogin ? 'Entrar' : 'Criar conta'}
+            {isLogin ? 'Entrar' : 'Criar conta'} como {expectedRole === 'admin' ? 'Administrador' : 'Proprietário'}
           </CardTitle>
           <CardDescription className="text-center">
             {isLogin 

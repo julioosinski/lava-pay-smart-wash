@@ -4,9 +4,21 @@ import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { WashingMachine, CreditCard, QrCode, ArrowRight } from "lucide-react";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Home() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const handleAdminAccess = () => {
+    navigate('/auth', { state: { role: 'admin' } });
+  };
+
+  const handleOwnerAccess = () => {
+    navigate('/auth', { state: { role: 'business' } });
+  };
+
   return (
     <Layout>
       <div className="bg-gradient-to-b from-lavapay-600 to-lavapay-800 text-white py-16">
@@ -88,11 +100,12 @@ export default function Home() {
                 </p>
               </CardContent>
               <CardFooter>
-                <Link to="/owner" className="w-full">
-                  <Button className="w-full bg-lavapay-500 hover:bg-lavapay-600">
-                    Acessar como Proprietário
-                  </Button>
-                </Link>
+                <Button 
+                  onClick={handleOwnerAccess} 
+                  className="w-full bg-lavapay-500 hover:bg-lavapay-600"
+                >
+                  Acessar como Proprietário
+                </Button>
               </CardFooter>
             </Card>
             
@@ -106,11 +119,12 @@ export default function Home() {
                 </p>
               </CardContent>
               <CardFooter>
-                <Link to="/admin" className="w-full">
-                  <Button className="w-full bg-lavapay-500 hover:bg-lavapay-600">
-                    Acessar como Administrador
-                  </Button>
-                </Link>
+                <Button 
+                  onClick={handleAdminAccess}
+                  className="w-full bg-lavapay-500 hover:bg-lavapay-600"
+                >
+                  Acessar como Administrador
+                </Button>
               </CardFooter>
             </Card>
           </div>
@@ -119,3 +133,4 @@ export default function Home() {
     </Layout>
   );
 }
+
