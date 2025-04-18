@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -33,7 +33,7 @@ export function LaundryForm() {
   const [userId, setUserId] = useState<string | null>(null);
 
   // Fetch the current user on component mount
-  useState(() => {
+  useEffect(() => {
     const getCurrentUser = async () => {
       const { data } = await supabase.auth.getSession();
       if (data.session?.user) {
@@ -41,7 +41,7 @@ export function LaundryForm() {
       }
     };
     getCurrentUser();
-  });
+  }, []);
 
   // Create form with react-hook-form and zod validation
   const form = useForm<LaundryFormValues>({
@@ -56,11 +56,11 @@ export function LaundryForm() {
   });
 
   // Update owner_id when userId changes
-  useState(() => {
+  useEffect(() => {
     if (userId) {
       form.setValue("owner_id", userId);
     }
-  }, [userId]);
+  }, [userId, form]);
 
   const onSubmit = async (data: LaundryFormValues) => {
     try {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +12,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { MachineCard } from "@/components/MachineCard";
-import { mockLocations, mockMachines, mockPayments, mockUsers } from "@/lib/mockData";
 import { StatusBadge } from "@/components/StatusBadge";
 import { 
   BarChart, 
@@ -33,21 +32,41 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ProgressCustom } from "@/components/ui/progress-custom";
-
-// Filtrar para mostrar apenas dados do proprietário atual (ID 2)
-const currentOwnerId = '2';
-const ownerLocations = mockLocations.filter(location => location.owner_id === currentOwnerId);
-const ownerLocationIds = ownerLocations.map(location => location.id);
-const ownerMachines = mockMachines.filter(machine => ownerLocationIds.includes(machine.laundry_id));
-const ownerMachineIds = ownerMachines.map(machine => machine.id);
-const ownerPayments = mockPayments.filter(payment => ownerMachineIds.includes(payment.machine_id));
+import { LaundryForm } from "@/components/admin/LaundryForm";
+import { MachineForm } from "@/components/admin/MachineForm";
+import { useLaundries } from "@/hooks/useLaundries";
+import { useMachines } from "@/hooks/useMachines";
+import { usePayments } from "@/hooks/usePayments";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Owner() {
-  const [selectedLocation, setSelectedLocation] = useState<string>(ownerLocations[0]?.id || "all");
-
-  const filteredMachines = ownerMachines.filter(
-    machine => selectedLocation === "all" ? true : machine.laundry_id === selectedLocation
+  const { user } = useAuth();
+  const { data: laundries = [] } = useLaundries();
+  
+  // Filter laundries to show only those owned by the current user
+  const ownerLaundries = laundries.filter(laundry => laundry.owner_id === user?.id);
+  const [selectedLocation, setSelectedLocation] = useState<string>(
+    ownerLaundries.length > 0 ? ownerLaundries[0]?.id : "all"
   );
+  
+  // Get all machines for the selected laundry
+  const { data: machines = [] } = useMachines(selectedLocation !== "all" ? selectedLocation : undefined);
+  
+  // Get payments for selected laundry's machines
+  const { data: payments = [] } = usePayments();
+  const ownerLaundryIds = ownerLaundries.map(location => location.id);
+  const ownerMachines = machines.filter(machine => 
+    selectedLocation === "all" 
+      ? ownerLaundryIds.includes(machine.laundry_id) 
+      : machine.laundry_id === selectedLocation
+  );
+  
+  // Update selected location when laundries change
+  useEffect(() => {
+    if (ownerLaundries.length > 0 && !ownerLaundries.find(l => l.id === selectedLocation)) {
+      setSelectedLocation(ownerLaundries[0]?.id || "all");
+    }
+  }, [ownerLaundries, selectedLocation]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -66,6 +85,12 @@ export default function Owner() {
     }).format(date);
   };
 
+  // Filter payments to only include those for the owner's machines
+  const ownerMachineIds = ownerMachines.map(machine => machine.id);
+  const ownerPayments = payments.filter(payment => 
+    ownerMachineIds.includes(payment.machine_id)
+  );
+
   // Cálculos para o dashboard
   const totalRevenue = ownerPayments
     .filter(payment => payment.status === 'approved')
@@ -76,9 +101,9 @@ export default function Owner() {
   const inUseMachines = ownerMachines.filter(m => m.status === 'in-use').length;
   const maintenanceMachines = ownerMachines.filter(m => m.status === 'maintenance').length;
   
-  const availablePercentage = (availableMachines / totalMachines) * 100;
-  const inUsePercentage = (inUseMachines / totalMachines) * 100;
-  const maintenancePercentage = (maintenanceMachines / totalMachines) * 100;
+  const availablePercentage = totalMachines > 0 ? (availableMachines / totalMachines) * 100 : 0;
+  const inUsePercentage = totalMachines > 0 ? (inUseMachines / totalMachines) * 100 : 0;
+  const maintenancePercentage = totalMachines > 0 ? (maintenanceMachines / totalMachines) * 100 : 0;
 
   // Cálculo do gráfico de receita (simulado)
   const revenueByDay = [
@@ -115,9 +140,9 @@ export default function Owner() {
             <MapPin className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{ownerLocations.length}</div>
+            <div className="text-2xl font-bold">{ownerLaundries.length}</div>
             <p className="text-xs text-muted-foreground">
-              {ownerLocations.length} locais em operação
+              {ownerLaundries.length} locais em operação
             </p>
           </CardContent>
         </Card>
@@ -232,7 +257,7 @@ export default function Owner() {
             <TableBody>
               {ownerPayments.slice(0, 5).map((payment) => {
                 const machine = ownerMachines.find(m => m.id === payment.machine_id);
-                const location = machine ? ownerLocations.find(l => l.id === machine.laundry_id) : null;
+                const location = machine ? ownerLaundries.find(l => l.id === machine.laundry_id) : null;
                 
                 return (
                   <TableRow key={payment.id}>
@@ -273,7 +298,7 @@ export default function Owner() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todas as lavanderias</SelectItem>
-                  {ownerLocations.map(location => (
+                  {ownerLaundries.map(location => (
                     <SelectItem key={location.id} value={location.id}>
                       {location.name}
                     </SelectItem>
@@ -281,15 +306,15 @@ export default function Owner() {
                 </SelectContent>
               </Select>
               
-              <Button className="bg-lavapay-500 hover:bg-lavapay-600">
-                <PlusCircle className="h-4 w-4 mr-2" /> Adicionar Máquina
-              </Button>
+              {selectedLocation !== "all" && (
+                <MachineForm laundryId={selectedLocation} />
+              )}
             </div>
           </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {filteredMachines.map(machine => (
+            {ownerMachines.map(machine => (
               <MachineCard 
                 key={machine.id} 
                 machine={machine} 
@@ -297,11 +322,15 @@ export default function Owner() {
               />
             ))}
             
-            {filteredMachines.length === 0 && (
+            {ownerMachines.length === 0 && (
               <div className="col-span-full flex items-center justify-center py-8">
                 <div className="text-center">
                   <AlertCircle className="h-10 w-10 text-gray-400 mx-auto mb-3" />
-                  <p className="text-gray-500">Nenhuma máquina encontrada para esta lavanderia.</p>
+                  <p className="text-gray-500">
+                    {selectedLocation === "all"
+                      ? "Nenhuma máquina encontrada. Selecione uma lavanderia específica para adicionar máquinas."
+                      : "Nenhuma máquina encontrada para esta lavanderia. Adicione uma nova máquina."}
+                  </p>
                 </div>
               </div>
             )}
@@ -319,19 +348,17 @@ export default function Owner() {
             <CardTitle>Suas Lavanderias</CardTitle>
             <CardDescription>Gerenciamento de locais</CardDescription>
           </div>
-          <Button className="bg-lavapay-500 hover:bg-lavapay-600 mt-4 sm:mt-0">
-            <PlusCircle className="h-4 w-4 mr-2" /> Nova Lavanderia
-          </Button>
+          <LaundryForm />
         </CardHeader>
         <CardContent>
-          {ownerLocations.length === 0 ? (
+          {ownerLaundries.length === 0 ? (
             <div className="text-center py-8">
               <AlertCircle className="h-10 w-10 text-gray-400 mx-auto mb-3" />
               <p className="text-gray-500">Você ainda não possui lavanderias cadastradas.</p>
             </div>
           ) : (
-            ownerLocations.map(location => {
-              const locationMachines = ownerMachines.filter(m => m.laundry_id === location.id);
+            ownerLaundries.map(location => {
+              const locationMachines = machines.filter(m => m.laundry_id === location.id);
               const availableCount = locationMachines.filter(m => m.status === 'available').length;
               const totalCount = locationMachines.length;
               
@@ -357,7 +384,12 @@ export default function Owner() {
                     
                     <div className="bg-gray-50 p-6 flex items-center justify-center md:justify-end">
                       <div className="flex gap-2">
-                        <Button variant="outline">Gerenciar</Button>
+                        <Button 
+                          variant="outline"
+                          onClick={() => setSelectedLocation(location.id)}
+                        >
+                          Gerenciar
+                        </Button>
                         <Button variant="outline" className="text-red-500 hover:text-red-700">Remover</Button>
                       </div>
                     </div>
@@ -399,7 +431,7 @@ export default function Owner() {
             <TableBody>
               {ownerPayments.map((payment) => {
                 const machine = ownerMachines.find(m => m.id === payment.machine_id);
-                const location = machine ? ownerLocations.find(l => l.id === machine.laundry_id) : null;
+                const location = machine ? ownerLaundries.find(l => l.id === machine.laundry_id) : null;
                 
                 return (
                   <TableRow key={payment.id}>
