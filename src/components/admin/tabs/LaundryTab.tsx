@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -8,6 +7,7 @@ import { useLaundries } from "@/hooks/useLaundries";
 import { LaundryForm } from "@/components/admin/LaundryForm";
 import { useMachines } from "@/hooks/useMachines";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface LaundryTabProps {
   searchQuery: string;
@@ -17,7 +17,7 @@ interface LaundryTabProps {
 export function LaundryTab({ searchQuery, onSearchChange }: LaundryTabProps) {
   const { data: laundries = [], isLoading } = useLaundries();
   const { data: allMachines = [] } = useMachines();
-  const [selectedLaundry, setSelectedLaundry] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const filteredLaundries = laundries.filter(laundry =>
     laundry.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -26,21 +26,13 @@ export function LaundryTab({ searchQuery, onSearchChange }: LaundryTabProps) {
     (laundry.contact_email && laundry.contact_email.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  // Function to view machines for a specific laundry
-  const viewMachines = (laundryId: string) => {
-    // Navigate to machines tab with the laundry ID
-    const machinesTab = document.querySelector("[data-state='inactive'][value='machines']") as HTMLElement;
-    if (machinesTab) {
-      machinesTab.click();
-      // Set the selected laundry in the URL or state for machines tab to filter
-      setSelectedLaundry(laundryId);
-      // The machines tab should pick this up somehow - typically with URL params or state management
-    }
-  };
-
   // Count machines per laundry
   const getMachineCount = (laundryId: string) => {
     return allMachines.filter(machine => machine.laundry_id === laundryId).length;
+  };
+
+  const viewLaundry = (laundryId: string) => {
+    navigate(`/admin/laundry/${laundryId}`);
   };
 
   if (isLoading) {
@@ -79,7 +71,11 @@ export function LaundryTab({ searchQuery, onSearchChange }: LaundryTabProps) {
               </TableRow>
             ) : (
               filteredLaundries.map((laundry) => (
-                <TableRow key={laundry.id}>
+                <TableRow 
+                  key={laundry.id} 
+                  className="cursor-pointer hover:bg-gray-50"
+                  onClick={() => viewLaundry(laundry.id)}
+                >
                   <TableCell className="font-medium">{laundry.name}</TableCell>
                   <TableCell>{laundry.address}</TableCell>
                   <TableCell>
@@ -98,13 +94,9 @@ export function LaundryTab({ searchQuery, onSearchChange }: LaundryTabProps) {
                   </TableCell>
                   <TableCell>{laundry.owner_id.substring(0, 8)}...</TableCell>
                   <TableCell>
-                    <Button 
-                      variant="link" 
-                      onClick={() => viewMachines(laundry.id)}
-                      className="p-0 h-auto font-normal flex items-center gap-1"
-                    >
+                    <div className="flex items-center gap-1">
                       <Building2 className="h-3 w-3" /> {getMachineCount(laundry.id)} máquinas
-                    </Button>
+                    </div>
                   </TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="icon" className="h-8 w-8 mr-1">

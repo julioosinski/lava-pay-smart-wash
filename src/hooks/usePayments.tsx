@@ -45,14 +45,13 @@ export const usePayments = (laundryId?: string) => {
         const { data, error } = await query;
         if (error) throw error;
         
-        // Convert created_at strings to Date objects
         return (data || []).map(payment => convertToPayment(payment as PaymentDB));
       } catch (error) {
         console.error("Error fetching payments:", error);
         return [];
       }
     },
-    enabled: true // Fixed: Simplify to boolean to avoid excessive type instantiation
+    enabled: true // Fixed: Changed to simple boolean to avoid type instantiation issues
   });
 };
 
