@@ -8,8 +8,10 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { MachineForm } from "../MachineForm";
 import { Machine } from "@/types";
 import { useLaundries } from "@/hooks/useLaundries";
+import { useDeleteMachine } from "@/hooks/useMachines";
 import { useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
 
 interface MachinesTabProps {
   machines: Machine[];
@@ -20,6 +22,7 @@ interface MachinesTabProps {
 export function MachinesTab({ machines, searchQuery, onSearchChange }: MachinesTabProps) {
   const { data: laundries = [] } = useLaundries();
   const [selectedLaundryId, setSelectedLaundryId] = useState<string>("all");
+  const deleteMachine = useDeleteMachine();
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -30,9 +33,11 @@ export function MachinesTab({ machines, searchQuery, onSearchChange }: MachinesT
 
   // Filter machines based on search and selected laundry
   const filteredMachines = machines.filter(machine => {
+    const machineNumber = machine.machine_number?.toString() || '';
     const matchesSearch = 
       machine.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      machine.type.toLowerCase().includes(searchQuery.toLowerCase());
+      machine.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      machineNumber.includes(searchQuery.toLowerCase());
     
     if (selectedLaundryId !== "all") {
       return matchesSearch && machine.laundry_id === selectedLaundryId;
@@ -45,6 +50,19 @@ export function MachinesTab({ machines, searchQuery, onSearchChange }: MachinesT
   const getLaundryName = (id: string) => {
     const laundry = laundries.find(l => l.id === id);
     return laundry ? laundry.name : id.substring(0, 8) + '...';
+  };
+
+  const handleDeleteMachine = async (machine: Machine) => {
+    if (confirm(`Tem certeza que deseja remover esta máquina?`)) {
+      try {
+        await deleteMachine.mutateAsync({
+          id: machine.id,
+          laundry_id: machine.laundry_id
+        });
+      } catch (error) {
+        console.error("Error deleting machine:", error);
+      }
+    }
   };
 
   return (
@@ -83,6 +101,7 @@ export function MachinesTab({ machines, searchQuery, onSearchChange }: MachinesT
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Número</TableHead>
               <TableHead>ID</TableHead>
               <TableHead>Tipo</TableHead>
               <TableHead>Status</TableHead>
@@ -95,7 +114,7 @@ export function MachinesTab({ machines, searchQuery, onSearchChange }: MachinesT
           <TableBody>
             {filteredMachines.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                <TableCell colSpan={8} className="text-center py-8 text-gray-500">
                   {selectedLaundryId !== "all" 
                     ? "Nenhuma máquina encontrada para esta lavanderia. Adicione uma nova máquina."
                     : "Selecione uma lavanderia para adicionar máquinas"}
@@ -104,7 +123,8 @@ export function MachinesTab({ machines, searchQuery, onSearchChange }: MachinesT
             ) : (
               filteredMachines.map((machine) => (
                 <TableRow key={machine.id}>
-                  <TableCell className="font-medium">{machine.id.substring(0, 8)}...</TableCell>
+                  <TableCell className="font-medium">{machine.machine_number || "-"}</TableCell>
+                  <TableCell className="font-mono text-xs">{machine.id.substring(0, 8)}...</TableCell>
                   <TableCell className="capitalize">
                     {machine.type === 'washer' ? 'Lavadora' : 'Secadora'}
                   </TableCell>
@@ -118,7 +138,12 @@ export function MachinesTab({ machines, searchQuery, onSearchChange }: MachinesT
                     <Button variant="ghost" size="icon" className="h-8 w-8 mr-1">
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-red-500"
+                      onClick={() => handleDeleteMachine(machine)}
+                    >
                       <Trash className="h-4 w-4" />
                     </Button>
                   </TableCell>

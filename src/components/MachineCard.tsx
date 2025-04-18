@@ -17,13 +17,15 @@ export function MachineCard({ machine, onSelect, showActions = true }: MachineCa
     currency: 'BRL'
   }).format(machine.price);
 
+  const displayId = machine.machine_number || machine.id.substring(0, 4);
+
   return (
     <Card className="border border-slate-200 overflow-hidden">
       <CardHeader className="bg-lavapay-50 pb-2">
         <CardTitle className="flex items-center justify-between">
           <span className="flex items-center gap-2">
             <WashingMachine className="h-5 w-5 text-lavapay-600" />
-            {machine.type === 'washer' ? 'Lavadora' : 'Secadora'} #{machine.id}
+            {machine.type === 'washer' ? 'Lavadora' : 'Secadora'} #{displayId}
           </span>
           <StatusBadge status={machine.status} />
         </CardTitle>

@@ -35,6 +35,7 @@ type MachineInput = {
   price: number;
   laundry_id: string;
   time_minutes: number;
+  machine_number: number;
 };
 
 export const useCreateMachine = () => {
@@ -45,13 +46,19 @@ export const useCreateMachine = () => {
       console.log("Creating machine with data:", machine);
       
       // Validate required fields
-      if (!machine.type || !machine.price || !machine.laundry_id || !machine.time_minutes) {
+      if (!machine.type || !machine.price || !machine.laundry_id || !machine.time_minutes || machine.machine_number === undefined) {
         throw new Error('Missing required fields');
       }
       
       const { data, error } = await supabase
         .from('machines')
-        .insert(machine)
+        .insert({
+          type: machine.type,
+          price: machine.price,
+          laundry_id: machine.laundry_id,
+          time_minutes: machine.time_minutes,
+          machine_number: machine.machine_number
+        })
         .select()
         .single();
 
@@ -69,6 +76,33 @@ export const useCreateMachine = () => {
     },
     onError: (error: Error) => {
       toast.error('Erro ao adicionar máquina: ' + error.message);
+    }
+  });
+};
+
+export const useDeleteMachine = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, laundry_id }: { id: string, laundry_id: string }) => {
+      const { error } = await supabase
+        .from('machines')
+        .delete()
+        .eq('id', id);
+      
+      if (error) {
+        console.error("Error deleting machine:", error);
+        throw error;
+      }
+      
+      return id;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['machines', variables.laundry_id] });
+      toast.success('Máquina removida com sucesso');
+    },
+    onError: (error: Error) => {
+      toast.error('Erro ao remover máquina: ' + error.message);
     }
   });
 };

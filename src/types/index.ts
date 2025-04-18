@@ -26,6 +26,7 @@ export interface Machine {
   price: number;
   time_minutes: number;
   laundry_id: string;
+  machine_number: number;
   created_at?: string;
   updated_at?: string;
 }
