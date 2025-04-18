@@ -8,16 +8,16 @@ import { convertToLaundry, LaundryDB } from "@/types/laundry";
 
 export function useCreateLaundry() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { session } = useAuth();
 
   return useMutation({
     mutationFn: async (laundry: Pick<LaundryLocation, 'name' | 'address' | 'contact_phone' | 'contact_email'>) => {
-      if (!user) {
+      if (!session?.user) {
         console.error("Authentication required: No authenticated user found");
         throw new Error('Você precisa estar autenticado para criar uma lavanderia');
       }
       
-      console.log("Creating laundry with user:", user.id);
+      console.log("Creating laundry with user:", session.user.id);
       
       if (!laundry.name || !laundry.address || !laundry.contact_email || !laundry.contact_phone) {
         throw new Error('Nome, endereço, email e telefone são obrigatórios');
@@ -30,7 +30,7 @@ export function useCreateLaundry() {
           address: laundry.address,
           contact_phone: laundry.contact_phone,
           contact_email: laundry.contact_email,
-          owner_id: user.id
+          owner_id: session.user.id
         })
         .select()
         .single();

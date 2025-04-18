@@ -12,7 +12,7 @@ export function useUpdateLaundry() {
 
   return useMutation({
     mutationFn: async (laundry: Pick<LaundryLocation, 'id' | 'name' | 'address' | 'contact_phone' | 'contact_email'>) => {
-      if (!session) {
+      if (!session?.user) {
         throw new Error('Você precisa estar autenticado para atualizar uma lavanderia');
       }
       
