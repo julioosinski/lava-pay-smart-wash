@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -41,12 +42,16 @@ export default function Owner() {
   const ownerLaundryIds = ownerLaundries.map(location => location.id);
   console.log("Owner laundry IDs:", ownerLaundryIds);
   
-  // Fetch machines - when selectedLocation is "all", fetch all machines to filter later
+  // Fetch all machines first, then filter them
   const { data: allMachines = [] } = useMachines();
   
   // Filter machines to only show those from owner's laundries
   const ownerMachines = allMachines.filter(machine => {
-    return ownerLaundryIds.includes(machine.laundry_id);
+    const belongs = ownerLaundryIds.includes(machine.laundry_id);
+    if (belongs) {
+      console.log(`Machine ${machine.id} belongs to owner's laundry ${machine.laundry_id}`);
+    }
+    return belongs;
   });
   
   console.log("Owner machines after filtering:", ownerMachines);
