@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -11,8 +12,8 @@ type LaundryDB = {
   address: string;
   owner_id: string;
   status?: string;
-  contact_phone?: string;
-  contact_email?: string;
+  contact_phone: string;
+  contact_email: string;
   created_at?: string;
   updated_at?: string;
   latitude?: number | null;
@@ -69,14 +70,17 @@ export function useCreateLaundry() {
       console.log("Creating laundry with user:", user.id);
       
       // Validate required fields before sending to the database
-      if (!laundry.name || !laundry.address) {
-        throw new Error('Nome e endereço são obrigatórios');
+      if (!laundry.name || !laundry.address || !laundry.contact_email || !laundry.contact_phone) {
+        throw new Error('Nome, endereço, email e telefone são obrigatórios');
       }
       
       // Make sure owner_id is set to the current authenticated user
       const laundryData = {
         ...laundry,
-        owner_id: user.id
+        owner_id: user.id,
+        // Ensure these fields are always provided
+        contact_email: laundry.contact_email,
+        contact_phone: laundry.contact_phone
       };
       
       console.log("Sending laundry data with authenticated user:", laundryData);

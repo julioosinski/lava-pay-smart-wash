@@ -14,8 +14,8 @@ import { LaundryLocation } from "@/types";
 const formSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
   address: z.string().min(1, "Endereço é obrigatório"),
-  contact_phone: z.string().optional(),
-  contact_email: z.string().email("Email inválido").optional().or(z.literal("")),
+  contact_phone: z.string().min(1, "Telefone é obrigatório"),
+  contact_email: z.string().email("Email inválido").min(1, "Email é obrigatório"),
 });
 
 interface LaundryFormProps {
@@ -103,7 +103,7 @@ export function LaundryForm({ initialData, mode = "create" }: LaundryFormProps) 
             <FormItem>
               <FormLabel>Telefone</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input {...field} required />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -117,7 +117,7 @@ export function LaundryForm({ initialData, mode = "create" }: LaundryFormProps) 
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input {...field} type="email" />
+                <Input {...field} type="email" required />
               </FormControl>
               <FormMessage />
             </FormItem>
