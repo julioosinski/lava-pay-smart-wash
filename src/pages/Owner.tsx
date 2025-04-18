@@ -46,7 +46,7 @@ export default function Owner() {
         <div className="container mx-auto px-4 py-8">
           <h1 className="text-3xl font-bold mb-4">Painel do Proprietário</h1>
           
-          <Alert variant="warning" className="bg-amber-50 border-amber-200">
+          <Alert variant="default" className="bg-amber-50 border-amber-200">
             <AlertTriangle className="h-5 w-5 text-amber-600" />
             <AlertTitle className="text-amber-800">Nenhuma lavanderia encontrada</AlertTitle>
             <AlertDescription className="text-amber-700">
