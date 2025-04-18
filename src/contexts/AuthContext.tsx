@@ -18,6 +18,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -55,6 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      setLoading(false);
       
       if (session?.user) {
         console.log("Session found during initialization");
@@ -73,6 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     
     console.log("Sign in successful, user:", data.user?.id);
+    console.log("Sign in successful, session:", data.session?.access_token ? "Token exists" : "No token");
     setUser(data.user);
     setSession(data.session);
     return;

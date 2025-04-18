@@ -104,19 +104,27 @@ export default function Auth() {
       if (isLogin) {
         console.log("Attempting login with email:", email);
         await signIn(email, password);
+        // Redirection will be handled by useEffect that watches the user state
         
-        // We'll let the useEffect handle the redirection after successful login
-        console.log("Login successful, waiting for auth state update to redirect");
+        // Also check session directly to ensure we have latest data
+        setTimeout(async () => {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session && !user) {
+            console.log("Session exists but user state not updated yet, redirecting manually");
+            redirectBasedOnRole(session.user.id);
+          }
+        }, 500);
       } else {
         await signUp(email, password);
         toast({
           title: "Registro realizado com sucesso!",
           description: "Verifique seu email para confirmar o cadastro.",
         });
+        setLoading(false);
       }
     } catch (error) {
       console.error("Auth error:", error);
-      setLoading(false); // Only set loading to false on error
+      setLoading(false);
       toast({
         variant: "destructive",
         title: "Erro",
