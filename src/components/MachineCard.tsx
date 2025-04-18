@@ -1,17 +1,18 @@
-
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "./StatusBadge";
 import { Machine } from "@/types";
 import { WashingMachine, Loader, Timer } from "lucide-react";
+import { MachineForm } from "./admin/MachineForm";
 
 interface MachineCardProps {
   machine: Machine;
   onSelect?: () => void;
   showActions?: boolean;
+  showEdit?: boolean;
 }
 
-export function MachineCard({ machine, onSelect, showActions = true }: MachineCardProps) {
+export function MachineCard({ machine, onSelect, showActions = true, showEdit = false }: MachineCardProps) {
   const formattedPrice = new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL'
@@ -27,7 +28,16 @@ export function MachineCard({ machine, onSelect, showActions = true }: MachineCa
             <WashingMachine className="h-5 w-5 text-lavapay-600" />
             {machine.type === 'washer' ? 'Lavadora' : 'Secadora'} #{displayId}
           </span>
-          <StatusBadge status={machine.status} />
+          <div className="flex items-center gap-2">
+            {showEdit && (
+              <MachineForm
+                laundryId={machine.laundry_id}
+                machine={machine}
+                variant="edit"
+              />
+            )}
+            <StatusBadge status={machine.status} />
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-4">

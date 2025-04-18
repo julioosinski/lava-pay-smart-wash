@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -106,6 +105,41 @@ export const useDeleteMachine = () => {
     },
     onError: (error: Error) => {
       toast.error('Erro ao remover máquina: ' + error.message);
+    }
+  });
+};
+
+export const useUpdateMachine = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (machine: Partial<Machine> & { id: string }) => {
+      const { data, error } = await supabase
+        .from('machines')
+        .update({
+          type: machine.type,
+          price: machine.price,
+          time_minutes: machine.time_minutes,
+          machine_number: machine.machine_number
+        })
+        .eq('id', machine.id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error updating machine:", error);
+        throw error;
+      }
+      
+      return data as Machine;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['machines'] });
+      queryClient.invalidateQueries({ queryKey: ['machines', variables.laundry_id] });
+      toast.success('Máquina atualizada com sucesso');
+    },
+    onError: (error: Error) => {
+      toast.error('Erro ao atualizar máquina: ' + error.message);
     }
   });
 };
