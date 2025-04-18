@@ -37,7 +37,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       
-      // Log the complete data object for debugging
       console.log("Profile data from database:", JSON.stringify(data));
       
       const role = data?.role;
@@ -45,7 +44,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (role === 'business') {
         console.log("Business role detected, redirecting to /owner");
-        // Force immediate redirect with replace:true
         navigate('/owner', { replace: true });
       } else if (role === 'admin') {
         console.log("Admin role detected, redirecting to /admin");
@@ -71,10 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           if (event === 'SIGNED_IN' && session?.user) {
             console.log("User signed in, will redirect based on role");
-            // Ensure we don't have any race conditions by using setTimeout
-            setTimeout(() => {
-              redirectBasedOnRole(session.user.id);
-            }, 0);
+            await redirectBasedOnRole(session.user.id);
           }
         }
       );
@@ -84,16 +79,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("Checking for existing session:", session ? "Found" : "None");
       setSession(session);
       setUser(session?.user ?? null);
-      setLoading(false);
       
       if (session?.user) {
         console.log("Session found during initialization for user:", session.user.id);
-        // Ensure we don't have any race conditions by using setTimeout
-        setTimeout(() => {
-          redirectBasedOnRole(session.user.id);
-        }, 0);
+        await redirectBasedOnRole(session.user.id);
       }
-
+      
+      setLoading(false);
+      
       return () => subscription.unsubscribe();
     };
 
@@ -116,10 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Redirect is now handled by the auth state change listener
     // but we'll ensure it happens here as well for immediate feedback
     if (data.user) {
-      // Use setTimeout to avoid race conditions with auth state listener
-      setTimeout(() => {
-        redirectBasedOnRole(data.user.id);
-      }, 0);
+      await redirectBasedOnRole(data.user.id);
     }
   };
 
@@ -150,7 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={{ user, session, signIn, signUp, signOut }}>
-      {loading ? <div>Loading auth...</div> : children}
+      {loading ? <div>Carregando autenticação...</div> : children}
     </AuthContext.Provider>
   );
 }
