@@ -11,7 +11,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
-  loading: boolean; // Add loading state to the context
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -35,7 +35,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (error) {
         console.error("Error fetching role:", error);
-        setLoading(false); // Make sure to set loading to false even if there's an error
         return;
       }
       
@@ -54,11 +53,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log("Standard user role, redirecting to home");
         navigate('/', { replace: true });
       }
-      
-      setLoading(false); // Set loading to false after redirection
     } catch (error) {
       console.error("Error in redirectBasedOnRole:", error);
-      setLoading(false); // Make sure to set loading to false even if there's an error
+    } finally {
+      setLoading(false); // Set loading to false after redirect attempt completes
     }
   };
 
@@ -69,15 +67,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Set up auth state listener first
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        async (event, session) => {
+        (event, newSession) => {
           console.log("Auth state changed:", event);
-          setSession(session);
-          setUser(session?.user ?? null);
+          setSession(newSession);
+          setUser(newSession?.user ?? null);
           
-          if (event === 'SIGNED_IN' && session?.user) {
+          if (event === 'SIGNED_IN' && newSession?.user) {
             console.log("User signed in, will redirect based on role");
-            await redirectBasedOnRole(session.user.id);
+            redirectBasedOnRole(newSession.user.id);
           } else if (event === 'SIGNED_OUT') {
+            console.log("User signed out");
             setLoading(false); // Set loading to false after sign out
           }
         }
@@ -85,15 +84,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Then check for existing session
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log("Checking for existing session:", session ? "Found" : "None");
-        setSession(session);
-        setUser(session?.user ?? null);
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        console.log("Checking for existing session:", currentSession ? "Found" : "None");
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
         
-        if (session?.user) {
-          console.log("Session found during initialization for user:", session.user.id);
-          await redirectBasedOnRole(session.user.id);
+        if (currentSession?.user) {
+          console.log("Session found during initialization for user:", currentSession.user.id);
+          await redirectBasedOnRole(currentSession.user.id);
         } else {
+          console.log("No session found, setting loading to false");
           setLoading(false); // Set loading to false if no session found
         }
       } catch (error) {
@@ -124,10 +124,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(data.session);
       
       // Redirect is now handled by the auth state change listener
-      // but we'll ensure it happens here as well for immediate feedback
-      if (data.user) {
-        await redirectBasedOnRole(data.user.id);
-      }
     } catch (error) {
       setLoading(false); // Set loading to false if there's an error
       throw error;

@@ -31,9 +31,6 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
       try {
         console.log(`ProtectedRoute: Checking role for user ${user.id}, required role: ${requiredRole}`);
         
-        // Log the user object to debug
-        console.log("ProtectedRoute: User object:", JSON.stringify(user));
-        
         const { data, error } = await supabase
           .from('profiles')
           .select('role')
@@ -49,9 +46,9 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
         const userRole = data?.role || null;
         console.log(`ProtectedRoute: User ${user.id} has role from database:`, userRole);
         setRole(userRole);
+        setLoading(false);
       } catch (error) {
         console.error("ProtectedRoute: Error checking role:", error);
-      } finally {
         setLoading(false);
       }
     };
@@ -59,7 +56,20 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     checkRole();
   }, [user, requiredRole, authLoading]);
 
-  if (authLoading || loading) {
+  // If the auth context is still loading, show a loading spinner
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-lavapay-600 mx-auto mb-3" />
+          <span className="block text-lg">Verificando autenticação...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // If we're checking the role, show a different loading message
+  if (loading && user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
