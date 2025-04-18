@@ -7,8 +7,12 @@ import { MachinesTab } from "@/components/owner/tabs/MachinesTab";
 import { LocationsTab } from "@/components/owner/tabs/LocationsTab";
 import { PaymentsTab } from "@/components/owner/tabs/PaymentsTab";
 import { useOwnerDashboard } from "@/hooks/useOwnerDashboard";
+import { Loader2, AlertTriangle } from "lucide-react";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { useAuth } from "@/contexts/auth";
 
 export default function Owner() {
+  const { user } = useAuth();
   const {
     ownerLaundries,
     ownerMachines,
@@ -20,11 +24,16 @@ export default function Owner() {
     revenueByDay
   } = useOwnerDashboard();
 
+  console.log("Owner page - user ID:", user?.id);
+  console.log("Owner page - laundries count:", ownerLaundries.length);
+
   if (isLoading) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-8 text-center">
-          <div className="animate-pulse">Carregando dados do proprietário...</div>
+          <Loader2 className="h-8 w-8 animate-spin text-lavapay-600 mx-auto mb-3" />
+          <div className="text-lg">Carregando dados do proprietário...</div>
+          <div className="text-sm text-gray-500 mt-2">Verificando lavanderias e máquinas associadas...</div>
         </div>
       </Layout>
     );
@@ -36,10 +45,16 @@ export default function Owner() {
       <Layout>
         <div className="container mx-auto px-4 py-8">
           <h1 className="text-3xl font-bold mb-4">Painel do Proprietário</h1>
-          <div className="bg-amber-100 border-l-4 border-amber-500 text-amber-700 p-4 mb-4">
-            <p className="font-bold">Nenhuma lavanderia encontrada</p>
-            <p>Você não possui lavanderias cadastradas. Por favor, contate o administrador do sistema.</p>
-          </div>
+          
+          <Alert variant="warning" className="bg-amber-50 border-amber-200">
+            <AlertTriangle className="h-5 w-5 text-amber-600" />
+            <AlertTitle className="text-amber-800">Nenhuma lavanderia encontrada</AlertTitle>
+            <AlertDescription className="text-amber-700">
+              <p>Você não possui lavanderias cadastradas. Por favor, contate o administrador do sistema.</p>
+              <p className="text-sm mt-2">ID do usuário: {user?.id}</p>
+            </AlertDescription>
+          </Alert>
+          
         </div>
       </Layout>
     );

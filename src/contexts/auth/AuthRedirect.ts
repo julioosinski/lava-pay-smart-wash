@@ -23,6 +23,47 @@ export async function redirectBasedOnRole(userId: string, navigate: (path: strin
       await updateUserRoleIfNeeded(userId, 'business');
       navigate('/owner', { replace: true });
       return;
+    } else {
+      console.log(`User ${userId} has no laundries associated`);
+      
+      // Try to assign a test laundry to this user if they have business role
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .single();
+      
+      if (profileData?.role === 'business') {
+        console.log("User has business role but no laundries. Checking for available laundries...");
+        
+        // Find a laundry without an owner and assign it to this user
+        const { data: availableLaundries, error: availableError } = await supabase
+          .from('laundries')
+          .select('id')
+          .is('owner_id', null)
+          .limit(1);
+        
+        if (availableError) {
+          console.error("Error checking for available laundries:", availableError);
+        } else if (availableLaundries && availableLaundries.length > 0) {
+          console.log("Found available laundry, assigning to user:", availableLaundries[0].id);
+          
+          const { error: updateError } = await supabase
+            .from('laundries')
+            .update({ owner_id: userId })
+            .eq('id', availableLaundries[0].id);
+          
+          if (updateError) {
+            console.error("Error assigning laundry to user:", updateError);
+          } else {
+            console.log("Successfully assigned laundry to user, redirecting to owner dashboard");
+            navigate('/owner', { replace: true });
+            return;
+          }
+        } else {
+          console.log("No available laundries found for assignment");
+        }
+      }
     }
 
     // Check profile role for other cases
