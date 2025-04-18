@@ -1,9 +1,11 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Home from "./pages/Home";
 import Totem from "./pages/Totem";
 import Admin from "./pages/Admin";
@@ -25,9 +27,21 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/" element={<Home />} />
             <Route path="/totem" element={<Totem />} />
-            <Route path="/admin" element={<Admin />} />
-            <Route path="/admin/laundry/:laundryId" element={<LaundryDashboard />} />
-            <Route path="/owner" element={<Owner />} />
+            <Route path="/admin" element={
+              <ProtectedRoute requiredRole="admin">
+                <Admin />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/laundry/:laundryId" element={
+              <ProtectedRoute requiredRole="admin">
+                <LaundryDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/owner" element={
+              <ProtectedRoute requiredRole="business">
+                <Owner />
+              </ProtectedRoute>
+            } />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </TooltipProvider>
