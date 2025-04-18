@@ -23,28 +23,35 @@ export function useCreateLaundry() {
         throw new Error('Nome, endereço, email e telefone são obrigatórios');
       }
       
-      // Use direct insert without relying on any database trigger to create users
-      const { data, error } = await supabase
-        .from('laundries')
-        .insert({
-          name: laundry.name,
-          address: laundry.address,
-          contact_phone: laundry.contact_phone,
-          contact_email: laundry.contact_email,
-          owner_id: session.user.id,
-          // Add status explicitly to avoid any null constraints
-          status: 'active'
-        })
-        .select()
-        .single();
+      // Certifique-se de que o owner_id é sempre enviado como string válida
+      const ownerID = session.user.id;
+      console.log("Using owner ID:", ownerID);
+      
+      try {
+        const { data, error } = await supabase
+          .from('laundries')
+          .insert({
+            name: laundry.name,
+            address: laundry.address,
+            contact_phone: laundry.contact_phone,
+            contact_email: laundry.contact_email,
+            owner_id: ownerID,
+            status: 'active'
+          })
+          .select()
+          .single();
 
-      if (error) {
-        console.error("Supabase error creating laundry:", error);
+        if (error) {
+          console.error("Supabase error creating laundry:", error);
+          throw new Error(`Erro ao criar lavanderia: ${error.message}`);
+        }
+        
+        console.log("Laundry created successfully:", data);
+        return convertToLaundry(data as LaundryDB);
+      } catch (error: any) {
+        console.error("Exception in laundry creation:", error);
         throw new Error(`Erro ao criar lavanderia: ${error.message}`);
       }
-      
-      console.log("Laundry created successfully:", data);
-      return convertToLaundry(data as LaundryDB);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['laundries'] });

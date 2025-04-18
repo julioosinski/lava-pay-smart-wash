@@ -16,24 +16,29 @@ export function useUpdateLaundry() {
         throw new Error('Você precisa estar autenticado para atualizar uma lavanderia');
       }
       
-      const { data, error } = await supabase
-        .from('laundries')
-        .update({
-          name: laundry.name,
-          address: laundry.address,
-          contact_phone: laundry.contact_phone,
-          contact_email: laundry.contact_email,
-        })
-        .eq('id', laundry.id)
-        .select()
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from('laundries')
+          .update({
+            name: laundry.name,
+            address: laundry.address,
+            contact_phone: laundry.contact_phone,
+            contact_email: laundry.contact_email,
+          })
+          .eq('id', laundry.id)
+          .select()
+          .single();
 
-      if (error) {
-        console.error("Error updating laundry:", error);
-        throw error;
+        if (error) {
+          console.error("Error updating laundry:", error);
+          throw new Error(`Erro ao atualizar lavanderia: ${error.message}`);
+        }
+        
+        return convertToLaundry(data as LaundryDB);
+      } catch (error: any) {
+        console.error("Exception in laundry update:", error);
+        throw new Error(`Erro ao atualizar lavanderia: ${error.message}`);
       }
-      
-      return convertToLaundry(data as LaundryDB);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['laundries'] });
