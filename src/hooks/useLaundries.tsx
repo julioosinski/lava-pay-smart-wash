@@ -2,27 +2,27 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { LaundryLocation } from "@/types";
 
-export const useLaundries = () => {
+export function useLaundries() {
   return useQuery({
     queryKey: ['laundries'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('laundries')
-        .select('*')
-        .order('created_at', { ascending: false });
-
+        .select('*');
+      
       if (error) throw error;
       return data;
     }
   });
-};
+}
 
-export const useCreateLaundry = () => {
+export function useCreateLaundry() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (laundry: { name: string; address: string; owner_id: string }) => {
+    mutationFn: async (laundry: Omit<LaundryLocation, 'id' | 'machines'>) => {
       const { data, error } = await supabase
         .from('laundries')
         .insert(laundry)
@@ -40,4 +40,4 @@ export const useCreateLaundry = () => {
       toast.error('Erro ao criar lavanderia: ' + error.message);
     }
   });
-};
+}

@@ -1,6 +1,4 @@
 
-// Tipos para o sistema de lavanderia
-
 export interface User {
   id: string;
   name: string;
@@ -12,8 +10,11 @@ export interface LaundryLocation {
   id: string;
   name: string;
   address: string;
-  ownerId: string;
+  owner_id: string;
   machines: Machine[];
+  status?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Machine {
@@ -21,16 +22,19 @@ export interface Machine {
   type: 'washer' | 'dryer';
   status: 'available' | 'in-use' | 'maintenance';
   price: number;
-  time_minutes: number; // Changed from timeMinutes to time_minutes to match DB
-  laundry_id: string;   // Changed from locationId to laundry_id to match DB
+  time_minutes: number;
+  laundry_id: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Payment {
   id: string;
-  machineId: string;
+  machine_id: string;
   amount: number;
   status: 'pending' | 'approved' | 'rejected';
   method: 'credit' | 'debit' | 'pix';
-  createdAt: Date;
-  transactionId?: string;
+  user_id: string;
+  created_at: Date;
+  transaction_id?: string;
 }
