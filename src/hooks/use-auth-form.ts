@@ -24,13 +24,9 @@ export const useAuthForm = (expectedRole: string = 'user') => {
     try {
       if (isLogin) {
         console.log("Attempting login with email:", email);
-        const result = await signIn(email, password);
-        
-        // Additional debugging
-        console.log("Login successful, checking for specific roles");
-        
-        // Let the AuthContext handle the redirection based on role
-        // We won't add additional redirection logic here to avoid conflicts
+        await signIn(email, password);
+        // The redirection is now handled directly in the AuthContext's signIn function
+        // No need for additional redirection logic here
       } else {
         await signUp(email, password);
         toast({

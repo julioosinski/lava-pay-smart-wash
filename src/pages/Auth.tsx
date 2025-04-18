@@ -29,53 +29,36 @@ export default function Auth() {
     handleSubmit,
   } = useAuthForm(expectedRole);
 
+  // This effect redirects the user if they're already authenticated
   useEffect(() => {
     const checkSession = async () => {
       console.log("Checking session in Auth page");
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        console.log("Session found in Auth page, checking role for redirection");
-        const { data } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', session.user.id)
-          .single();
-        
-        if (data?.role === 'business') {
-          navigate('/owner', { replace: true });
-        } else if (data?.role === 'admin') {
-          navigate('/admin', { replace: true });
-        } else {
-          navigate('/', { replace: true });
-        }
-      } else {
-        console.log("No session found in Auth page");
-      }
-    };
-    
-    if (!user) {
-      checkSession();
-    } else {
-      // If user is already set, we should redirect based on their role
-      console.log("User already set in Auth page, redirecting");
-      const checkRoleAndRedirect = async () => {
+      // No need to get the session again as we're using the user from context
+      if (user) {
+        console.log("User already authenticated in Auth page, redirecting");
         const { data } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', user.id)
           .single();
         
-        if (data?.role === 'business') {
+        const role = data?.role;
+        console.log("User role detected in Auth page:", role);
+        
+        if (role === 'business') {
+          console.log("Business role detected in Auth page, redirecting to /owner");
           navigate('/owner', { replace: true });
-        } else if (data?.role === 'admin') {
+        } else if (role === 'admin') {
+          console.log("Admin role detected in Auth page, redirecting to /admin");
           navigate('/admin', { replace: true });
         } else {
+          console.log("Standard user role in Auth page, redirecting to home");
           navigate('/', { replace: true });
         }
-      };
-      
-      checkRoleAndRedirect();
-    }
+      }
+    };
+    
+    checkSession();
   }, [navigate, user]);
 
   useEffect(() => {

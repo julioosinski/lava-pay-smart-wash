@@ -42,6 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (role === 'business') {
         console.log("Business role detected, redirecting to /owner");
+        // Force immediate redirect with replace:true
         navigate('/owner', { replace: true });
       } else if (role === 'admin') {
         console.log("Admin role detected, redirecting to /admin");
@@ -57,6 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const setupAuth = async () => {
+      console.log("Setting up auth state listener");
       // Set up auth state listener first
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         async (event, session) => {
@@ -66,7 +68,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           if (event === 'SIGNED_IN' && session?.user) {
             console.log("User signed in, will redirect based on role");
-            await redirectBasedOnRole(session.user.id);
+            // Ensure we don't have any race conditions by using setTimeout
+            setTimeout(() => {
+              redirectBasedOnRole(session.user.id);
+            }, 0);
           }
         }
       );
@@ -80,7 +85,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (session?.user) {
         console.log("Session found during initialization for user:", session.user.id);
-        await redirectBasedOnRole(session.user.id);
+        // Ensure we don't have any race conditions by using setTimeout
+        setTimeout(() => {
+          redirectBasedOnRole(session.user.id);
+        }, 0);
       }
 
       return () => subscription.unsubscribe();
@@ -105,7 +113,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Redirect is now handled by the auth state change listener
     // but we'll ensure it happens here as well for immediate feedback
     if (data.user) {
-      await redirectBasedOnRole(data.user.id);
+      // Use setTimeout to avoid race conditions with auth state listener
+      setTimeout(() => {
+        redirectBasedOnRole(data.user.id);
+      }, 0);
     }
   };
 
@@ -123,7 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       setUser(null);
       setSession(null);
-      navigate('/auth');
+      navigate('/auth', { replace: true });
     } catch (error) {
       console.error("Error during sign out:", error);
       toast({
