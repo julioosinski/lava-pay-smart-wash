@@ -33,20 +33,21 @@ const convertToLaundry = (dbLaundry: LaundryDB): LaundryLocation => ({
   updated_at: dbLaundry.updated_at
 });
 
-export function useLaundries(ownerId?: string) {
+export function useLaundries(options?: { ownerId?: string, forceShowAll?: boolean }) {
   return useQuery({
-    queryKey: ['laundries', ownerId],
+    queryKey: ['laundries', options?.ownerId, options?.forceShowAll],
     queryFn: async () => {
       try {
-        console.log("Fetching laundries, filtered by ownerId:", ownerId);
         let query = supabase
           .from('laundries')
           .select('*');
           
-        // Only filter by owner_id if provided
-        if (ownerId) {
-          console.log(`Filtering laundries by owner_id: ${ownerId}`);
-          query = query.eq('owner_id', ownerId);
+        // Only filter by owner_id if provided and not forcing to show all
+        if (options?.ownerId && !options?.forceShowAll) {
+          console.log(`Filtering laundries by owner_id: ${options.ownerId}`);
+          query = query.eq('owner_id', options.ownerId);
+        } else {
+          console.log("Fetching all laundries (no owner filter)");
         }
         
         const { data, error } = await query;

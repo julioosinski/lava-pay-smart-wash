@@ -7,10 +7,14 @@ import { LaundryTab } from "@/components/admin/tabs/LaundryTab";
 import { SubscriptionsTab } from "@/components/admin/tabs/SubscriptionsTab";
 import { MachinesTab } from "@/components/admin/tabs/MachinesTab";
 import { useMachines } from "@/hooks/useMachines";
+import { useLaundries } from "@/hooks/useLaundries";
 
 export default function Admin() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("locations");
+  
+  // Force showing all laundries for admin
+  const { data: allLaundries = [] } = useLaundries({ forceShowAll: true });
   const { data: machines = [] } = useMachines();
 
   return (
@@ -42,6 +46,7 @@ export default function Admin() {
             <LaundryTab
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
+              laundries={allLaundries}
             />
           </TabsContent>
 

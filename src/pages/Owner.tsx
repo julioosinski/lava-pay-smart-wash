@@ -15,35 +15,15 @@ import { RecentPayments } from "@/components/owner/RecentPayments";
 import { MachinesTab } from "@/components/owner/tabs/MachinesTab";
 import { LocationsTab } from "@/components/owner/tabs/LocationsTab";
 import { PaymentsTab } from "@/components/owner/tabs/PaymentsTab";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Owner() {
   const { user } = useAuth();
-  
-  // Fetch ALL laundries first
-  const { data: allLaundries = [] } = useLaundries();
-  console.log("All laundries fetched:", allLaundries);
-  
-  // Get user profile from supabase profiles table for checking roles
-  const [ownerLaundries, setOwnerLaundries] = useState(allLaundries);
-  
-  console.log("Current user:", user);
-  
-  // Filter laundries to show only those owned by the current user
-  useEffect(() => {
-    if (user && allLaundries.length > 0) {
-      console.log(`Filtering laundries for user ${user.id}`);
-      const filtered = allLaundries.filter(laundry => {
-        const isOwner = laundry.owner_id === user.id;
-        console.log(`Checking laundry ${laundry.id} (owner: ${laundry.owner_id}) against user ${user?.id}: ${isOwner}`);
-        return isOwner;
-      });
-      
-      console.log("Owner laundries after filtering:", filtered);
-      setOwnerLaundries(filtered);
-    }
-  }, [user, allLaundries]);
-  
   const [selectedLocation, setSelectedLocation] = useState<string>("all");
+  
+  // Fetch laundries that belong to the current user
+  const { data: ownerLaundries = [] } = useLaundries({ ownerId: user?.id });
+  console.log(`Owner laundries for user ${user?.id}:`, ownerLaundries);
   
   // Update selectedLocation when owner laundries change
   useEffect(() => {
@@ -52,14 +32,15 @@ export default function Owner() {
     }
   }, [ownerLaundries]);
   
-  // Fetch ALL machines without filtering by laundry ID
+  // Get laundry IDs owned by the current user
+  const ownerLaundryIds = ownerLaundries.map(location => location.id);
+  console.log("Owner laundry IDs:", ownerLaundryIds);
+  
+  // Fetch machines for all laundries owned by the current user
   const { data: allMachines = [] } = useMachines();
   console.log("All fetched machines:", allMachines);
   
   // Filter machines to only show those from owner's laundries
-  const ownerLaundryIds = ownerLaundries.map(location => location.id);
-  console.log("Owner laundry IDs:", ownerLaundryIds);
-  
   const ownerMachines = allMachines.filter(machine => {
     const belongs = ownerLaundryIds.includes(machine.laundry_id);
     console.log(`Machine ${machine.id} (laundry: ${machine.laundry_id}) belongs to owner's laundry: ${belongs}`);
