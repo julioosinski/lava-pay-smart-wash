@@ -1,92 +1,24 @@
-import { useState, useEffect } from "react";
+
 import { Layout } from "@/components/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useLaundries } from "@/hooks/useLaundries";
-import { useMachines } from "@/hooks/useMachines";
-import { usePayments } from "@/hooks/usePayments";
-import { useAuth } from "@/contexts/auth";
 import { OwnerDashboardHeader } from "@/components/owner/dashboard/OwnerDashboardHeader";
 import { OwnerDashboardOverview } from "@/components/owner/dashboard/OwnerDashboardOverview";
 import { MachinesTab } from "@/components/owner/tabs/MachinesTab";
 import { LocationsTab } from "@/components/owner/tabs/LocationsTab";
 import { PaymentsTab } from "@/components/owner/tabs/PaymentsTab";
+import { useOwnerDashboard } from "@/hooks/useOwnerDashboard";
 
 export default function Owner() {
-  const { user } = useAuth();
-  const [selectedLocation, setSelectedLocation] = useState<string>("all");
-  
-  // Fetch laundries owned by the current user
-  const { data: ownerLaundries = [], isLoading: isLoadingLaundries } = useLaundries({ 
-    ownerId: user?.id,
-    options: {
-      enabled: !!user?.id,
-      retry: 3,
-      staleTime: 30000,
-    }
-  });
-
-  console.log("Owner.tsx - Current user:", user);
-  console.log("Owner.tsx - Owner laundries:", ownerLaundries);
-  
-  // Update selectedLocation when owner laundries change
-  useEffect(() => {
-    if (ownerLaundries.length > 0 && (selectedLocation === "all" || !selectedLocation)) {
-      console.log(`Setting selected location to first laundry: ${ownerLaundries[0]?.id}`);
-      setSelectedLocation(ownerLaundries[0]?.id || "all");
-    }
-  }, [ownerLaundries, selectedLocation]);
-  
-  // Get laundry IDs owned by the current user
-  const ownerLaundryIds = ownerLaundries.map(location => location.id);
-  console.log("Owner laundry IDs:", ownerLaundryIds);
-  
-  // Fetch machines for the owner's laundries
-  const { data: allMachines = [], isLoading: isLoadingMachines } = useMachines(selectedLocation !== "all" ? selectedLocation : undefined);
-  
-  // Filter machines to only show those from owner's laundries
-  const ownerMachines = allMachines.filter(machine => 
-    ownerLaundryIds.includes(machine.laundry_id)
-  );
-  
-  console.log("Owner machines:", ownerMachines);
-
-  // Get payments for owner's machines
-  const { data: allPayments = [], isLoading: isLoadingPayments } = usePayments();
-  
-  // Filter payments to only include those for the owner's machines
-  const ownerMachineIds = ownerMachines.map(machine => machine.id);
-  const ownerPayments = allPayments.filter(payment => 
-    ownerMachineIds.includes(payment.machine_id)
-  );
-
-  console.log("Owner payments:", ownerPayments);
-
-  // Dashboard calculations
-  const totalRevenue = ownerPayments
-    .filter(payment => payment.status === 'approved')
-    .reduce((sum, payment) => sum + payment.amount, 0);
-  
-  const totalMachines = ownerMachines.length;
-  const availableMachines = ownerMachines.filter(m => m.status === 'available').length;
-  const inUseMachines = ownerMachines.filter(m => m.status === 'in-use').length;
-  const maintenanceMachines = ownerMachines.filter(m => m.status === 'maintenance').length;
-  
-  const availablePercentage = totalMachines > 0 ? (availableMachines / totalMachines) * 100 : 0;
-  const inUsePercentage = totalMachines > 0 ? (inUseMachines / totalMachines) * 100 : 0;
-  const maintenancePercentage = totalMachines > 0 ? (maintenanceMachines / totalMachines) * 100 : 0;
-
-  // Revenue chart data (simulated)
-  const revenueByDay = [
-    { day: 'Seg', amount: 320 },
-    { day: 'Ter', amount: 280 },
-    { day: 'Qua', amount: 340 },
-    { day: 'Qui', amount: 380 },
-    { day: 'Sex', amount: 450 },
-    { day: 'Sáb', amount: 520 },
-    { day: 'Dom', amount: 390 },
-  ];
-
-  const isLoading = isLoadingLaundries || isLoadingMachines || isLoadingPayments;
+  const {
+    ownerLaundries,
+    ownerMachines,
+    ownerPayments,
+    selectedLocation,
+    setSelectedLocation,
+    isLoading,
+    stats,
+    revenueByDay
+  } = useOwnerDashboard();
 
   if (isLoading) {
     return (
@@ -131,13 +63,13 @@ export default function Owner() {
 
           <TabsContent value="dashboard">
             <OwnerDashboardOverview
-              totalRevenue={totalRevenue}
+              totalRevenue={stats.totalRevenue}
               ownerLaundries={ownerLaundries}
-              totalMachines={totalMachines}
-              availableMachines={availableMachines}
-              maintenanceMachines={maintenanceMachines}
-              inUsePercentage={inUsePercentage}
-              inUseMachines={inUseMachines}
+              totalMachines={stats.totalMachines}
+              availableMachines={stats.availableMachines}
+              maintenanceMachines={stats.maintenanceMachines}
+              inUsePercentage={stats.inUsePercentage}
+              inUseMachines={stats.inUseMachines}
               revenueByDay={revenueByDay}
               ownerPayments={ownerPayments}
               ownerMachines={ownerMachines}
