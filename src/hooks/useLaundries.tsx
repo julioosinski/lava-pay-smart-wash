@@ -49,7 +49,7 @@ export function useLaundries() {
         return (data || []).map(laundry => convertToLaundry(laundry as LaundryDB));
       } catch (error) {
         console.error("Error in useLaundries hook:", error);
-        return [];
+        throw error;
       }
     }
   });
