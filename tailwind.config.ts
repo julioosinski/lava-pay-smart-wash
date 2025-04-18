@@ -32,6 +32,18 @@ export default {
 					DEFAULT: 'hsl(var(--secondary))',
 					foreground: 'hsl(var(--secondary-foreground))'
 				},
+				lavapay: {
+					50: '#e6f7ff',
+					100: '#bae3ff',
+					200: '#7cc8ff',
+					300: '#36adff',
+					400: '#0090ff',
+					500: '#0077e6',
+					600: '#005cb3',
+					700: '#004280',
+					800: '#00284d',
+					900: '#00101f',
+				},
 				destructive: {
 					DEFAULT: 'hsl(var(--destructive))',
 					foreground: 'hsl(var(--destructive-foreground))'
