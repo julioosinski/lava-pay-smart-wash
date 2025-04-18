@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,10 +33,22 @@ export default function Auth() {
       console.log("Checking session in Auth page");
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        console.log("Session found, redirecting based on role");
-        navigate('/');
+        console.log("Session found in Auth page, checking role for redirection");
+        const { data } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
+        
+        if (data?.role === 'business') {
+          navigate('/owner', { replace: true });
+        } else if (data?.role === 'admin') {
+          navigate('/admin', { replace: true });
+        } else {
+          navigate('/', { replace: true });
+        }
       } else {
-        console.log("No session found");
+        console.log("No session found in Auth page");
       }
     };
     checkSession();
@@ -46,9 +57,8 @@ export default function Auth() {
   useEffect(() => {
     if (user) {
       console.log("User object changed in Auth page:", user.id);
-      navigate('/');
     }
-  }, [user, navigate]);
+  }, [user]);
 
   console.log("Auth page loaded with role:", expectedRole);
 

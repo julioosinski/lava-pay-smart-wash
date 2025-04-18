@@ -22,6 +22,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Helper function to redirect based on role
+  const redirectBasedOnRole = async (userId: string) => {
+    try {
+      console.log("Checking role for user ID:", userId);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .single();
+      
+      if (error) {
+        console.error("Error fetching role:", error);
+        return;
+      }
+      
+      const role = data?.role;
+      console.log("User role detected:", role);
+      
+      if (role === 'business') {
+        console.log("Business role detected, redirecting to /owner");
+        navigate('/owner', { replace: true });
+      } else if (role === 'admin') {
+        console.log("Admin role detected, redirecting to /admin");
+        navigate('/admin', { replace: true });
+      } else {
+        console.log("Standard user role, redirecting to home");
+        navigate('/', { replace: true });
+      }
+    } catch (error) {
+      console.error("Error in redirectBasedOnRole:", error);
+    }
+  };
+
   useEffect(() => {
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -31,36 +64,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null);
         
         if (event === 'SIGNED_IN' && session?.user) {
-          // Check user role on sign in
-          try {
-            console.log("Checking user role after sign in event");
-            const { data, error } = await supabase
-              .from('profiles')
-              .select('role')
-              .eq('id', session.user.id)
-              .single();
-              
-            if (error) {
-              console.error("Error fetching user role:", error);
-              return;
-            }
-            
-            console.log("User role on auth state change:", data?.role);
-            
-            // Redirect based on role
-            if (data?.role === 'business') {
-              console.log("Business user signed in, redirecting to owner page");
-              navigate('/owner', { replace: true });
-            } else if (data?.role === 'admin') {
-              console.log("Admin user signed in, redirecting to admin page");
-              navigate('/admin', { replace: true });
-            } else {
-              console.log("Regular user signed in, redirecting to home page");
-              navigate('/', { replace: true });
-            }
-          } catch (error) {
-            console.error("Error checking user role:", error);
-          }
+          console.log("User signed in, will redirect based on role");
+          redirectBasedOnRole(session.user.id);
         }
       }
     );
@@ -74,6 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (session?.user) {
         console.log("Session found during initialization for user:", session.user.id);
+        redirectBasedOnRole(session.user.id);
       }
     });
 
@@ -93,37 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(data.user);
     setSession(data.session);
     
-    // Get user role and redirect accordingly
-    if (data.user) {
-      try {
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', data.user.id)
-          .single();
-          
-        if (profileError) {
-          console.error("Error fetching user profile:", profileError);
-          return;
-        }
-        
-        console.log("User role after sign in:", profileData?.role);
-        
-        // Redirect based on role
-        if (profileData?.role === 'business') {
-          console.log("Redirecting business user to owner page");
-          navigate('/owner', { replace: true });
-        } else if (profileData?.role === 'admin') {
-          console.log("Redirecting admin user to admin page");
-          navigate('/admin', { replace: true });
-        } else {
-          console.log("Redirecting regular user to home page");
-          navigate('/', { replace: true });
-        }
-      } catch (error) {
-        console.error("Error redirecting after sign in:", error);
-      }
-    }
+    // Redirect based on role is now handled by the auth state change listener
   };
 
   const signUp = async (email: string, password: string) => {

@@ -18,13 +18,13 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
   useEffect(() => {
     const checkRole = async () => {
       if (!user) {
-        console.log("No user found in ProtectedRoute, will redirect to auth");
+        console.log(`ProtectedRoute: No user found, role required: ${requiredRole}`);
         setLoading(false);
         return;
       }
 
       try {
-        console.log("Checking role for protected route, user:", user.id);
+        console.log(`ProtectedRoute: Checking role for user ${user.id}, required role: ${requiredRole}`);
         const { data, error } = await supabase
           .from('profiles')
           .select('role')
@@ -32,25 +32,25 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
           .single();
 
         if (error) {
-          console.error("Error fetching role:", error);
+          console.error("ProtectedRoute: Error fetching role:", error);
           setLoading(false);
           return;
         }
 
-        console.log("User role data for protected route:", data);
-        setRole(data?.role || null);
+        const userRole = data?.role || null;
+        console.log(`ProtectedRoute: User ${user.id} has role: ${userRole}`);
+        setRole(userRole);
       } catch (error) {
-        console.error("Error checking role:", error);
+        console.error("ProtectedRoute: Error checking role:", error);
       } finally {
         setLoading(false);
       }
     };
 
     checkRole();
-  }, [user]);
+  }, [user, requiredRole]);
 
   if (loading) {
-    // Show a better loading state with rotating spinner
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-lavapay-600" />
@@ -61,17 +61,23 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
 
   // If there's no authenticated user, redirect to login page
   if (!user) {
-    console.log("No authenticated user, redirecting to auth page");
+    console.log("ProtectedRoute: No authenticated user, redirecting to auth page");
     return <Navigate to="/auth" />;
   }
 
   // If a specific role is required, check if user has that role
   if (requiredRole && role !== requiredRole) {
-    console.log(`User role ${role} doesn't match required role ${requiredRole}, redirecting to home`);
-    return <Navigate to="/" />;
+    console.log(`ProtectedRoute: Access denied - User role ${role} doesn't match required role ${requiredRole}`);
+    if (role === 'business') {
+      return <Navigate to="/owner" replace />;
+    } else if (role === 'admin') {
+      return <Navigate to="/admin" replace />;
+    } else {
+      return <Navigate to="/" replace />;
+    }
   }
 
   // If user passes all checks, render the protected content
-  console.log("User authorized for protected route");
+  console.log(`ProtectedRoute: User ${user.id} authorized for route requiring role: ${requiredRole}`);
   return <>{children}</>;
 }

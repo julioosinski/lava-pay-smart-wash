@@ -15,46 +15,7 @@ export const useAuthForm = (expectedRole: string = 'user') => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const redirectBasedOnRole = async (userId: string) => {
-    try {
-      console.log("Checking role for user:", userId);
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error("Error fetching role:", error);
-        throw error;
-      }
-
-      console.log("User role data:", data);
-      console.log("Expected role:", expectedRole);
-      
-      const userRole = data?.role;
-
-      // Handle redirection based on role
-      if (userRole === 'business') {
-        console.log("Business user detected, redirecting to owner page");
-        return '/owner';
-      } else if (userRole === 'admin') {
-        console.log("Admin user detected, redirecting to admin page");
-        return '/admin';
-      } 
-      
-      // Default redirect to home
-      return '/';
-    } catch (error) {
-      console.error('Error checking user role:', error);
-      toast({
-        variant: "destructive",
-        title: "Erro ao verificar permissões",
-        description: "Não foi possível verificar seu perfil de usuário."
-      });
-      return '/';
-    }
-  };
+  console.log("Auth form initialized with expected role:", expectedRole);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,13 +26,24 @@ export const useAuthForm = (expectedRole: string = 'user') => {
         console.log("Attempting login with email:", email);
         await signIn(email, password);
         
+        // The redirection is now handled in the AuthContext
+        // but we'll add a fallback just in case
         setTimeout(async () => {
           const { data: { session } } = await supabase.auth.getSession();
           if (session && !user) {
-            console.log("Session exists but user state not updated yet, redirecting manually");
-            const redirectPath = await redirectBasedOnRole(session.user.id);
-            console.log("Redirecting to:", redirectPath);
-            navigate(redirectPath, { replace: true });
+            console.log("Fallback: Session exists but user state not updated yet");
+            const { data } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('id', session.user.id)
+              .single();
+            
+            if (data?.role === 'business') {
+              console.log("Fallback: Business role detected, navigating to /owner");
+              navigate('/owner', { replace: true });
+            } else if (data?.role === 'admin') {
+              navigate('/admin', { replace: true });
+            }
           }
         }, 500);
       } else {
