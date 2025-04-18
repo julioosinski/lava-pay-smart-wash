@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LaundryLocation } from "@/types";
+import { useAuth } from "@/contexts/AuthContext";
 
 // DB type to match what's coming from the database
 type LaundryDB = {
@@ -57,19 +58,32 @@ export function useLaundries() {
 
 export function useCreateLaundry() {
   const queryClient = useQueryClient();
+  const { session } = useAuth();
 
   return useMutation({
     mutationFn: async (laundry: Pick<LaundryLocation, 'name' | 'address' | 'owner_id' | 'contact_phone' | 'contact_email'>) => {
       console.log("Creating laundry with data:", laundry);
       
+      if (!session?.user) {
+        throw new Error('User must be authenticated to create a laundry');
+      }
+      
       // Validate required fields before sending to the database
-      if (!laundry.name || !laundry.address || !laundry.owner_id) {
+      if (!laundry.name || !laundry.address) {
         throw new Error('Missing required fields');
       }
       
+      // Make sure owner_id is set to the current authenticated user
+      const laundryData = {
+        ...laundry,
+        owner_id: session.user.id
+      };
+      
+      console.log("Sending laundry data with authenticated user:", laundryData);
+      
       const { data, error } = await supabase
         .from('laundries')
-        .insert(laundry)
+        .insert(laundryData)
         .select()
         .single();
 

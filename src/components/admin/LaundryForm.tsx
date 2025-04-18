@@ -1,16 +1,15 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCreateLaundry } from "@/hooks/useLaundries";
 import { Plus } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
 // Define schema for form validation
@@ -18,8 +17,7 @@ const laundrySchema = z.object({
   name: z.string().min(3, { message: "Nome deve ter pelo menos 3 caracteres" }),
   address: z.string().min(5, { message: "Endereço deve ter pelo menos 5 caracteres" }),
   contact_phone: z.string().optional(),
-  contact_email: z.string().email({ message: "Email inválido" }).optional().or(z.literal('')),
-  owner_id: z.string().default("00000000-0000-0000-0000-000000000000") // Default UUID for testing
+  contact_email: z.string().email({ message: "Email inválido" }).optional().or(z.literal(''))
 });
 
 type LaundryFormValues = z.infer<typeof laundrySchema>;
@@ -28,20 +26,7 @@ export function LaundryForm() {
   const [open, setOpen] = useState(false);
   const createLaundry = useCreateLaundry();
   const [loading, setLoading] = useState(false);
-
-  // Get current user ID to use as owner_id
-  const [userId, setUserId] = useState<string | null>(null);
-
-  // Fetch the current user on component mount
-  useEffect(() => {
-    const getCurrentUser = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session?.user) {
-        setUserId(data.session.user.id);
-      }
-    };
-    getCurrentUser();
-  }, []);
+  const { user } = useAuth();
 
   // Create form with react-hook-form and zod validation
   const form = useForm<LaundryFormValues>({
@@ -50,34 +35,27 @@ export function LaundryForm() {
       name: "",
       address: "",
       contact_phone: "",
-      contact_email: "",
-      owner_id: userId || "00000000-0000-0000-0000-000000000000" // Use actual user ID if available
+      contact_email: ""
     }
   });
-
-  // Update owner_id when userId changes
-  useEffect(() => {
-    if (userId) {
-      form.setValue("owner_id", userId);
-    }
-  }, [userId, form]);
 
   const onSubmit = async (data: LaundryFormValues) => {
     try {
       setLoading(true);
-      console.log("Submitting laundry data with owner:", data);
       
-      // Make sure we have a valid owner_id
-      if (!data.owner_id && userId) {
-        data.owner_id = userId;
+      if (!user) {
+        toast.error('Você precisa estar autenticado para criar uma lavanderia');
+        return;
       }
+      
+      console.log("Submitting laundry data:", data);
       
       await createLaundry.mutateAsync({
         name: data.name,
         address: data.address,
         contact_phone: data.contact_phone,
         contact_email: data.contact_email,
-        owner_id: data.owner_id
+        owner_id: user.id // Este valor será sobrescrito no hook
       });
       
       setOpen(false);
