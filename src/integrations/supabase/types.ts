@@ -131,6 +131,7 @@ export type Database = {
           created_at: string
           id: string
           laundry_id: string
+          machine_number: number | null
           price: number
           status: string | null
           time_minutes: number
@@ -141,6 +142,7 @@ export type Database = {
           created_at?: string
           id?: string
           laundry_id: string
+          machine_number?: number | null
           price: number
           status?: string | null
           time_minutes: number
@@ -151,6 +153,7 @@ export type Database = {
           created_at?: string
           id?: string
           laundry_id?: string
+          machine_number?: number | null
           price?: number
           status?: string | null
           time_minutes?: number

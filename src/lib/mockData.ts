@@ -47,7 +47,8 @@ export const mockMachines: Machine[] = [
     status: 'available',
     price: 12.50,
     time_minutes: 45,
-    laundry_id: '1'
+    laundry_id: '1',
+    machine_number: 1
   },
   {
     id: '2',
@@ -55,7 +56,8 @@ export const mockMachines: Machine[] = [
     status: 'available',
     price: 8.00,
     time_minutes: 30,
-    laundry_id: '1'
+    laundry_id: '1',
+    machine_number: 2
   },
   {
     id: '3',
@@ -63,7 +65,8 @@ export const mockMachines: Machine[] = [
     status: 'in-use',
     price: 12.50,
     time_minutes: 45,
-    laundry_id: '1'
+    laundry_id: '1',
+    machine_number: 3
   },
   {
     id: '4',
@@ -71,7 +74,8 @@ export const mockMachines: Machine[] = [
     status: 'available',
     price: 15.00,
     time_minutes: 60,
-    laundry_id: '2'
+    laundry_id: '2',
+    machine_number: 1
   },
   {
     id: '5',
@@ -79,7 +83,8 @@ export const mockMachines: Machine[] = [
     status: 'maintenance',
     price: 10.00,
     time_minutes: 40,
-    laundry_id: '2'
+    laundry_id: '2',
+    machine_number: 2
   }
 ];
 
