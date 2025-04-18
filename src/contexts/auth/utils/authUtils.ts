@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export const updateUserRole = async (userId: string, role: 'business' | 'user' | 'admin') => {
@@ -132,15 +131,22 @@ export const updateUserContact = async (userId: string, email: string, phone: st
       console.log("Contact columns might not exist in profiles table, adding them");
       
       try {
-        // Execute raw SQL to insert into the helper table
-        // This avoids TypeScript errors by using raw SQL instead of the typed client
-        const { error: sqlError } = await supabase
-          .rpc('execute_sql', { 
-            sql_query: "INSERT INTO add_contact_fields_to_profiles_call (dummy) VALUES (true)" 
-          });
+        // Use the REST API directly to avoid TypeScript issues
+        const response = await fetch(`${supabase.supabaseUrl}/rest/v1/rpc/execute_sql`, {
+          method: 'POST',
+          headers: {
+            'apikey': supabase.supabaseKey,
+            'Authorization': `Bearer ${supabase.supabaseKey}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({
+            sql_query: "INSERT INTO add_contact_fields_to_profiles_call (dummy) VALUES (true)"
+          })
+        });
         
-        if (sqlError) {
-          console.error("Error triggering add_contact_fields_to_profiles function:", sqlError);
+        if (!response.ok) {
+          console.error("Error triggering add_contact_fields_to_profiles function:", await response.text());
         } else {
           console.log("Successfully triggered add_contact_fields_to_profiles function");
           
