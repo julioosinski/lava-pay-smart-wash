@@ -58,25 +58,26 @@ export function useLaundries() {
 
 export function useCreateLaundry() {
   const queryClient = useQueryClient();
-  const { session } = useAuth();
+  const { user, session } = useAuth();
 
   return useMutation({
-    mutationFn: async (laundry: Pick<LaundryLocation, 'name' | 'address' | 'owner_id' | 'contact_phone' | 'contact_email'>) => {
-      console.log("Creating laundry with data:", laundry);
-      
-      if (!session?.user) {
-        throw new Error('User must be authenticated to create a laundry');
+    mutationFn: async (laundry: Pick<LaundryLocation, 'name' | 'address' | 'contact_phone' | 'contact_email'>) => {
+      if (!user || !session) {
+        console.error("Authentication required: No authenticated user found");
+        throw new Error('Você precisa estar autenticado para criar uma lavanderia');
       }
+      
+      console.log("Creating laundry with user:", user.id);
       
       // Validate required fields before sending to the database
       if (!laundry.name || !laundry.address) {
-        throw new Error('Missing required fields');
+        throw new Error('Nome e endereço são obrigatórios');
       }
       
       // Make sure owner_id is set to the current authenticated user
       const laundryData = {
         ...laundry,
-        owner_id: session.user.id
+        owner_id: user.id
       };
       
       console.log("Sending laundry data with authenticated user:", laundryData);
@@ -89,7 +90,7 @@ export function useCreateLaundry() {
 
       if (error) {
         console.error("Supabase error creating laundry:", error);
-        throw error;
+        throw new Error(`Erro ao criar lavanderia: ${error.message}`);
       }
       
       console.log("Laundry created successfully:", data);
@@ -101,7 +102,7 @@ export function useCreateLaundry() {
     },
     onError: (error: Error) => {
       console.error("Error in mutation:", error);
-      toast.error('Erro ao criar lavanderia: ' + error.message);
+      toast.error(error.message);
     }
   });
 }

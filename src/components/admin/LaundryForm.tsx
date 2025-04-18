@@ -11,6 +11,7 @@ import { useCreateLaundry } from "@/hooks/useLaundries";
 import { Plus } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 // Define schema for form validation
 const laundrySchema = z.object({
@@ -27,6 +28,7 @@ export function LaundryForm() {
   const createLaundry = useCreateLaundry();
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   // Create form with react-hook-form and zod validation
   const form = useForm<LaundryFormValues>({
@@ -45,6 +47,8 @@ export function LaundryForm() {
       
       if (!user) {
         toast.error('Você precisa estar autenticado para criar uma lavanderia');
+        setOpen(false);
+        navigate('/auth');
         return;
       }
       
@@ -54,8 +58,7 @@ export function LaundryForm() {
         name: data.name,
         address: data.address,
         contact_phone: data.contact_phone,
-        contact_email: data.contact_email,
-        owner_id: user.id // Este valor será sobrescrito no hook
+        contact_email: data.contact_email
       });
       
       setOpen(false);
