@@ -19,6 +19,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     const checkRole = async () => {
       if (authLoading) {
         // Wait for auth to complete before checking roles
+        console.log("ProtectedRoute: Waiting for auth to complete");
         return;
       }
       
@@ -35,7 +36,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
           .from('profiles')
           .select('role')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
         if (error) {
           console.error("ProtectedRoute: Error fetching role:", error);
@@ -54,6 +55,16 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     };
 
     checkRole();
+    
+    // Safety timeout to prevent infinite loading
+    const timeout = setTimeout(() => {
+      if (loading) {
+        console.log("ProtectedRoute: Safety timeout triggered");
+        setLoading(false);
+      }
+    }, 3000);
+    
+    return () => clearTimeout(timeout);
   }, [user, requiredRole, authLoading]);
 
   // If the auth context is still loading, show a loading spinner

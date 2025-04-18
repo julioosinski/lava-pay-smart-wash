@@ -4,6 +4,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
 
 interface AuthContextType {
   user: User | null;
@@ -35,6 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (error) {
         console.error("Error fetching role:", error);
+        setLoading(false);
         return;
       }
       
@@ -74,7 +76,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           if (event === 'SIGNED_IN' && newSession?.user) {
             console.log("User signed in, will redirect based on role");
-            redirectBasedOnRole(newSession.user.id);
+            // Using setTimeout to avoid potential deadlock with Supabase auth
+            setTimeout(() => {
+              redirectBasedOnRole(newSession.user.id);
+            }, 0);
           } else if (event === 'SIGNED_OUT') {
             console.log("User signed out");
             setLoading(false); // Set loading to false after sign out
@@ -86,12 +91,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const { data: { session: currentSession } } = await supabase.auth.getSession();
         console.log("Checking for existing session:", currentSession ? "Found" : "None");
+        
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
         if (currentSession?.user) {
           console.log("Session found during initialization for user:", currentSession.user.id);
-          await redirectBasedOnRole(currentSession.user.id);
+          // Using setTimeout to avoid potential deadlock with Supabase auth
+          setTimeout(() => {
+            redirectBasedOnRole(currentSession.user.id);
+          }, 0);
         } else {
           console.log("No session found, setting loading to false");
           setLoading(false); // Set loading to false if no session found
@@ -104,7 +113,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return () => subscription.unsubscribe();
     };
 
+    // Add a safety timeout to prevent infinite loading
+    const safetyTimeout = setTimeout(() => {
+      console.log("Safety timeout triggered - forcing loading state to false");
+      setLoading(false);
+    }, 5000);
+
     setupAuth();
+    
+    return () => clearTimeout(safetyTimeout);
   }, [navigate]);
 
   const signIn = async (email: string, password: string) => {
@@ -115,6 +132,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) {
         console.error("Sign in error:", error);
         setLoading(false); // Set loading to false if there's an error
+        toast({
+          variant: "destructive",
+          title: "Erro ao entrar",
+          description: error.message
+        });
         throw error;
       }
       
@@ -136,6 +158,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.auth.signUp({ email, password });
       if (error) {
         setLoading(false); // Set loading to false if there's an error
+        toast({
+          variant: "destructive",
+          title: "Erro ao criar conta",
+          description: error.message
+        });
         throw error;
       }
       // Loading will be set to false by the auth state change listener
@@ -174,7 +201,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       {loading ? (
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-lavapay-600 mx-auto mb-4"></div>
+            <Loader2 className="h-12 w-12 animate-spin text-lavapay-600 mx-auto mb-4" />
             <p className="text-lg font-medium">Carregando autenticação...</p>
             <p className="text-sm text-gray-500">Por favor, aguarde um momento...</p>
           </div>
