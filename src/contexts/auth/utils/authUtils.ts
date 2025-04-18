@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export const updateUserRole = async (userId: string, role: 'business' | 'user' | 'admin') => {
@@ -131,17 +132,21 @@ export const updateUserContact = async (userId: string, email: string, phone: st
       console.log("Contact columns might not exist in profiles table, adding them");
       
       try {
-        // Use the REST API directly to avoid TypeScript issues
-        const response = await fetch(`${supabase.supabaseUrl}/rest/v1/rpc/execute_sql`, {
+        // Use a direct insert to the trigger table
+        const SUPABASE_URL = "https://ftvvhclqjwtthquokzii.supabase.co";
+        const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0dnZoY2xxand0dGhxdW9remlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAyNjkzNzYsImV4cCI6MjA1NTg0NTM3Nn0.UkjPU_AMophCGvQjLWAvU3mMwjSX5iLyXbmSysjI3U4";
+        
+        // Use the REST API directly with the constants
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/add_contact_fields_to_profiles_call`, {
           method: 'POST',
           headers: {
-            'apikey': supabase.supabaseKey,
-            'Authorization': `Bearer ${supabase.supabaseKey}`,
+            'apikey': SUPABASE_PUBLISHABLE_KEY,
+            'Authorization': `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
             'Content-Type': 'application/json',
             'Prefer': 'return=minimal'
           },
           body: JSON.stringify({
-            sql_query: "INSERT INTO add_contact_fields_to_profiles_call (dummy) VALUES (true)"
+            dummy: true
           })
         });
         
