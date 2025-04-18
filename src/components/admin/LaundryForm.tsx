@@ -39,7 +39,15 @@ export function LaundryForm({ initialData, mode = "create" }: LaundryFormProps) 
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (mode === "create") {
-      await createLaundry.mutateAsync(values);
+      // Ensure required fields are present by spreading the form values
+      const laundryData = {
+        name: values.name, // This guarantees name is not optional
+        address: values.address, // This guarantees address is not optional
+        contact_phone: values.contact_phone,
+        contact_email: values.contact_email,
+      };
+      
+      await createLaundry.mutateAsync(laundryData);
       setOpen(false);
       form.reset();
     } else {
