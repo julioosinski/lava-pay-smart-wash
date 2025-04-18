@@ -7,19 +7,21 @@ interface PasswordInputProps {
   onChange: (value: string) => void;
   showPassword: boolean;
   onToggleShow: () => void;
+  label?: string; // Make label optional
 }
 
 export const PasswordInput = ({ 
   value, 
   onChange, 
   showPassword, 
-  onToggleShow 
+  onToggleShow,
+  label = "Senha" // Default value if not provided
 }: PasswordInputProps) => {
   return (
     <div className="relative">
       <Input
         type={showPassword ? "text" : "password"}
-        placeholder="Senha"
+        placeholder={label}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         required
