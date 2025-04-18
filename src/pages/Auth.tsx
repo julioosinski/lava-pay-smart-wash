@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -81,6 +82,8 @@ export default function Auth() {
       setLoading(false);
     }
   };
+
+  console.log("Auth page loaded with role:", expectedRole);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">

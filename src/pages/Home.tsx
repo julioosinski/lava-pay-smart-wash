@@ -103,6 +103,7 @@ export default function Home() {
                 <Button 
                   onClick={handleOwnerAccess} 
                   className="w-full bg-lavapay-500 hover:bg-lavapay-600"
+                  type="button"
                 >
                   Acessar como Proprietário
                 </Button>
@@ -122,6 +123,7 @@ export default function Home() {
                 <Button 
                   onClick={handleAdminAccess}
                   className="w-full bg-lavapay-500 hover:bg-lavapay-600"
+                  type="button"
                 >
                   Acessar como Administrador
                 </Button>
@@ -133,4 +135,3 @@ export default function Home() {
     </Layout>
   );
 }
-
