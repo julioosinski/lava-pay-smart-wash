@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -80,7 +79,6 @@ export default function Totem() {
     setStep("processing");
 
     try {
-      // Simular processamento de pagamento
       const token = await generatePaymentToken(cardDetails);
       const payment = await processCardPayment(
         token,
@@ -90,7 +88,6 @@ export default function Totem() {
         selectedMachine.id
       );
 
-      // Simular pequeno atraso adicional
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       if (payment.status === 'approved') {
@@ -118,7 +115,6 @@ export default function Totem() {
     setIsProcessing(true);
     
     try {
-      // Gerar QR Code PIX
       const pixData = await generatePixQRCode(
         selectedMachine.price,
         `Pagamento ${selectedMachine.type === 'washer' ? 'Lavadora' : 'Secadora'} #${selectedMachine.id}`,
@@ -127,8 +123,6 @@ export default function Totem() {
       
       setPixQRCode(pixData.qrCodeBase64);
       
-      // Em uma implementação real, seria iniciado um polling para verificar o status do pagamento
-      // Aqui vamos simular um pagamento bem-sucedido após alguns segundos
       setTimeout(async () => {
         const activated = await activateMachine(selectedMachine.id);
         
@@ -139,8 +133,7 @@ export default function Totem() {
         }
         
         setIsProcessing(false);
-      }, 5000); // Simular 5 segundos para pagamento
-      
+      }, 5000);
     } catch (error) {
       console.error("Erro no pagamento PIX:", error);
       setStep("error");
@@ -196,7 +189,7 @@ export default function Totem() {
             <div className="flex justify-between items-center">
               <p>
                 {selectedMachine.type === 'washer' ? 'Lavadora' : 'Secadora'} #{selectedMachine.id}
-                <span className="block text-sm text-gray-500">{selectedMachine.timeMinutes} minutos</span>
+                <span className="block text-sm text-gray-500">{selectedMachine.time_minutes} minutos</span>
               </p>
               <p className="font-semibold text-lg">
                 {new Intl.NumberFormat('pt-BR', {
@@ -431,7 +424,7 @@ export default function Totem() {
             <p className="font-medium mb-1">Detalhes:</p>
             {selectedMachine && (
               <p className="text-gray-600">
-                {selectedMachine.type === 'washer' ? 'Lavadora' : 'Secadora'} #{selectedMachine.id} - {selectedMachine.timeMinutes} minutos
+                {selectedMachine.type === 'washer' ? 'Lavadora' : 'Secadora'} #{selectedMachine.id} - {selectedMachine.time_minutes} minutos
               </p>
             )}
           </div>

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Layout } from "@/components/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -38,7 +39,7 @@ import { ProgressCustom } from "@/components/ui/progress-custom";
 const currentOwnerId = '2';
 const ownerLocations = mockLocations.filter(location => location.ownerId === currentOwnerId);
 const ownerLocationIds = ownerLocations.map(location => location.id);
-const ownerMachines = mockMachines.filter(machine => ownerLocationIds.includes(machine.locationId));
+const ownerMachines = mockMachines.filter(machine => ownerLocationIds.includes(machine.laundry_id));
 const ownerMachineIds = ownerMachines.map(machine => machine.id);
 const ownerPayments = mockPayments.filter(payment => ownerMachineIds.includes(payment.machineId));
 
@@ -46,7 +47,7 @@ export default function Owner() {
   const [selectedLocation, setSelectedLocation] = useState<string>(ownerLocations[0]?.id || "all");
 
   const filteredMachines = ownerMachines.filter(
-    machine => selectedLocation === "all" ? true : machine.locationId === selectedLocation
+    machine => selectedLocation === "all" ? true : machine.laundry_id === selectedLocation
   );
 
   const formatCurrency = (value: number) => {
@@ -331,7 +332,7 @@ export default function Owner() {
             </div>
           ) : (
             ownerLocations.map(location => {
-              const locationMachines = ownerMachines.filter(m => m.locationId === location.id);
+              const locationMachines = ownerMachines.filter(m => m.laundry_id === location.id);
               const availableCount = locationMachines.filter(m => m.status === 'available').length;
               const totalCount = locationMachines.length;
               
@@ -399,7 +400,7 @@ export default function Owner() {
             <TableBody>
               {ownerPayments.map((payment) => {
                 const machine = ownerMachines.find(m => m.id === payment.machineId);
-                const location = machine ? ownerLocations.find(l => l.id === machine.locationId) : null;
+                const location = machine ? ownerLocations.find(l => l.id === machine.laundry_id) : null;
                 
                 return (
                   <TableRow key={payment.id}>

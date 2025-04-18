@@ -46,40 +46,40 @@ export const mockMachines: Machine[] = [
     type: 'washer',
     status: 'available',
     price: 12.50,
-    timeMinutes: 45,
-    locationId: '1'
+    time_minutes: 45,
+    laundry_id: '1'
   },
   {
     id: '2',
     type: 'dryer',
     status: 'available',
     price: 8.00,
-    timeMinutes: 30,
-    locationId: '1'
+    time_minutes: 30,
+    laundry_id: '1'
   },
   {
     id: '3',
     type: 'washer',
     status: 'in-use',
     price: 12.50,
-    timeMinutes: 45,
-    locationId: '1'
+    time_minutes: 45,
+    laundry_id: '1'
   },
   {
     id: '4',
     type: 'washer',
     status: 'available',
     price: 15.00,
-    timeMinutes: 60,
-    locationId: '2'
+    time_minutes: 60,
+    laundry_id: '2'
   },
   {
     id: '5',
     type: 'dryer',
     status: 'maintenance',
     price: 10.00,
-    timeMinutes: 40,
-    locationId: '2'
+    time_minutes: 40,
+    laundry_id: '2'
   }
 ];
 
@@ -114,5 +114,5 @@ export const mockPayments: Payment[] = [
 
 // Preparar os dados para uso
 mockLocations.forEach(location => {
-  location.machines = mockMachines.filter(machine => machine.locationId === location.id);
+  location.machines = mockMachines.filter(machine => machine.laundry_id === location.id);
 });
