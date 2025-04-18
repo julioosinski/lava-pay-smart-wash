@@ -132,17 +132,19 @@ export const updateUserContact = async (userId: string, email: string, phone: st
       console.log("Contact columns might not exist in profiles table, adding them");
       
       try {
-        // Call the helper table that triggers the function to add columns
-        const { error: insertError } = await supabase
-          .from('add_contact_fields_to_profiles_call')
-          .insert({ dummy: true });
+        // Execute raw SQL to insert into the helper table
+        // This avoids TypeScript errors by using raw SQL instead of the typed client
+        const { error: sqlError } = await supabase
+          .rpc('execute_sql', { 
+            sql_query: "INSERT INTO add_contact_fields_to_profiles_call (dummy) VALUES (true)" 
+          });
         
-        if (insertError) {
-          console.error("Error triggering add_contact_fields_to_profiles function:", insertError);
+        if (sqlError) {
+          console.error("Error triggering add_contact_fields_to_profiles function:", sqlError);
         } else {
           console.log("Successfully triggered add_contact_fields_to_profiles function");
           
-          // Try update again
+          // Try update again after a delay to allow the function to complete
           setTimeout(async () => {
             const { error: retryError } = await supabase
               .from('profiles')
