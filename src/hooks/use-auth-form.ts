@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/auth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import { toast as sonnerToast } from 'sonner';
 
 export const useAuthForm = (expectedRole: string = 'user') => {
   const [isLogin, setIsLogin] = useState(true);
@@ -19,6 +20,12 @@ export const useAuthForm = (expectedRole: string = 'user') => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email || !password) {
+      sonnerToast.error("Por favor, preencha todos os campos");
+      return;
+    }
+    
     setLoading(true);
 
     try {
@@ -37,6 +44,8 @@ export const useAuthForm = (expectedRole: string = 'user') => {
             
             if (!existingLaundries || existingLaundries.length === 0) {
               console.log("No laundries found, creating a test laundry");
+              sonnerToast.info("Criando dados de teste para lavanderia");
+              
               await supabase.from('laundries').insert({
                 name: 'Test Laundry',
                 contact_email: email.trim(),
@@ -49,6 +58,7 @@ export const useAuthForm = (expectedRole: string = 'user') => {
             // Try login
             await signIn(email.trim(), password.trim());
             console.log("Business login successful");
+            sonnerToast.success("Login realizado com sucesso!");
           } catch (error) {
             console.error("Business login failed:", error);
             
@@ -73,6 +83,8 @@ export const useAuthForm = (expectedRole: string = 'user') => {
             // Attempt to create a user account if authentication failed
             console.log("Attempting to create user account after failed login");
             try {
+              sonnerToast.info("Tentando criar uma nova conta");
+              
               const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
                 email: email.trim(),
                 password: password.trim()
@@ -80,22 +92,29 @@ export const useAuthForm = (expectedRole: string = 'user') => {
               
               if (signUpError) {
                 console.error("Error creating user account:", signUpError);
+                sonnerToast.error("Erro ao criar conta");
               } else if (signUpData.user) {
                 console.log("User account created successfully, attempting login");
+                sonnerToast.success("Conta criada com sucesso! Tentando login...");
+                
                 try {
                   await signIn(email.trim(), password.trim());
+                  sonnerToast.success("Login realizado com sucesso!");
                 } catch (loginError) {
                   console.error("Login after signup failed:", loginError);
+                  sonnerToast.error("Erro ao fazer login após criar a conta");
                 }
               }
             } catch (signUpAttemptError) {
               console.error("Error in signup attempt:", signUpAttemptError);
+              sonnerToast.error("Erro ao tentar criar conta");
             }
           }
         } else {
           // Login normal para outros tipos de usuário
           try {
             await signIn(email.trim(), password.trim());
+            sonnerToast.success("Login realizado com sucesso!");
           } catch (error) {
             console.error("Login error:", error);
             toast({
@@ -109,6 +128,22 @@ export const useAuthForm = (expectedRole: string = 'user') => {
         // Fluxo de cadastro
         try {
           await signUp(email.trim(), password.trim());
+          sonnerToast.success("Registro realizado com sucesso!");
+          
+          // Adicionar role baseado no contexto da tela de autenticação
+          if (expectedRole) {
+            const { error: roleError } = await supabase
+              .from('profiles')
+              .update({ role: expectedRole })
+              .eq('id', user?.id || '');
+              
+            if (roleError) {
+              console.error("Error setting user role:", roleError);
+            } else {
+              console.log(`Role set to ${expectedRole} for new user`);
+            }
+          }
+          
           toast({
             title: "Registro realizado com sucesso!",
             description: "Verifique seu email para confirmar o cadastro.",
@@ -124,6 +159,7 @@ export const useAuthForm = (expectedRole: string = 'user') => {
       }
     } catch (error) {
       console.error("Auth error:", error);
+      sonnerToast.error("Erro de autenticação");
     } finally {
       setLoading(false);
     }

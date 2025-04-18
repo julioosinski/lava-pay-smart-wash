@@ -2,11 +2,12 @@
 import { useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { AuthContext, type AuthContextType } from './AuthContext';
 import { redirectBasedOnRole } from './AuthRedirect';
 import { useAuthMethods } from './useAuthMethods';
+import { toast } from 'sonner';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Initialize all state hooks first, before any other hooks
@@ -16,6 +17,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   
   // Then initialize other hooks
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Initialize auth methods hook last
   const { signIn, signUp, signOut } = useAuthMethods({ 
@@ -39,12 +41,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           if (event === 'SIGNED_IN' && newSession?.user) {
             console.log("User signed in, will redirect based on role");
-            setTimeout(() => {
-              redirectBasedOnRole(newSession.user.id, navigate);
-            }, 0);
+            
+            // Check if we're already on a protected route
+            const isOnAuthPage = location.pathname === '/auth';
+            
+            if (isOnAuthPage) {
+              // Only redirect if on auth page
+              setTimeout(() => {
+                redirectBasedOnRole(newSession.user.id, navigate);
+              }, 0);
+            }
           } else if (event === 'SIGNED_OUT') {
             console.log("User signed out");
             setLoading(false);
+            
+            // Redirect to auth page on sign out if not already there
+            if (location.pathname !== '/auth') {
+              navigate('/auth', { replace: true });
+            }
           }
         }
       );
@@ -58,16 +72,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (currentSession?.user) {
           console.log("Session found during initialization for user:", currentSession.user.id);
-          setTimeout(() => {
-            redirectBasedOnRole(currentSession.user.id, navigate);
-          }, 0);
+          
+          // Check if we're already on a protected route
+          const isOnAuthPage = location.pathname === '/auth';
+          
+          if (isOnAuthPage) {
+            // Only redirect if on auth page
+            setTimeout(() => {
+              redirectBasedOnRole(currentSession.user.id, navigate);
+            }, 0);
+          }
         } else {
           console.log("No session found, setting loading to false");
           setLoading(false);
+          
+          // If no session and on a protected route, the ProtectedRoute component will handle redirection
         }
       } catch (error) {
         console.error("Error getting session:", error);
         setLoading(false);
+        toast.error("Erro ao verificar a sessão");
       }
       
       return () => subscription.unsubscribe();
@@ -81,7 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setupAuth();
     
     return () => clearTimeout(safetyTimeout);
-  }, [navigate]);
+  }, [navigate, location.pathname]);
 
   const contextValue: AuthContextType = {
     user,

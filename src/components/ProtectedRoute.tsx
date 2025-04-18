@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/auth';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -40,6 +41,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
 
         if (error) {
           console.error("ProtectedRoute: Error fetching role:", error);
+          toast.error("Erro ao verificar permissões do usuário");
           setLoading(false);
           return;
         }
@@ -50,6 +52,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
         setLoading(false);
       } catch (error) {
         console.error("ProtectedRoute: Error checking role:", error);
+        toast.error("Erro ao verificar permissões do usuário");
         setLoading(false);
       }
     };
@@ -101,6 +104,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
   // If a specific role is required, check if user has that role
   if (requiredRole && role !== requiredRole) {
     console.log(`ProtectedRoute: Access denied - User role ${role} doesn't match required role ${requiredRole}`);
+    toast.error(`Acesso negado. Seu papel atual (${role || 'usuário'}) não tem permissão para esta página.`);
     
     // Redirect based on the user's actual role
     if (role === 'business') {

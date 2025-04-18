@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { WashingMachine } from 'lucide-react';
@@ -9,11 +9,13 @@ import { useAuth } from '@/contexts/auth';
 import { EmailInput } from '@/components/auth/EmailInput';
 import { PasswordInput } from '@/components/auth/PasswordInput';
 import { useAuthForm } from '@/hooks/use-auth-form';
+import { toast } from 'sonner';
 
 export default function Auth() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const expectedRole = location.state?.role || 'user';
   
   const {
@@ -36,6 +38,8 @@ export default function Auth() {
       // No need to get the session again as we're using the user from context
       if (user) {
         console.log("User already authenticated in Auth page, redirecting");
+        setIsRedirecting(true);
+        
         const { data } = await supabase
           .from('profiles')
           .select('role')
@@ -45,15 +49,21 @@ export default function Auth() {
         const role = data?.role;
         console.log("User role detected in Auth page:", role);
         
-        if (role === 'business') {
-          console.log("Business role detected in Auth page, redirecting to /owner");
-          navigate('/owner', { replace: true });
-        } else if (role === 'admin') {
-          console.log("Admin role detected in Auth page, redirecting to /admin");
-          navigate('/admin', { replace: true });
-        } else {
-          console.log("Standard user role in Auth page, redirecting to home");
-          navigate('/', { replace: true });
+        try {
+          if (role === 'business') {
+            console.log("Business role detected in Auth page, redirecting to /owner");
+            navigate('/owner', { replace: true });
+          } else if (role === 'admin') {
+            console.log("Admin role detected in Auth page, redirecting to /admin");
+            navigate('/admin', { replace: true });
+          } else {
+            console.log("Standard user role in Auth page, redirecting to home");
+            navigate('/', { replace: true });
+          }
+        } catch (error) {
+          console.error("Error during redirection:", error);
+          setIsRedirecting(false);
+          toast.error("Erro ao redirecionar para a página correta");
         }
       }
     };
@@ -109,16 +119,16 @@ export default function Auth() {
             <Button 
               type="submit" 
               className="w-full bg-lavapay-600 hover:bg-lavapay-700"
-              disabled={loading}
+              disabled={loading || isRedirecting}
             >
-              {loading ? 'Processando...' : (isLogin ? 'Entrar' : 'Criar conta')}
+              {loading || isRedirecting ? 'Processando...' : (isLogin ? 'Entrar' : 'Criar conta')}
             </Button>
             <Button
               type="button"
               variant="link"
               className="w-full"
               onClick={() => setIsLogin(!isLogin)}
-              disabled={loading}
+              disabled={loading || isRedirecting}
             >
               {isLogin 
                 ? 'Não tem uma conta? Criar conta'
