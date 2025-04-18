@@ -87,6 +87,8 @@ export type Database = {
       laundries: {
         Row: {
           address: string
+          contact_email: string | null
+          contact_phone: string | null
           created_at: string
           id: string
           latitude: number | null
@@ -98,6 +100,8 @@ export type Database = {
         }
         Insert: {
           address: string
+          contact_email?: string | null
+          contact_phone?: string | null
           created_at?: string
           id?: string
           latitude?: number | null
@@ -109,6 +113,8 @@ export type Database = {
         }
         Update: {
           address?: string
+          contact_email?: string | null
+          contact_phone?: string | null
           created_at?: string
           id?: string
           latitude?: number | null
