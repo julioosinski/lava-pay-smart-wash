@@ -33,16 +33,16 @@ export const usePayments = (laundryId?: string) => {
   return useQuery({
     queryKey: ['payments', laundryId],
     queryFn: async () => {
-      let query = supabase
+      // Create the base query
+      const baseQuery = supabase
         .from('payments')
         .select('*')
         .order('created_at', { ascending: false });
-
-      if (laundryId) {
-        query = query.eq('laundry_id', laundryId);
-      }
-
-      const { data, error } = await query;
+      
+      // Apply the filter if laundryId is provided
+      const { data, error } = laundryId 
+        ? await baseQuery.eq('laundry_id', laundryId)
+        : await baseQuery;
       
       if (error) {
         console.error("Error fetching payments:", error);
