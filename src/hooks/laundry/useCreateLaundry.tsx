@@ -23,6 +23,7 @@ export function useCreateLaundry() {
         throw new Error('Nome, endereço, email e telefone são obrigatórios');
       }
       
+      // Use direct insert without relying on any database trigger to create users
       const { data, error } = await supabase
         .from('laundries')
         .insert({
@@ -30,7 +31,9 @@ export function useCreateLaundry() {
           address: laundry.address,
           contact_phone: laundry.contact_phone,
           contact_email: laundry.contact_email,
-          owner_id: session.user.id
+          owner_id: session.user.id,
+          // Add status explicitly to avoid any null constraints
+          status: 'active'
         })
         .select()
         .single();
