@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { WashingMachine, Menu, X } from "lucide-react";
+import { WashingMachine, Menu, X, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -11,7 +11,7 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const isMobile = useIsMobile();
 
   const isActiveRoute = (path: string) => {
@@ -24,6 +24,11 @@ export function Header() {
 
   const handleOwnerAccess = () => {
     navigate('/auth', { state: { role: 'business' } });
+  };
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/');
   };
 
   const navItems = [
@@ -80,6 +85,18 @@ export function Header() {
                       </button>
                     )
                   ))}
+                  {user && (
+                    <button
+                      className="px-4 py-3 hover:bg-lavapay-500 transition-colors text-left flex items-center gap-2"
+                      onClick={() => {
+                        handleLogout();
+                        setMobileMenuOpen(false);
+                      }}
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Sair
+                    </button>
+                  )}
                 </nav>
               </div>
             )}
@@ -108,6 +125,17 @@ export function Header() {
                 </button>
               )
             ))}
+            {user && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLogout}
+                className="text-white hover:bg-lavapay-500 flex items-center gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+                Sair
+              </Button>
+            )}
           </nav>
         )}
       </div>

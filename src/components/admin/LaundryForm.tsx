@@ -8,7 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useCreateLaundry } from "@/hooks/useLaundries";
+import { useCreateLaundry, useUpdateLaundry } from "@/hooks/useLaundries";
 import { LaundryLocation } from "@/types";
 
 const formSchema = z.object({
@@ -26,6 +26,7 @@ interface LaundryFormProps {
 export function LaundryForm({ initialData, mode = "create" }: LaundryFormProps) {
   const [open, setOpen] = useState(false);
   const createLaundry = useCreateLaundry();
+  const updateLaundry = useUpdateLaundry();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -38,22 +39,29 @@ export function LaundryForm({ initialData, mode = "create" }: LaundryFormProps) 
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    if (mode === "create") {
-      // Ensure required fields are present by spreading the form values
-      const laundryData = {
-        name: values.name, // This guarantees name is not optional
-        address: values.address, // This guarantees address is not optional
-        contact_phone: values.contact_phone,
-        contact_email: values.contact_email,
-      };
-      
-      await createLaundry.mutateAsync(laundryData);
-      setOpen(false);
-      form.reset();
-    } else {
-      // Handle edit mode here
-      // We'll implement this later when we add the update mutation
-      console.log("Edit mode:", values);
+    try {
+      if (mode === "create") {
+        const laundryData = {
+          name: values.name,
+          address: values.address,
+          contact_phone: values.contact_phone,
+          contact_email: values.contact_email,
+        };
+        
+        await createLaundry.mutateAsync(laundryData);
+        setOpen(false);
+        form.reset();
+      } else if (initialData?.id) {
+        await updateLaundry.mutateAsync({
+          id: initialData.id,
+          name: values.name,
+          address: values.address,
+          contact_phone: values.contact_phone,
+          contact_email: values.contact_email,
+        });
+      }
+    } catch (error) {
+      console.error("Error in form submission:", error);
     }
   };
 
