@@ -1,43 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Layout } from "@/components/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MachineCard } from "@/components/MachineCard";
-import { StatusBadge } from "@/components/StatusBadge";
-import { 
-  BarChart, 
-  DollarSign, 
-  MapPin, 
-  WashingMachine, 
-  RefreshCcw, 
-  PlusCircle,
-  ChevronDown,
-  AlertCircle,
-  CheckCircle
-} from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { ProgressCustom } from "@/components/ui/progress-custom";
+import { ChevronDown, Plus, AlertCircle } from "lucide-react";
 import { LaundryForm } from "@/components/admin/LaundryForm";
 import { MachineForm } from "@/components/admin/MachineForm";
 import { useLaundries } from "@/hooks/useLaundries";
 import { useMachines } from "@/hooks/useMachines";
 import { usePayments } from "@/hooks/usePayments";
 import { useAuth } from "@/contexts/AuthContext";
+import { DashboardStats } from "@/components/owner/DashboardStats";
+import { RevenueChart } from "@/components/owner/RevenueChart";
+import { MachineStatus } from "@/components/owner/MachineStatus";
+import { RecentPayments } from "@/components/owner/RecentPayments";
 
 export default function Owner() {
   const { user } = useAuth();
@@ -61,37 +38,13 @@ export default function Owner() {
       : machine.laundry_id === selectedLocation
   );
   
-  // Update selected location when laundries change
-  useEffect(() => {
-    if (ownerLaundries.length > 0 && !ownerLaundries.find(l => l.id === selectedLocation)) {
-      setSelectedLocation(ownerLaundries[0]?.id || "all");
-    }
-  }, [ownerLaundries, selectedLocation]);
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value);
-  };
-
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(date);
-  };
-
   // Filter payments to only include those for the owner's machines
   const ownerMachineIds = ownerMachines.map(machine => machine.id);
   const ownerPayments = payments.filter(payment => 
     ownerMachineIds.includes(payment.machine_id)
   );
 
-  // Cálculos para o dashboard
+  // Dashboard calculations
   const totalRevenue = ownerPayments
     .filter(payment => payment.status === 'approved')
     .reduce((sum, payment) => sum + payment.amount, 0);
@@ -105,7 +58,7 @@ export default function Owner() {
   const inUsePercentage = totalMachines > 0 ? (inUseMachines / totalMachines) * 100 : 0;
   const maintenancePercentage = totalMachines > 0 ? (maintenanceMachines / totalMachines) * 100 : 0;
 
-  // Cálculo do gráfico de receita (simulado)
+  // Revenue chart data (simulated)
   const revenueByDay = [
     { day: 'Seg', amount: 320 },
     { day: 'Ter', amount: 280 },
@@ -116,169 +69,35 @@ export default function Owner() {
     { day: 'Dom', amount: 390 },
   ];
 
-  const maxRevenue = Math.max(...revenueByDay.map(d => d.amount));
-
   const renderDashboard = () => (
     <div className="space-y-6">
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Receita Total</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(totalRevenue)}</div>
-            <p className="text-xs text-muted-foreground">
-              +15.2% em relação à semana passada
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Lavanderias</CardTitle>
-            <MapPin className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{ownerLaundries.length}</div>
-            <p className="text-xs text-muted-foreground">
-              {ownerLaundries.length} locais em operação
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Máquinas</CardTitle>
-            <WashingMachine className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalMachines}</div>
-            <p className="text-xs text-muted-foreground">
-              {availableMachines} disponíveis, {maintenanceMachines} em manutenção
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Taxa de Ocupação</CardTitle>
-            <BarChart className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{Math.round(inUsePercentage)}%</div>
-            <p className="text-xs text-muted-foreground">
-              {inUseMachines} máquinas em uso no momento
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      <DashboardStats
+        totalRevenue={totalRevenue}
+        laundries={ownerLaundries}
+        totalMachines={totalMachines}
+        availableMachines={availableMachines}
+        maintenanceMachines={maintenanceMachines}
+        inUsePercentage={inUsePercentage}
+        inUseMachines={inUseMachines}
+      />
       
       <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Receita Semanal</CardTitle>
-            <CardDescription>Receita dos últimos 7 dias</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[200px] flex items-end justify-between gap-2">
-              {revenueByDay.map((data) => (
-                <div key={data.day} className="flex flex-col items-center">
-                  <div 
-                    className="bg-lavapay-500 w-8 rounded-t-md" 
-                    style={{ height: `${(data.amount / maxRevenue) * 160}px` }}
-                  ></div>
-                  <div className="text-xs mt-2">{data.day}</div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Status das Máquinas</CardTitle>
-            <CardDescription>Visão geral do estado do equipamento</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <div className="flex items-center">
-                  <div className="h-3 w-3 rounded-full bg-green-500 mr-2"></div>
-                  <span>Disponíveis</span>
-                </div>
-                <span>{availableMachines} máquinas</span>
-              </div>
-              <ProgressCustom value={availablePercentage} bgColor="bg-green-500" />
-            </div>
-            
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <div className="flex items-center">
-                  <div className="h-3 w-3 rounded-full bg-blue-500 mr-2"></div>
-                  <span>Em Uso</span>
-                </div>
-                <span>{inUseMachines} máquinas</span>
-              </div>
-              <ProgressCustom value={inUsePercentage} bgColor="bg-blue-500" />
-            </div>
-            
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <div className="flex items-center">
-                  <div className="h-3 w-3 rounded-full bg-orange-500 mr-2"></div>
-                  <span>Manutenção</span>
-                </div>
-                <span>{maintenanceMachines} máquinas</span>
-              </div>
-              <ProgressCustom value={maintenancePercentage} bgColor="bg-orange-500" />
-            </div>
-          </CardContent>
-        </Card>
+        <RevenueChart revenueByDay={revenueByDay} />
+        <MachineStatus
+          availableMachines={availableMachines}
+          inUseMachines={inUseMachines}
+          maintenanceMachines={maintenanceMachines}
+          availablePercentage={availablePercentage}
+          inUsePercentage={inUsePercentage}
+          maintenancePercentage={maintenancePercentage}
+        />
       </div>
       
-      <Card>
-        <CardHeader>
-          <CardTitle>Pagamentos Recentes</CardTitle>
-          <CardDescription>Últimas transações registradas no sistema</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Máquina</TableHead>
-                <TableHead>Valor</TableHead>
-                <TableHead>Método</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Data/Hora</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {ownerPayments.slice(0, 5).map((payment) => {
-                const machine = ownerMachines.find(m => m.id === payment.machine_id);
-                const location = machine ? ownerLaundries.find(l => l.id === machine.laundry_id) : null;
-                
-                return (
-                  <TableRow key={payment.id}>
-                    <TableCell className="font-medium">{payment.id}</TableCell>
-                    <TableCell>
-                      {machine ? `${machine.type === 'washer' ? 'Lavadora' : 'Secadora'} #${machine.id}` : "N/A"}
-                      {location && <div className="text-xs text-gray-500">{location.name}</div>}
-                    </TableCell>
-                    <TableCell>{formatCurrency(payment.amount)}</TableCell>
-                    <TableCell className="capitalize">{payment.method}</TableCell>
-                    <TableCell>
-                      <StatusBadge status={payment.status} />
-                    </TableCell>
-                    <TableCell>{formatDate(payment.created_at)}</TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <RecentPayments 
+        payments={ownerPayments}
+        machines={ownerMachines}
+        laundries={ownerLaundries}
+      />
     </div>
   );
 
@@ -473,18 +292,10 @@ export default function Owner() {
 
         <Tabs defaultValue="dashboard">
           <TabsList className="mb-6">
-            <TabsTrigger value="dashboard" className="flex items-center gap-2">
-              <BarChart className="h-4 w-4" /> Dashboard
-            </TabsTrigger>
-            <TabsTrigger value="machines" className="flex items-center gap-2">
-              <WashingMachine className="h-4 w-4" /> Máquinas
-            </TabsTrigger>
-            <TabsTrigger value="locations" className="flex items-center gap-2">
-              <MapPin className="h-4 w-4" /> Lavanderias
-            </TabsTrigger>
-            <TabsTrigger value="payments" className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4" /> Pagamentos
-            </TabsTrigger>
+            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+            <TabsTrigger value="machines">Máquinas</TabsTrigger>
+            <TabsTrigger value="locations">Lavanderias</TabsTrigger>
+            <TabsTrigger value="payments">Pagamentos</TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard">
