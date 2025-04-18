@@ -1,16 +1,12 @@
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { ChevronDown } from "lucide-react";
 import { useLaundries } from "@/hooks/useLaundries";
 import { useMachines } from "@/hooks/useMachines";
 import { usePayments } from "@/hooks/usePayments";
 import { useAuth } from "@/contexts/auth";
-import { DashboardStats } from "@/components/owner/DashboardStats";
-import { RevenueChart } from "@/components/owner/RevenueChart";
-import { MachineStatus } from "@/components/owner/MachineStatus";
-import { RecentPayments } from "@/components/owner/RecentPayments";
+import { OwnerDashboardHeader } from "@/components/owner/dashboard/OwnerDashboardHeader";
+import { OwnerDashboardOverview } from "@/components/owner/dashboard/OwnerDashboardOverview";
 import { MachinesTab } from "@/components/owner/tabs/MachinesTab";
 import { LocationsTab } from "@/components/owner/tabs/LocationsTab";
 import { PaymentsTab } from "@/components/owner/tabs/PaymentsTab";
@@ -117,51 +113,13 @@ export default function Owner() {
     );
   }
 
-  const renderDashboard = () => (
-    <div className="space-y-6">
-      <DashboardStats
-        totalRevenue={totalRevenue}
-        laundries={ownerLaundries}
-        totalMachines={totalMachines}
-        availableMachines={availableMachines}
-        maintenanceMachines={maintenanceMachines}
-        inUsePercentage={inUsePercentage}
-        inUseMachines={inUseMachines}
-      />
-      
-      <div className="grid gap-6 md:grid-cols-2">
-        <RevenueChart revenueByDay={revenueByDay} />
-        <MachineStatus
-          availableMachines={availableMachines}
-          inUseMachines={inUseMachines}
-          maintenanceMachines={maintenanceMachines}
-          availablePercentage={availablePercentage}
-          inUsePercentage={inUsePercentage}
-          maintenancePercentage={maintenancePercentage}
-        />
-      </div>
-      
-      <RecentPayments 
-        payments={ownerPayments}
-        machines={ownerMachines}
-        laundries={ownerLaundries}
-      />
-    </div>
-  );
-
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-3xl font-bold">Painel do Proprietário</h1>
-            <Button variant="outline" className="h-9">
-              <ChevronDown className="h-4 w-4 mr-2" />
-              Suas Lavanderias
-            </Button>
-          </div>
-          <p className="text-gray-500">Gerencie suas lavanderias e máquinas</p>
-        </div>
+        <OwnerDashboardHeader 
+          title="Painel do Proprietário"
+          subtitle="Gerencie suas lavanderias e máquinas"
+        />
 
         <Tabs defaultValue="dashboard">
           <TabsList className="mb-6">
@@ -172,7 +130,18 @@ export default function Owner() {
           </TabsList>
 
           <TabsContent value="dashboard">
-            {renderDashboard()}
+            <OwnerDashboardOverview
+              totalRevenue={totalRevenue}
+              ownerLaundries={ownerLaundries}
+              totalMachines={totalMachines}
+              availableMachines={availableMachines}
+              maintenanceMachines={maintenanceMachines}
+              inUsePercentage={inUsePercentage}
+              inUseMachines={inUseMachines}
+              revenueByDay={revenueByDay}
+              ownerPayments={ownerPayments}
+              ownerMachines={ownerMachines}
+            />
           </TabsContent>
 
           <TabsContent value="machines">
