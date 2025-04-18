@@ -33,23 +33,35 @@ export default function Auth() {
 
   const redirectBasedOnRole = async (userId: string) => {
     try {
+      console.log("Checking role for user:", userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', userId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching role:", error);
+        throw error;
+      }
+
+      console.log("User role data:", data);
 
       if (data?.role === 'admin') {
         navigate('/admin');
-      } else if (data?.role === 'business') {
+      } else if (data?.role === 'business' || data?.role === 'owner') {
         navigate('/owner');
       } else {
+        console.log("No specific role found, redirecting to home");
         navigate('/');
       }
     } catch (error) {
       console.error('Error checking user role:', error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao verificar permissões",
+        description: "Não foi possível verificar seu perfil de usuário."
+      });
       navigate('/');
     }
   };
@@ -62,8 +74,11 @@ export default function Auth() {
       if (isLogin) {
         await signIn(email, password);
         const { data: { user } } = await supabase.auth.getUser();
+        
         if (user) {
-          redirectBasedOnRole(user.id);
+          console.log("Login successful, redirecting based on role for user:", user.id);
+          // Add a small delay to ensure the session is fully established
+          setTimeout(() => redirectBasedOnRole(user.id), 500);
         }
       } else {
         await signUp(email, password);
