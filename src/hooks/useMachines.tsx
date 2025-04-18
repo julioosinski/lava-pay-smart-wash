@@ -18,6 +18,8 @@ export const useMachines = (laundryId?: string) => {
         if (laundryId && laundryId !== 'all') {
           console.log("Filtering machines by laundry_id:", laundryId);
           query = query.eq('laundry_id', laundryId);
+        } else {
+          console.log("No laundry filter applied, fetching all machines");
         }
 
         const { data, error } = await query;
@@ -33,7 +35,8 @@ export const useMachines = (laundryId?: string) => {
         console.error("Error in useMachines hook:", error);
         throw error;
       }
-    }
+    },
+    enabled: true // Always enable the query to ensure data is fetched
   });
 };
 
