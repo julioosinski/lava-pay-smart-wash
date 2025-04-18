@@ -15,10 +15,20 @@ import { LaundryLocation } from "@/types";
 interface LaundryTabProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
+  laundries?: LaundryLocation[]; // Make laundries optional
 }
 
-export function LaundryTab({ searchQuery, onSearchChange }: LaundryTabProps) {
-  const { data: laundries = [], isLoading } = useLaundries();
+export function LaundryTab({ searchQuery, onSearchChange, laundries: externalLaundries }: LaundryTabProps) {
+  // Only fetch laundries if they weren't provided externally
+  const { data: fetchedLaundries = [], isLoading } = useLaundries({ 
+    forceShowAll: true,
+    // Skip fetch if laundries were provided externally
+    options: { enabled: !externalLaundries }
+  });
+  
+  // Use external laundries if provided, otherwise use fetched laundries
+  const laundries = externalLaundries || fetchedLaundries;
+  
   const { data: allMachines = [] } = useMachines();
   const [selectedLaundry, setSelectedLaundry] = useState<LaundryLocation | null>(null);
   const navigate = useNavigate();
@@ -39,7 +49,7 @@ export function LaundryTab({ searchQuery, onSearchChange }: LaundryTabProps) {
     setSelectedLaundry(laundry);
   };
 
-  if (isLoading) {
+  if (isLoading && !externalLaundries) {
     return <div className="flex justify-center items-center h-64">Carregando...</div>;
   }
 
