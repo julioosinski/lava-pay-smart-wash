@@ -1,3 +1,4 @@
+
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -21,30 +22,24 @@ export function useAuthMethods({
     setLoading(true);
     console.log("Attempting to sign in with email:", email);
     try {
-      // Primeiro tentamos encontrar uma lavanderia com este email e telefone como senha
-      const { data: laundryData, error: laundryError } = await supabase
-        .from('laundries')
-        .select('contact_email, contact_phone, owner_id')
-        .eq('contact_email', email)
-        .eq('contact_phone', password)
-        .maybeSingle();
+      // Primeiro tentar fazer login normal
+      const { error, data } = await supabase.auth.signInWithPassword({ email, password });
       
-      if (laundryData && laundryData.owner_id) {
-        console.log("Found laundry with matching email and phone. Trying to fetch existing user...");
+      if (error) {
+        console.log("Standard login failed, checking if this is a business owner", error);
         
-        // Verificar se já existe um usuário para este owner_id
-        const { data: userData, error: userError } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('id', laundryData.owner_id)
-          .maybeSingle();
+        // Verificar se existe uma lavanderia com este email e telefone como senha
+        const { data: laundryData, error: laundryError } = await supabase
+          .from('laundries')
+          .select('contact_email, contact_phone, owner_id')
+          .eq('contact_email', email)
+          .eq('contact_phone', password)
+          .single();
         
-        if (userData) {
-          // Usuário já existe, tentamos fazer login
-          console.log("User exists, attempting login with credentials");
-        } else {
-          // Criar um novo usuário com estas credenciais
-          console.log("Creating user account for business owner");
+        if (laundryData) {
+          console.log("Found laundry with matching email/phone, creating user account");
+          
+          // Criar uma conta para o proprietário
           const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
             email,
             password
@@ -52,11 +47,14 @@ export function useAuthMethods({
           
           if (signUpError) {
             console.error("Error creating user account:", signUpError);
+            setLoading(false);
             throw signUpError;
           }
           
-          // Atualizar o owner_id da lavanderia com o novo usuário
+          // Se o usuário foi criado com sucesso, atualize o owner_id da lavanderia
           if (signUpData.user) {
+            console.log("User created successfully, updating laundry owner_id");
+            
             const { error: updateError } = await supabase
               .from('laundries')
               .update({ owner_id: signUpData.user.id })
@@ -68,55 +66,72 @@ export function useAuthMethods({
             } else {
               console.log("Updated laundry owner ID to:", signUpData.user.id);
             }
-          }
-        }
-      }
-
-      // Tenta fazer login normal
-      const { error, data } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        console.error("Sign in error:", error);
-        setLoading(false);
-        toast({
-          variant: "destructive",
-          title: "Erro ao entrar",
-          description: error.message
-        });
-        throw error;
-      }
-      
-      console.log("Sign in successful, user:", data.user?.id);
-      console.log("Sign in successful, session:", data.session?.access_token ? "Token exists" : "No token");
-      setUser(data.user);
-      setSession(data.session);
-
-      // Verificar e atualizar o papel do usuário se for um proprietário
-      if (data.user) {
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', data.user.id)
-          .maybeSingle();
-        
-        if (!profileData || !profileData.role) {
-          // Verificar se o usuário é um proprietário de lavanderia
-          const { data: laundryCheck, error: laundryCheckError } = await supabase
-            .from('laundries')
-            .select('id')
-            .eq('owner_id', data.user.id)
-            .eq('contact_email', email)
-            .maybeSingle();
-          
-          if (laundryCheck) {
-            // É um proprietário, atualizar o perfil
-            console.log("Updating user role to business");
-            const { error: updateRoleError } = await supabase
+            
+            // Definir o papel do usuário como 'business'
+            const { error: profileError } = await supabase
               .from('profiles')
               .update({ role: 'business' })
-              .eq('id', data.user.id);
+              .eq('id', signUpData.user.id);
             
-            if (updateRoleError) {
-              console.error("Error updating user role:", updateRoleError);
+            if (profileError) {
+              console.error("Error updating user role:", profileError);
+            } else {
+              console.log("Updated user role to business");
+            }
+            
+            // Fazer login com as credenciais recém-criadas
+            const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({ 
+              email, 
+              password 
+            });
+            
+            if (loginError) {
+              console.error("Error logging in after account creation:", loginError);
+              setLoading(false);
+              throw loginError;
+            }
+            
+            console.log("Login successful after account creation");
+            setUser(loginData.user);
+            setSession(loginData.session);
+            setLoading(false);
+            return;
+          }
+        } else {
+          // Se não encontrou lavanderia correspondente, propagar o erro original
+          console.log("No matching laundry found with this email/phone");
+          setLoading(false);
+          throw error;
+        }
+      } else {
+        // Login normal bem-sucedido
+        console.log("Standard login successful, user:", data.user?.id);
+        setUser(data.user);
+        setSession(data.session);
+
+        // Verificar e atualizar o papel do usuário se for um proprietário
+        if (data.user) {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', data.user.id)
+            .maybeSingle();
+          
+          if (!profileData || !profileData.role) {
+            // Verificar se o usuário é um proprietário de lavanderia
+            const { data: laundryCheck } = await supabase
+              .from('laundries')
+              .select('id')
+              .eq('owner_id', data.user.id)
+              .eq('contact_email', email)
+              .maybeSingle();
+            
+            if (laundryCheck) {
+              console.log("Updating user role to business");
+              await supabase
+                .from('profiles')
+                .update({ role: 'business' })
+                .eq('id', data.user.id);
             }
           }
         }
@@ -124,6 +139,7 @@ export function useAuthMethods({
       
       setLoading(false);
     } catch (error) {
+      console.error("Error during sign in:", error);
       setLoading(false);
       throw error;
     }
@@ -132,7 +148,8 @@ export function useAuthMethods({
   const signUp = async (email: string, password: string) => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({ email, password });
+      const { error, data } = await supabase.auth.signUp({ email, password });
+      
       if (error) {
         setLoading(false);
         toast({
@@ -142,6 +159,9 @@ export function useAuthMethods({
         });
         throw error;
       }
+      
+      console.log("Sign up successful:", data);
+      setLoading(false);
     } catch (error) {
       setLoading(false);
       throw error;

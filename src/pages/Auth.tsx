@@ -82,6 +82,13 @@ export default function Auth() {
               ? 'Entre com suas credenciais para acessar o sistema'
               : 'Crie sua conta para começar a usar o sistema'}
           </CardDescription>
+          
+          {expectedRole === 'business' && isLogin && (
+            <div className="mt-2 text-sm text-gray-600 bg-blue-50 p-3 rounded-md">
+              <p className="font-medium mb-1">⚠️ Atenção proprietários:</p>
+              <p>Use o <strong>e-mail de contato</strong> da sua lavanderia como usuário e o <strong>telefone de contato</strong> como senha.</p>
+            </div>
+          )}
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
@@ -94,6 +101,7 @@ export default function Auth() {
                 onChange={setPassword}
                 showPassword={showPassword}
                 onToggleShow={() => setShowPassword(!showPassword)}
+                label={expectedRole === 'business' && isLogin ? "Telefone" : "Senha"}
               />
             </div>
           </CardContent>
