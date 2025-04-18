@@ -1,4 +1,3 @@
-
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -29,15 +28,26 @@ export function useAuthMethods({
         console.log("Standard login failed, checking if this is a business owner", error);
         
         // Verificar se existe uma lavanderia com este email e telefone como senha
+        // Primeiro vamos logar todos os parâmetros para debug
+        console.log("Searching for laundry with email:", email, "and phone:", password);
+        
         const { data: laundries, error: laundryError } = await supabase
           .from('laundries')
-          .select('contact_email, contact_phone, owner_id')
-          .eq('contact_email', email)
-          .eq('contact_phone', password);
+          .select('*')  // Selecionando todos os campos para debug
+          .eq('contact_email', email.trim())
+          .eq('contact_phone', password.trim());
+        
+        console.log("Laundry search results:", laundries, "Error:", laundryError);
+        
+        if (laundryError) {
+          console.error("Error searching for laundry:", laundryError);
+          setLoading(false);
+          throw laundryError;
+        }
         
         if (laundries && laundries.length > 0) {
           const laundryData = laundries[0];
-          console.log("Found laundry with matching email/phone, creating user account");
+          console.log("Found laundry:", laundryData);
           
           // Criar uma conta para o proprietário
           const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
@@ -46,7 +56,57 @@ export function useAuthMethods({
           });
           
           if (signUpError) {
+            // Se der erro no signup, pode ser que o usuário já exista
             console.error("Error creating user account:", signUpError);
+            if (signUpError.message.includes("User already registered")) {
+              console.log("User already exists, trying to sign in again");
+              const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({ 
+                email, 
+                password 
+              });
+              
+              if (retryError) {
+                console.error("Error on retry login:", retryError);
+                setLoading(false);
+                throw retryError;
+              }
+              
+              // Login bem-sucedido após nova tentativa
+              console.log("Login successful after retry");
+              
+              // Verificar se o usuário já está associado à lavanderia
+              if (laundryData.owner_id !== retryData.user?.id) {
+                console.log("Updating laundry owner_id to:", retryData.user?.id);
+                const { error: updateError } = await supabase
+                  .from('laundries')
+                  .update({ owner_id: retryData.user?.id })
+                  .eq('id', laundryData.id);
+                
+                if (updateError) {
+                  console.error("Error updating laundry owner:", updateError);
+                }
+              }
+              
+              // Atualizar o papel do usuário para 'business'
+              if (retryData.user) {
+                const { error: profileError } = await supabase
+                  .from('profiles')
+                  .update({ role: 'business' })
+                  .eq('id', retryData.user.id);
+                
+                if (profileError) {
+                  console.error("Error updating user role:", profileError);
+                } else {
+                  console.log("Updated user role to business");
+                }
+              }
+              
+              setUser(retryData.user);
+              setSession(retryData.session);
+              setLoading(false);
+              return;
+            }
+            
             setLoading(false);
             throw signUpError;
           }
@@ -58,8 +118,7 @@ export function useAuthMethods({
             const { error: updateError } = await supabase
               .from('laundries')
               .update({ owner_id: signUpData.user.id })
-              .eq('contact_email', email)
-              .eq('contact_phone', password);
+              .eq('id', laundryData.id);
             
             if (updateError) {
               console.error("Error updating laundry owner:", updateError);

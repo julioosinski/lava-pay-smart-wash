@@ -29,33 +29,48 @@ export const useAuthForm = (expectedRole: string = 'user') => {
           console.log("Checking business login with phone as password");
           
           // Buscar lavanderia com o email e telefone fornecidos
+          // Primeiro vamos logar os parâmetros para debug
+          console.log("Searching for laundry with email:", email, "and phone:", password);
+          
           const { data: laundries, error: laundryError } = await supabase
             .from('laundries')
-            .select('contact_email, contact_phone, owner_id')
-            .eq('contact_email', email)
-            .eq('contact_phone', password);
+            .select('*')  // Selecionando todos os campos para debug
+            .eq('contact_email', email.trim())
+            .eq('contact_phone', password.trim());
           
           console.log("Laundries found:", laundries);
           
+          if (laundryError) {
+            console.error("Error searching for laundries:", laundryError);
+            toast({
+              variant: "destructive",
+              title: "Erro na consulta",
+              description: laundryError.message || "Erro ao buscar lavanderia",
+            });
+            setLoading(false);
+            return;
+          }
+          
           if (laundries && laundries.length > 0) {
             const laundryCheck = laundries[0];
-            console.log("Found matching laundry. Attempting login or account creation");
+            console.log("Found matching laundry:", laundryCheck);
+            
             // Tente fazer login diretamente - se falhar, crie uma conta
             try {
-              await signIn(email, password);
+              await signIn(email.trim(), password.trim());
               console.log("Login successful");
             } catch (loginError) {
               console.log("Login failed, trying to create account", loginError);
               // Se o login falhou, pode ser que o usuário ainda não exista
               // Tente criar a conta
-              await signUp(email, password);
+              await signUp(email.trim(), password.trim());
               toast({
                 title: "Conta criada com sucesso",
                 description: "Uma conta foi criada para você. Faça login para continuar.",
               });
               
               // Tente fazer login novamente após criar a conta
-              await signIn(email, password);
+              await signIn(email.trim(), password.trim());
             }
           } else {
             console.log("No matching laundry found with this email/phone combination");
@@ -64,14 +79,15 @@ export const useAuthForm = (expectedRole: string = 'user') => {
               title: "Credenciais inválidas",
               description: "Nenhuma lavanderia encontrada com este email e telefone.",
             });
+            setLoading(false);
           }
         } else {
           // Login normal para outros tipos de usuário
-          await signIn(email, password);
+          await signIn(email.trim(), password.trim());
         }
       } else {
         // Fluxo de cadastro
-        await signUp(email, password);
+        await signUp(email.trim(), password.trim());
         toast({
           title: "Registro realizado com sucesso!",
           description: "Verifique seu email para confirmar o cadastro.",
