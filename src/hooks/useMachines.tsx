@@ -19,7 +19,7 @@ export const useMachines = (laundryId?: string) => {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data;
+      return data as Machine[];
     },
     enabled: !laundryId || !!laundryId
   });
@@ -42,7 +42,7 @@ export const useCreateMachine = () => {
         .single();
 
       if (error) throw error;
-      return data;
+      return data as Machine;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['machines', variables.laundry_id] });

@@ -46,12 +46,13 @@ export async function processCardPayment(
   
   const payment: Payment = {
     id: Math.random().toString(36).substring(2, 10),
-    machineId,
+    machine_id: machineId,
     amount,
     status: success ? 'approved' : 'rejected',
     method: Math.random() > 0.5 ? 'credit' : 'debit',
-    createdAt: new Date(),
-    transactionId: success ? `mp_${Math.random().toString(36).substring(2, 15)}` : undefined
+    created_at: new Date(),
+    transaction_id: success ? `mp_${Math.random().toString(36).substring(2, 15)}` : undefined,
+    user_id: 'mock-user-id' // Added missing required property
   };
   
   return payment;
@@ -73,7 +74,7 @@ export async function generatePixQRCode(
   
   return {
     qrCode: "00020101021226880014br.gov.bcb.pix2566qrcodes-pix.mercadopago.com/abc123",
-    qrCodeBase64: "iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAMAAABrrFhUAAAABlBMVEX///8AAABVwtN+AAADJUlEQVR4nO3dW3LjMAxFQcn7X/ScSSYTJ5YoX7QfWcD5ruW9g9A0TdM0TdM0TdM0vfP6+/frz9ef6P3P/uvn9Zc/r7+8/vVnTE0HulJ+/bv6zK4IqZJiue4I/lT9X0zwpHBWoeclBE+N56Mj+K2+jzsAb9/wgOYEVP8BBDsFLDuC5gbUyCOQm4DiR6BGgJf/DgIh/9ugFvwCnZJ/VAuCaEr+KQ1IGp19LAHVxsGY/BMRdNR3mZqgq76b1AR99V2kCHrru0cHEFDfNSqAkPruUQCE1XeNACCuvls6gMj6LqkAQuu7owKIre+OCiC2vjsEALn13VEBxNZ3RwUQW98dFUBsfXcIAHLru/v4AJLru/vwALLru/voANLru/vgAPLru/vYAA7Ud/ehAZyo7+4jA7hS392HBXCpvruPC+BafXcfFsDN+u4+JoC79d19QACH67v7aABO13f3oQDcr+/uAwF4UN/dhwHwpL67jwHgUX13HwHAs/ru3h7A0/ruXhzAw+PvzgZw5fi7MwEcOv7uLACnjr87A8Cx4+9OB3Du+LuTAVw8/u5MAFePvzsLwN3j784AcPn4u9MBqomIAADVVDQAgGoyIgBA9QRUAEB1EloAQLUeSgBAtSJqAEC1JkoAQLUqWgBAdTJ6AEB1OooAQPUIFAGA6hmoAgDVY9AGAKoHoQsAVM9CHQConoY+AFA9DzKAA89DHQCoHggpQPVEqAGqZ0IPAKgeCkUAoHoqJAGA6rEQBQCq50ITAKieDVkAoHo6dAGA6vkQBgCqJ0QZAKieki4AUFVCAaDa6VEBqNYmdAC+egoA1eoMAEB1QAMAoLoiBQCoTkkFAKhuSgIAqMtSAADqvkQAgHpjKgBAXZoMAFD3pgMA1NUpAAD1BcAAAPUdqAAA9S2IAATVxzAAtyvQVd/dRwbQU9/dBwfQUd/dxwdwvb67DwHgan13HwXAtfruPg6AK/XdfSQA8fXdfSwA4fXdfTQAwfXdfTwAsfXdfUQAofXdfUwAkfXdfVQAgfXdfVwAcfXdBQUQ9/3vUgJE5P8+JYAegBoAUD0FbQBAXZwCAFCXpwAAVAekAABUV6QBAFR3pALQUtSHp2mapmna6/YDXIAy7aZ057kAAAAASUVORK5CYII=",
+    qrCodeBase64: "iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAMAAABrrFhUAAAABlBMVEX///8AAABVwtN+AAADJUlEQVR4nO3dW3LjMAxFQcn7X/ScSSYTJ5YoX7QfWcD5ruW9g9A0TdM0TdM0TdM0vfP6+/frz9ef6P3P/uvn9Zc/r7+8/vVnTE0HulJ+/bv6zK4IqZJiue4I/lT9X0zwpHBWoeclBE+N56Mj+K2+jzsAb9/wgOYEVP8BBDsFLDuC5gbUyCOQm4DiR6BGgJf/DgIh/9ugFvwCnZJ/VAuCaEr+KQ1IGp19LAHVxsGY/BMRdNR3mZqgq76b1AR99V2kCHrru0cHEFDfNSqAkPruUQCE1XeNACCuvls6gMj6LqkAQuu7owKIre+OCiC2vjsEALn13VEBxNZ3RwUQW98dFUBsfXcIAHLru/v4AJLru/vwALLru/voANLru/vgAPLru/vYAA7Ud/ehAZyo7+4jA7hS392HBXCpvruPC+BafXcfFsDN+u4+JoC79d19QACH67v7aABO13f3oQDcr+/uAwF4UN/dhwHwpL67jwHgUX13HwHAs/ru3h7A0/ruXhzAw+PvzgZw5fi7MwEcOv7uLACnjr87A8Cx4+9OB3Du+LuTAVw8/u5MAFePvzsLwN3j784AcPn4u9MBqomIAADVVDQAgGoyIgBA9QRUAEB1EloAQLUeSgBAtSJqAEC1JkoAQLUqWgBAdTJ6AEB1OooAQPUIFAGA6hmoAgDVY9AGAKoHoQsAVM9CHQConoY+AFA9DzKAA89DHQCoHggpQPVEqAGqZ0IPAKgeCkUAoHoqJAGA6rEQBQCq50ITAKieDVkAoHo6dAGA6vkQBgCqJ0QZAKieki4AUFVCAaDa6VEBqNYmdAC+egoA1eoMAEB1QAMAoLoiBQCoTkkFAKhuSgIAqMtSAADqvkQAgHpjKgBAXZoMAFD3pgMA1NUpAAD1BcAAAPUdqAAA9S2IAATVxzAAtyvQVd/dRwbQU9/dBwfQUd/dxwdwvb67DwHgan13HwXAtfruPg6AK/XdfSQA8fXdfSwAwfXdfTQAwfXdfTwAsfXdfUQAofXdfUwAkfXdfVQAgfXdfVwAcfXdBQUQ9/3vUgJE5P8+JYAegBoAUD0FbQBAXZwCAFCXpwAAVAekAABUV6QBAFR3pALQUtSHp2mapmna6/YDXIAy7aZ057kAAAAASUVORK5CYII=",
     expirationTime
   };
 }
@@ -92,12 +93,13 @@ export async function checkPixPaymentStatus(machineId: string): Promise<Payment 
   
   return {
     id: Math.random().toString(36).substring(2, 10),
-    machineId,
+    machine_id: machineId,
     amount: Math.random() * 20 + 5, // Valor entre 5 e 25
     status: 'approved',
     method: 'pix',
-    createdAt: new Date(),
-    transactionId: `mp_pix_${Math.random().toString(36).substring(2, 15)}`
+    created_at: new Date(),
+    transaction_id: `mp_pix_${Math.random().toString(36).substring(2, 15)}`,
+    user_id: 'mock-user-id' // Added missing required property
   };
 }
 

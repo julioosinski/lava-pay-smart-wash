@@ -28,14 +28,14 @@ export const mockLocations: LaundryLocation[] = [
     id: '1',
     name: 'Lavanderia Centro',
     address: 'Rua Central, 123',
-    ownerId: '2',
+    owner_id: '2',
     machines: []
   },
   {
     id: '2',
     name: 'Lavanderia Shopping',
     address: 'Shopping Top Center, Loja 45',
-    ownerId: '2',
+    owner_id: '2',
     machines: []
   }
 ];
@@ -86,29 +86,32 @@ export const mockMachines: Machine[] = [
 export const mockPayments: Payment[] = [
   {
     id: '1',
-    machineId: '1',
+    machine_id: '1',
     amount: 12.50,
     status: 'approved',
     method: 'credit',
-    createdAt: new Date('2023-04-15T14:30:00'),
-    transactionId: 'mp_12345678'
+    created_at: new Date('2023-04-15T14:30:00'),
+    transaction_id: 'mp_12345678',
+    user_id: '3'
   },
   {
     id: '2',
-    machineId: '2',
+    machine_id: '2',
     amount: 8.00,
     status: 'approved',
     method: 'pix',
-    createdAt: new Date('2023-04-15T15:20:00'),
-    transactionId: 'mp_87654321'
+    created_at: new Date('2023-04-15T15:20:00'),
+    transaction_id: 'mp_87654321',
+    user_id: '3'
   },
   {
     id: '3',
-    machineId: '4',
+    machine_id: '4',
     amount: 15.00,
     status: 'pending',
     method: 'debit',
-    createdAt: new Date('2023-04-15T16:15:00')
+    created_at: new Date('2023-04-15T16:15:00'),
+    user_id: '3'
   }
 ];
 

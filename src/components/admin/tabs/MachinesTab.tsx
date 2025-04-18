@@ -6,15 +6,7 @@ import { Plus, Edit, Trash } from "lucide-react";
 import { SearchBar } from "../SearchBar";
 import { StatusBadge } from "@/components/StatusBadge";
 import { MachineForm } from "../MachineForm";
-
-interface Machine {
-  id: string;
-  type: 'washer' | 'dryer';
-  status: 'available' | 'in-use' | 'maintenance';
-  price: number;
-  time_minutes: number;
-  laundry_id: string;
-}
+import { Machine } from "@/types";
 
 interface MachinesTabProps {
   machines: Machine[];

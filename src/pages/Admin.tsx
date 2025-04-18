@@ -8,10 +8,13 @@ import { LaundryTab } from "@/components/admin/tabs/LaundryTab";
 import { MachinesTab } from "@/components/admin/tabs/MachinesTab";
 import { PaymentsTab } from "@/components/admin/tabs/PaymentsTab";
 import { UsersTab } from "@/components/admin/tabs/UsersTab";
+import { useMachines } from "@/hooks/useMachines";
+import { mockPayments, mockUsers } from "@/lib/mockData";
 
 export default function Admin() {
   const [searchQuery, setSearchQuery] = useState("");
-
+  const { data: machines = [] } = useMachines();
+  
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
@@ -52,6 +55,7 @@ export default function Admin() {
 
           <TabsContent value="machines">
             <MachinesTab
+              machines={machines}
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
             />
@@ -59,6 +63,7 @@ export default function Admin() {
 
           <TabsContent value="payments">
             <PaymentsTab
+              payments={mockPayments}
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
             />
@@ -66,6 +71,7 @@ export default function Admin() {
 
           <TabsContent value="users">
             <UsersTab
+              users={mockUsers}
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
             />

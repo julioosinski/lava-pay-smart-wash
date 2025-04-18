@@ -54,7 +54,7 @@ export function PaymentsTab({ payments, searchQuery, onSearchChange }: PaymentsT
             {payments.map((payment) => (
               <TableRow key={payment.id}>
                 <TableCell className="font-medium">{payment.id}</TableCell>
-                <TableCell>{payment.machineId}</TableCell>
+                <TableCell>{payment.machine_id}</TableCell>
                 <TableCell>
                   {new Intl.NumberFormat('pt-BR', {
                     style: 'currency',
@@ -65,8 +65,8 @@ export function PaymentsTab({ payments, searchQuery, onSearchChange }: PaymentsT
                 <TableCell>
                   <StatusBadge status={payment.status} />
                 </TableCell>
-                <TableCell>{formatDateTime(payment.createdAt)}</TableCell>
-                <TableCell>{payment.transactionId || "—"}</TableCell>
+                <TableCell>{formatDateTime(payment.created_at)}</TableCell>
+                <TableCell>{payment.transaction_id || "—"}</TableCell>
               </TableRow>
             ))}
           </TableBody>

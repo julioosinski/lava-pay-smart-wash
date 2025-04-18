@@ -36,11 +36,11 @@ import { ProgressCustom } from "@/components/ui/progress-custom";
 
 // Filtrar para mostrar apenas dados do proprietário atual (ID 2)
 const currentOwnerId = '2';
-const ownerLocations = mockLocations.filter(location => location.ownerId === currentOwnerId);
+const ownerLocations = mockLocations.filter(location => location.owner_id === currentOwnerId);
 const ownerLocationIds = ownerLocations.map(location => location.id);
 const ownerMachines = mockMachines.filter(machine => ownerLocationIds.includes(machine.laundry_id));
 const ownerMachineIds = ownerMachines.map(machine => machine.id);
-const ownerPayments = mockPayments.filter(payment => ownerMachineIds.includes(payment.machineId));
+const ownerPayments = mockPayments.filter(payment => ownerMachineIds.includes(payment.machine_id));
 
 export default function Owner() {
   const [selectedLocation, setSelectedLocation] = useState<string>(ownerLocations[0]?.id || "all");
@@ -231,7 +231,7 @@ export default function Owner() {
             </TableHeader>
             <TableBody>
               {ownerPayments.slice(0, 5).map((payment) => {
-                const machine = ownerMachines.find(m => m.id === payment.machineId);
+                const machine = ownerMachines.find(m => m.id === payment.machine_id);
                 const location = machine ? ownerLocations.find(l => l.id === machine.laundry_id) : null;
                 
                 return (
@@ -246,7 +246,7 @@ export default function Owner() {
                     <TableCell>
                       <StatusBadge status={payment.status} />
                     </TableCell>
-                    <TableCell>{formatDate(payment.createdAt)}</TableCell>
+                    <TableCell>{formatDate(payment.created_at)}</TableCell>
                   </TableRow>
                 );
               })}
@@ -398,7 +398,7 @@ export default function Owner() {
             </TableHeader>
             <TableBody>
               {ownerPayments.map((payment) => {
-                const machine = ownerMachines.find(m => m.id === payment.machineId);
+                const machine = ownerMachines.find(m => m.id === payment.machine_id);
                 const location = machine ? ownerLocations.find(l => l.id === machine.laundry_id) : null;
                 
                 return (
@@ -413,8 +413,8 @@ export default function Owner() {
                     <TableCell>
                       <StatusBadge status={payment.status} />
                     </TableCell>
-                    <TableCell>{formatDate(payment.createdAt)}</TableCell>
-                    <TableCell>{payment.transactionId || "—"}</TableCell>
+                    <TableCell>{formatDate(payment.created_at)}</TableCell>
+                    <TableCell>{payment.transaction_id || "—"}</TableCell>
                   </TableRow>
                 );
               })}
