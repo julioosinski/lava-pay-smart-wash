@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -8,6 +9,8 @@ import { LaundryForm } from "@/components/admin/LaundryForm";
 import { useMachines } from "@/hooks/useMachines";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { EditLaundryDialog } from "../EditLaundryDialog";
+import { LaundryLocation } from "@/types";
 
 interface LaundryTabProps {
   searchQuery: string;
@@ -17,6 +20,7 @@ interface LaundryTabProps {
 export function LaundryTab({ searchQuery, onSearchChange }: LaundryTabProps) {
   const { data: laundries = [], isLoading } = useLaundries();
   const { data: allMachines = [] } = useMachines();
+  const [selectedLaundry, setSelectedLaundry] = useState<LaundryLocation | null>(null);
   const navigate = useNavigate();
 
   const filteredLaundries = laundries.filter(laundry =>
@@ -31,8 +35,8 @@ export function LaundryTab({ searchQuery, onSearchChange }: LaundryTabProps) {
     return allMachines.filter(machine => machine.laundry_id === laundryId).length;
   };
 
-  const viewLaundry = (laundryId: string) => {
-    navigate(`/admin/laundry/${laundryId}`);
+  const handleEdit = (laundry: LaundryLocation) => {
+    setSelectedLaundry(laundry);
   };
 
   if (isLoading) {
@@ -72,9 +76,8 @@ export function LaundryTab({ searchQuery, onSearchChange }: LaundryTabProps) {
             ) : (
               filteredLaundries.map((laundry) => (
                 <TableRow 
-                  key={laundry.id} 
+                  key={laundry.id}
                   className="cursor-pointer hover:bg-gray-50"
-                  onClick={() => viewLaundry(laundry.id)}
                 >
                   <TableCell className="font-medium">{laundry.name}</TableCell>
                   <TableCell>{laundry.address}</TableCell>
@@ -99,7 +102,15 @@ export function LaundryTab({ searchQuery, onSearchChange }: LaundryTabProps) {
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 mr-1">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 mr-1"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEdit(laundry);
+                      }}
+                    >
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500">
@@ -112,6 +123,14 @@ export function LaundryTab({ searchQuery, onSearchChange }: LaundryTabProps) {
           </TableBody>
         </Table>
       </Card>
+
+      {selectedLaundry && (
+        <EditLaundryDialog
+          open={!!selectedLaundry}
+          onOpenChange={(open) => !open && setSelectedLaundry(null)}
+          laundry={selectedLaundry}
+        />
+      )}
     </div>
   );
 }
