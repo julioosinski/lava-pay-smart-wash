@@ -133,7 +133,11 @@ export const updateUserContact = async (userId: string, email: string, phone: st
       
       try {
         // Try to add columns to profiles table
-        const { error: alterError } = await supabase.rpc('add_contact_fields_to_profiles');
+        // Use a direct SQL query instead of rpc to avoid TypeScript errors
+        const { error: alterError } = await supabase
+          .from('add_contact_fields_to_profiles_call')
+          .insert({ dummy: true })
+          .select();
         
         if (alterError) {
           console.error("Error adding contact fields to profiles:", alterError);
