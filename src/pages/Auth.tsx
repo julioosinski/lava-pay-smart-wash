@@ -15,7 +15,7 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -23,13 +23,25 @@ export default function Auth() {
 
   useEffect(() => {
     const checkSession = async () => {
+      console.log("Checking session in Auth page");
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
+        console.log("Session found, redirecting based on role");
         redirectBasedOnRole(session.user.id);
+      } else {
+        console.log("No session found");
       }
     };
     checkSession();
   }, []);
+
+  // Add an effect to check user value changes
+  useEffect(() => {
+    if (user) {
+      console.log("User object changed in Auth page:", user.id);
+      redirectBasedOnRole(user.id);
+    }
+  }, [user]);
 
   const redirectBasedOnRole = async (userId: string) => {
     try {
@@ -46,14 +58,31 @@ export default function Auth() {
       }
 
       console.log("User role data:", data);
+      console.log("Expected role:", expectedRole);
 
+      // First check if we're specifically trying to log in as a role type
+      if (expectedRole === 'admin' && data?.role === 'admin') {
+        console.log("Admin role verified, redirecting to admin");
+        navigate('/admin');
+        return;
+      } 
+      
+      if (expectedRole === 'business' && data?.role === 'business') {
+        console.log("Business owner role verified, redirecting to owner dashboard");
+        navigate('/owner');
+        return;
+      }
+
+      // If no specific expected role or no match with expected role, 
+      // redirect based on what the user actually is
       if (data?.role === 'admin') {
+        console.log("Admin detected, redirecting to admin dashboard");
         navigate('/admin');
       } else if (data?.role === 'business') {
         console.log("Business owner detected, redirecting to owner dashboard");
         navigate('/owner');
       } else {
-        console.log("No specific role found or customer role, redirecting to home");
+        console.log("Regular user or unknown role, redirecting to home");
         navigate('/');
       }
     } catch (error) {
@@ -75,13 +104,9 @@ export default function Auth() {
       if (isLogin) {
         console.log("Attempting login with email:", email);
         await signIn(email, password);
-        const { data: { user } } = await supabase.auth.getUser();
         
-        if (user) {
-          console.log("Login successful, redirecting based on role for user:", user.id);
-          // Add a small delay to ensure the session is fully established
-          setTimeout(() => redirectBasedOnRole(user.id), 500);
-        }
+        // We'll let the useEffect handle the redirection after successful login
+        console.log("Login successful, waiting for auth state update to redirect");
       } else {
         await signUp(email, password);
         toast({
@@ -91,13 +116,12 @@ export default function Auth() {
       }
     } catch (error) {
       console.error("Auth error:", error);
+      setLoading(false); // Only set loading to false on error
       toast({
         variant: "destructive",
         title: "Erro",
         description: error instanceof Error ? error.message : "Ocorreu um erro durante a autenticação",
       });
-    } finally {
-      setLoading(false);
     }
   };
 

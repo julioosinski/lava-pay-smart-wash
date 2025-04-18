@@ -73,6 +73,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     
     console.log("Sign in successful, user:", data.user?.id);
+    setUser(data.user);
+    setSession(data.session);
     return;
   };
 
@@ -88,6 +90,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error("Sign out error:", error);
         throw error;
       }
+      setUser(null);
+      setSession(null);
       navigate('/auth');
     } catch (error) {
       console.error("Error during sign out:", error);
