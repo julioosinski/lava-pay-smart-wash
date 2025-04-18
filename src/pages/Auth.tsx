@@ -49,11 +49,11 @@ export default function Auth() {
 
       if (data?.role === 'admin') {
         navigate('/admin');
-      } else if (data?.role === 'business' || data?.role === 'user') {
-        // Changed 'owner' to 'user' to match the valid enum values
+      } else if (data?.role === 'business') {
+        console.log("Business owner detected, redirecting to owner dashboard");
         navigate('/owner');
       } else {
-        console.log("No specific role found, redirecting to home");
+        console.log("No specific role found or customer role, redirecting to home");
         navigate('/');
       }
     } catch (error) {
@@ -73,6 +73,7 @@ export default function Auth() {
 
     try {
       if (isLogin) {
+        console.log("Attempting login with email:", email);
         await signIn(email, password);
         const { data: { user } } = await supabase.auth.getUser();
         
@@ -89,10 +90,11 @@ export default function Auth() {
         });
       }
     } catch (error) {
+      console.error("Auth error:", error);
       toast({
         variant: "destructive",
         title: "Erro",
-        description: error instanceof Error ? error.message : "Ocorreu um erro",
+        description: error instanceof Error ? error.message : "Ocorreu um erro durante a autenticação",
       });
     } finally {
       setLoading(false);
