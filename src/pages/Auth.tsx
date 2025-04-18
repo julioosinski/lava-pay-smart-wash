@@ -109,7 +109,7 @@ export default function Auth() {
         <CardHeader className="space-y-1 flex flex-col items-center">
           <WashingMachine className="h-12 w-12 text-lavapay-600 mb-2" />
           <CardTitle className="text-2xl font-bold text-center">
-            {isLogin ? 'Entrar' : 'Criar conta'} como {expectedRole === 'admin' ? 'Administrador' : 'Proprietário'}
+            {isLogin ? 'Entrar' : 'Criar conta'} {expectedRole === 'admin' ? 'como Administrador' : expectedRole === 'business' ? 'como Proprietário' : ''}
           </CardTitle>
           <CardDescription className="text-center">
             {isLogin 
