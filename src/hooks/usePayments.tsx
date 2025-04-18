@@ -33,21 +33,12 @@ export const usePayments = (laundryId?: string) => {
   return useQuery({
     queryKey: ['payments', laundryId],
     queryFn: async () => {
-      // Create base query
-      let query = supabase
-        .from('payments')
-        .select('*')
-        .order('created_at', { ascending: false });
+      let query = supabase.from('payments').select('*').order('created_at', { ascending: false });
       
-      // Apply filters conditionally to avoid TypeScript depth issues
-      let result;
-      if (laundryId) {
-        result = await query.eq('laundry_id', laundryId);
-      } else {
-        result = await query;
-      }
-      
-      const { data, error } = result;
+      // Execute the query with or without the filter
+      const { data, error } = laundryId 
+        ? await query.eq('laundry_id', laundryId)
+        : await query;
       
       if (error) {
         console.error("Error fetching payments:", error);
