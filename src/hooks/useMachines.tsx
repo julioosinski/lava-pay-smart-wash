@@ -12,7 +12,7 @@ export const useMachines = (laundryId?: string) => {
         const query = supabase
           .from('machines')
           .select('*')
-          .order('created_at', { ascending: false });
+          .order('machine_number', { ascending: true });
 
         if (laundryId) {
           query.eq('laundry_id', laundryId);
@@ -20,13 +20,14 @@ export const useMachines = (laundryId?: string) => {
 
         const { data, error } = await query;
         if (error) throw error;
+        console.log("Fetched machines:", data);
         return (data || []) as Machine[];
       } catch (error) {
         console.error("Error fetching machines:", error);
         return [];
       }
     },
-    enabled: !!true // Fix the excessive type instantiation by using a simple boolean
+    enabled: true // Sempre ativar a query
   });
 };
 
@@ -71,6 +72,7 @@ export const useCreateMachine = () => {
       return data as Machine;
     },
     onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['machines'] });
       queryClient.invalidateQueries({ queryKey: ['machines', variables.laundry_id] });
       toast.success('Máquina adicionada com sucesso');
     },
@@ -98,6 +100,7 @@ export const useDeleteMachine = () => {
       return id;
     },
     onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['machines'] });
       queryClient.invalidateQueries({ queryKey: ['machines', variables.laundry_id] });
       toast.success('Máquina removida com sucesso');
     },

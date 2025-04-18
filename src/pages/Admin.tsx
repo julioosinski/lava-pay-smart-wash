@@ -2,13 +2,16 @@
 import { useState } from "react";
 import { Layout } from "@/components/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MapPin, Calendar } from "lucide-react";
+import { MapPin, Calendar, WashingMachine } from "lucide-react";
 import { LaundryTab } from "@/components/admin/tabs/LaundryTab";
 import { SubscriptionsTab } from "@/components/admin/tabs/SubscriptionsTab";
+import { MachinesTab } from "@/components/admin/tabs/MachinesTab";
+import { useMachines } from "@/hooks/useMachines";
 
 export default function Admin() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("locations");
+  const { data: machines = [] } = useMachines();
 
   return (
     <Layout>
@@ -27,6 +30,9 @@ export default function Admin() {
             <TabsTrigger value="locations" className="flex items-center gap-2">
               <MapPin className="h-4 w-4" /> Lavanderias
             </TabsTrigger>
+            <TabsTrigger value="machines" className="flex items-center gap-2">
+              <WashingMachine className="h-4 w-4" /> Máquinas
+            </TabsTrigger>
             <TabsTrigger value="subscriptions" className="flex items-center gap-2">
               <Calendar className="h-4 w-4" /> Mensalidades
             </TabsTrigger>
@@ -34,6 +40,14 @@ export default function Admin() {
 
           <TabsContent value="locations">
             <LaundryTab
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+            />
+          </TabsContent>
+
+          <TabsContent value="machines">
+            <MachinesTab
+              machines={machines}
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
             />

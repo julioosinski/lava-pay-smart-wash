@@ -46,6 +46,10 @@ export function MachinesTab({ machines, searchQuery, onSearchChange }: MachinesT
     return matchesSearch;
   });
 
+  console.log("All machines:", machines);
+  console.log("Filtered machines:", filteredMachines);
+  console.log("Selected laundry:", selectedLaundryId);
+
   // Get laundry name by id
   const getLaundryName = (id: string) => {
     const laundry = laundries.find(l => l.id === id);
