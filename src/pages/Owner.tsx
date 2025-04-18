@@ -42,12 +42,6 @@ export default function Owner() {
 
   // Get payments for selected laundry's machines
   const { data: payments = [] } = usePayments();
-  const ownerLaundryIds = ownerLaundries.map(location => location.id);
-  const ownerMachines = machines.filter(machine => 
-    selectedLocation === "all" 
-      ? ownerLaundryIds.includes(machine.laundry_id) 
-      : machine.laundry_id === selectedLocation
-  );
   
   // Filter payments to only include those for the owner's machines
   const ownerMachineIds = ownerMachines.map(machine => machine.id);
