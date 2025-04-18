@@ -11,6 +11,16 @@ import { useLaundries } from "@/hooks/useLaundries";
 import { useDeleteMachine } from "@/hooks/useMachines";
 import { useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 
 interface MachinesTabProps {
@@ -23,6 +33,7 @@ export function MachinesTab({ machines, searchQuery, onSearchChange }: MachinesT
   const { data: laundries = [] } = useLaundries();
   const [selectedLaundryId, setSelectedLaundryId] = useState<string>("all");
   const deleteMachine = useDeleteMachine();
+  const [machineToDelete, setMachineToDelete] = useState<Machine | null>(null);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -56,16 +67,20 @@ export function MachinesTab({ machines, searchQuery, onSearchChange }: MachinesT
     return laundry ? laundry.name : id.substring(0, 8) + '...';
   };
 
-  const handleDeleteMachine = async (machine: Machine) => {
-    if (confirm(`Tem certeza que deseja remover esta máquina?`)) {
-      try {
-        await deleteMachine.mutateAsync({
-          id: machine.id,
-          laundry_id: machine.laundry_id
-        });
-      } catch (error) {
-        console.error("Error deleting machine:", error);
-      }
+  const handleDeleteConfirm = async () => {
+    if (!machineToDelete) return;
+    
+    try {
+      await deleteMachine.mutateAsync({
+        id: machineToDelete.id,
+        laundry_id: machineToDelete.laundry_id
+      });
+      toast.success("Máquina excluída com sucesso");
+    } catch (error) {
+      console.error("Error deleting machine:", error);
+      toast.error("Erro ao excluir máquina");
+    } finally {
+      setMachineToDelete(null);
     }
   };
 
@@ -139,14 +154,21 @@ export function MachinesTab({ machines, searchQuery, onSearchChange }: MachinesT
                   <TableCell>{machine.time_minutes} min</TableCell>
                   <TableCell>{getLaundryName(machine.laundry_id)}</TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 mr-1">
-                      <Edit className="h-4 w-4" />
-                    </Button>
+                    <MachineForm
+                      laundryId={machine.laundry_id}
+                      machine={machine}
+                      variant="edit"
+                      triggerElement={
+                        <Button variant="ghost" size="icon" className="h-8 w-8 mr-1">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      }
+                    />
                     <Button 
                       variant="ghost" 
                       size="icon" 
                       className="h-8 w-8 text-red-500"
-                      onClick={() => handleDeleteMachine(machine)}
+                      onClick={() => setMachineToDelete(machine)}
                     >
                       <Trash className="h-4 w-4" />
                     </Button>
@@ -157,6 +179,24 @@ export function MachinesTab({ machines, searchQuery, onSearchChange }: MachinesT
           </TableBody>
         </Table>
       </Card>
+
+      {/* Confirmation Dialog for Delete */}
+      <AlertDialog open={!!machineToDelete} onOpenChange={(open) => !open && setMachineToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir esta máquina? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-red-600 hover:bg-red-700">
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
