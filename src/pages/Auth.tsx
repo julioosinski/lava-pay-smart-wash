@@ -42,7 +42,8 @@ export default function Auth() {
 
       if (data?.role === 'admin') {
         navigate('/admin');
-      } else if (data?.role === 'owner') {
+      } else if (data?.role === 'business') {
+        // Changed from 'owner' to 'business' to match the type
         navigate('/owner');
       } else {
         // Caso não tenha role definido, redireciona para home
