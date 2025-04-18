@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -51,8 +52,31 @@ export default function Auth() {
         console.log("No session found in Auth page");
       }
     };
-    checkSession();
-  }, [navigate]);
+    
+    if (!user) {
+      checkSession();
+    } else {
+      // If user is already set, we should redirect based on their role
+      console.log("User already set in Auth page, redirecting");
+      const checkRoleAndRedirect = async () => {
+        const { data } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        
+        if (data?.role === 'business') {
+          navigate('/owner', { replace: true });
+        } else if (data?.role === 'admin') {
+          navigate('/admin', { replace: true });
+        } else {
+          navigate('/', { replace: true });
+        }
+      };
+      
+      checkRoleAndRedirect();
+    }
+  }, [navigate, user]);
 
   useEffect(() => {
     if (user) {

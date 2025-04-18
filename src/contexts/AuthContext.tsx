@@ -56,22 +56,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    // Set up auth state listener first
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log("Auth state changed:", event);
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (event === 'SIGNED_IN' && session?.user) {
-          console.log("User signed in, will redirect based on role");
-          redirectBasedOnRole(session.user.id);
+    const setupAuth = async () => {
+      // Set up auth state listener first
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        async (event, session) => {
+          console.log("Auth state changed:", event);
+          setSession(session);
+          setUser(session?.user ?? null);
+          
+          if (event === 'SIGNED_IN' && session?.user) {
+            console.log("User signed in, will redirect based on role");
+            await redirectBasedOnRole(session.user.id);
+          }
         }
-      }
-    );
+      );
 
-    // Then check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+      // Then check for existing session
+      const { data: { session } } = await supabase.auth.getSession();
       console.log("Checking for existing session:", session ? "Found" : "None");
       setSession(session);
       setUser(session?.user ?? null);
@@ -79,11 +80,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (session?.user) {
         console.log("Session found during initialization for user:", session.user.id);
-        redirectBasedOnRole(session.user.id);
+        await redirectBasedOnRole(session.user.id);
       }
-    });
 
-    return () => subscription.unsubscribe();
+      return () => subscription.unsubscribe();
+    };
+
+    setupAuth();
   }, [navigate]);
 
   const signIn = async (email: string, password: string) => {
@@ -99,7 +102,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(data.user);
     setSession(data.session);
     
-    // Redirect based on role is now handled by the auth state change listener
+    // Redirect is now handled by the auth state change listener
+    // but we'll ensure it happens here as well for immediate feedback
+    if (data.user) {
+      await redirectBasedOnRole(data.user.id);
+    }
   };
 
   const signUp = async (email: string, password: string) => {

@@ -24,28 +24,13 @@ export const useAuthForm = (expectedRole: string = 'user') => {
     try {
       if (isLogin) {
         console.log("Attempting login with email:", email);
-        await signIn(email, password);
+        const result = await signIn(email, password);
         
-        // The redirection is now handled in the AuthContext
-        // but we'll add a fallback just in case
-        setTimeout(async () => {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (session && !user) {
-            console.log("Fallback: Session exists but user state not updated yet");
-            const { data } = await supabase
-              .from('profiles')
-              .select('role')
-              .eq('id', session.user.id)
-              .single();
-            
-            if (data?.role === 'business') {
-              console.log("Fallback: Business role detected, navigating to /owner");
-              navigate('/owner', { replace: true });
-            } else if (data?.role === 'admin') {
-              navigate('/admin', { replace: true });
-            }
-          }
-        }, 500);
+        // Additional debugging
+        console.log("Login successful, checking for specific roles");
+        
+        // Let the AuthContext handle the redirection based on role
+        // We won't add additional redirection logic here to avoid conflicts
       } else {
         await signUp(email, password);
         toast({
