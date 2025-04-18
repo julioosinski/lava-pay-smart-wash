@@ -90,12 +90,15 @@ export function useCreateLaundry() {
         throw new Error('Nome, endereço, email e telefone são obrigatórios');
       }
       
-      // Create the laundry using RPC call instead of direct insert
-      // This will properly handle the owner_id and related user creation
+      // Create the laundry with properly typed fields
+      // All required fields are explicitly defined to satisfy TypeScript
       const { data, error } = await supabase
         .from('laundries')
         .insert({
-          ...laundry,
+          name: laundry.name,
+          address: laundry.address,
+          contact_phone: laundry.contact_phone,
+          contact_email: laundry.contact_email,
           owner_id: user.id
         })
         .select()
