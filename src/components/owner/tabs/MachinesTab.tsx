@@ -27,7 +27,11 @@ export function MachinesTab({
   // Filter machines based on selected location
   const filteredMachines = selectedLocation === "all" 
     ? machines 
-    : machines.filter(machine => machine.laundry_id === selectedLocation);
+    : machines.filter(machine => {
+        const matches = machine.laundry_id === selectedLocation;
+        console.log(`Machine ${machine.id} matches selected location ${selectedLocation}: ${matches}`);
+        return matches;
+      });
   
   console.log("MachinesTab - filteredMachines:", filteredMachines);
 

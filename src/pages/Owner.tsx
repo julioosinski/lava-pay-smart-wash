@@ -20,7 +20,12 @@ export default function Owner() {
   const { data: laundries = [] } = useLaundries();
   
   // Filter laundries to show only those owned by the current user
-  const ownerLaundries = laundries.filter(laundry => laundry.owner_id === user?.id);
+  const ownerLaundries = laundries.filter(laundry => {
+    const isOwner = laundry.owner_id === user?.id;
+    console.log(`Checking laundry ${laundry.id} (owner_id: ${laundry.owner_id}) against user ${user?.id}: ${isOwner}`);
+    return isOwner;
+  });
+  
   console.log("Owner laundries:", ownerLaundries);
   console.log("Current user:", user);
   
@@ -28,17 +33,21 @@ export default function Owner() {
     ownerLaundries.length > 0 ? ownerLaundries[0]?.id : "all"
   );
   
-  // Get all machines - we'll filter them in the component
+  // Get all machines without filtering by laundry
   const { data: allMachines = [] } = useMachines();
   console.log("All fetched machines:", allMachines);
   
   // Filter machines to only show those from owner's laundries
   const ownerLaundryIds = ownerLaundries.map(location => location.id);
-  const ownerMachines = allMachines.filter(machine => 
-    ownerLaundryIds.includes(machine.laundry_id)
-  );
-  console.log("Owner machines after filtering:", ownerMachines);
   console.log("Owner laundry IDs:", ownerLaundryIds);
+  
+  const ownerMachines = allMachines.filter(machine => {
+    const belongs = ownerLaundryIds.includes(machine.laundry_id);
+    console.log(`Machine ${machine.id} belongs to owner's laundry (${machine.laundry_id}): ${belongs}`);
+    return belongs;
+  });
+  
+  console.log("Owner machines after filtering:", ownerMachines);
 
   // Get payments for selected laundry's machines
   const { data: payments = [] } = usePayments();
