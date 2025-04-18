@@ -10,10 +10,12 @@ import { PaymentsTab } from "@/components/admin/tabs/PaymentsTab";
 import { UsersTab } from "@/components/admin/tabs/UsersTab";
 import { useMachines } from "@/hooks/useMachines";
 import { mockPayments, mockUsers } from "@/lib/mockData";
+import { usePayments } from "@/hooks/usePayments";
 
 export default function Admin() {
   const [searchQuery, setSearchQuery] = useState("");
-  const { data: machines = [] } = useMachines();
+  const { data: machines = [], isLoading: machinesLoading } = useMachines();
+  const { data: payments = [], isLoading: paymentsLoading } = usePayments();
   
   return (
     <Layout>
@@ -63,7 +65,7 @@ export default function Admin() {
 
           <TabsContent value="payments">
             <PaymentsTab
-              payments={mockPayments}
+              payments={paymentsLoading ? [] : payments}
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
             />

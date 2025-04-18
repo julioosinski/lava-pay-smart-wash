@@ -4,8 +4,8 @@ import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Edit, Trash } from "lucide-react";
 import { SearchBar } from "../SearchBar";
-import { LaundryLocation } from "@/types";
 import { useLaundries } from "@/hooks/useLaundries";
+import { LaundryForm } from "@/components/admin/LaundryForm";
 
 interface LaundryTabProps {
   searchQuery: string;
@@ -32,9 +32,7 @@ export function LaundryTab({ searchQuery, onSearchChange }: LaundryTabProps) {
           value={searchQuery}
           onChange={onSearchChange}
         />
-        <Button className="bg-lavapay-500 hover:bg-lavapay-600">
-          <Plus className="mr-2 h-4 w-4" /> Nova Lavanderia
-        </Button>
+        <LaundryForm />
       </div>
 
       <Card>
@@ -54,7 +52,7 @@ export function LaundryTab({ searchQuery, onSearchChange }: LaundryTabProps) {
                 <TableCell className="font-medium">{laundry.name}</TableCell>
                 <TableCell>{laundry.address}</TableCell>
                 <TableCell>{laundry.owner_id}</TableCell>
-                <TableCell>{laundry.machines?.length || 0}</TableCell>
+                <TableCell>0</TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="icon" className="h-8 w-8 mr-1">
                     <Edit className="h-4 w-4" />
