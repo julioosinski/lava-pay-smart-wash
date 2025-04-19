@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -30,6 +31,57 @@ export async function redirectBasedOnRole(userId: string, navigate: (path: strin
       return;
     } else if (role === 'business') {
       console.log("Business role detected, redirecting to owner page");
+      
+      // Check if user has any laundries before redirecting
+      const { data: laundryCheck, error: laundryError } = await supabase
+        .from('laundries')
+        .select('id')
+        .eq('owner_id', userId)
+        .limit(1);
+      
+      if (laundryError) {
+        console.error("Error checking laundries:", laundryError);
+      }
+      
+      if (laundryCheck && laundryCheck.length > 0) {
+        console.log(`User ${userId} already has laundries:`, laundryCheck);
+        navigate('/owner', { replace: true });
+        return;
+      } else {
+        console.log("Business user has no laundries. Creating a test laundry...");
+        
+        try {
+          // Create a test laundry for this business user
+          const testLaundryName = `Lavanderia Teste ${Math.floor(Math.random() * 1000)}`;
+          const { data: newLaundry, error: createError } = await supabase
+            .from('laundries')
+            .insert({
+              name: testLaundryName,
+              address: 'Rua Teste, 123, Cidade Teste',
+              contact_email: 'test@example.com',
+              contact_phone: '(11) 99999-9999',
+              owner_id: userId,
+              status: 'active'
+            })
+            .select()
+            .single();
+            
+          if (createError) {
+            console.error("Error creating test laundry:", createError);
+            toast.error("Erro ao criar lavanderia de teste");
+          } else if (newLaundry) {
+            console.log("Successfully created test laundry:", newLaundry);
+            toast.success("Lavanderia de teste criada com sucesso");
+          }
+          
+          navigate('/owner', { replace: true });
+          return;
+        } catch (error) {
+          console.error("Error in test laundry creation:", error);
+          toast.error("Erro ao criar lavanderia de teste");
+        }
+      }
+      
       navigate('/owner', { replace: true });
       return;
     }
@@ -55,40 +107,6 @@ export async function redirectBasedOnRole(userId: string, navigate: (path: strin
       return;
     } else {
       console.log(`User ${userId} has no laundries associated`);
-      
-      if (role === 'business') {
-        console.log("User has business role but no laundries. Creating a test laundry...");
-        
-        try {
-          // Create a test laundry for this business user
-          const testLaundryName = `Test Laundry ${Math.floor(Math.random() * 1000)}`;
-          const { data: newLaundry, error: createError } = await supabase
-            .from('laundries')
-            .insert({
-              name: testLaundryName,
-              address: '123 Test Street, Test City',
-              contact_email: 'test@example.com',
-              contact_phone: '(555) 123-4567',
-              owner_id: userId,
-              status: 'active'
-            })
-            .select()
-            .single();
-            
-          if (createError) {
-            console.error("Error creating test laundry:", createError);
-            toast.error("Erro ao criar lavanderia de teste");
-          } else if (newLaundry) {
-            console.log("Successfully created test laundry:", newLaundry);
-            toast.success("Lavanderia de teste criada com sucesso");
-            navigate('/owner', { replace: true });
-            return;
-          }
-        } catch (error) {
-          console.error("Error in test laundry creation:", error);
-          toast.error("Erro ao criar lavanderia de teste");
-        }
-      }
     }
 
     console.log("No specific role detected or user role, redirecting to home");
