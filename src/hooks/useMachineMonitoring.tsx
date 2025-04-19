@@ -16,7 +16,7 @@ export function useMachineMonitoring(laundryId?: string) {
     const channel = supabase
       .channel('machine-status-changes')
       .on(
-        'postgres_changes' as 'system',
+        'postgres_changes' as unknown as 'system',
         {
           event: '*',
           schema: 'public',
