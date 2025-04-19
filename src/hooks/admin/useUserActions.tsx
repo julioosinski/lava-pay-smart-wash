@@ -15,6 +15,7 @@ export function useUserActions(refetchFn: () => Promise<unknown>) {
 
   const handleEdit = (user: BusinessOwner) => {
     if (isProcessingAction) return;
+    console.log("Editando proprietário:", user);
     setSelectedUser(user);
     setShowUserForm(true);
   };

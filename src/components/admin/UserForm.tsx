@@ -15,7 +15,7 @@ import { BusinessOwner } from "@/types";
 interface UserFormProps {
   onClose: () => void;
   onSuccess: () => void;
-  user?: BusinessOwner;
+  user?: BusinessOwner | null;
   mode?: "create" | "edit";
 }
 
@@ -43,6 +43,7 @@ export function UserForm({ onClose, onSuccess, user, mode = "create" }: UserForm
   // Atualizar valores do formulário quando o usuário muda
   useEffect(() => {
     if (user) {
+      console.log("Atualizando formulário com os dados do usuário:", user);
       form.reset({
         name: user.name || "",
         email: user.email || "",
@@ -74,6 +75,7 @@ export function UserForm({ onClose, onSuccess, user, mode = "create" }: UserForm
       
       if (mode === "edit" && user?.id) {
         // Atualizar proprietário existente
+        console.log("Enviando dados para atualização:", user.id, ownerData);
         result = await updateBusinessOwner(user.id, ownerData);
       } else {
         // Criar novo proprietário

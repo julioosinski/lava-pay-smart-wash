@@ -111,23 +111,30 @@ export async function updateBusinessOwner(id: string, params: CreateBusinessOwne
   try {
     console.log("Atualizando proprietário:", id, params);
     
+    // Extrair primeiro nome e sobrenome do nome completo
+    const firstName = params.name.split(' ')[0] || '';
+    const lastName = params.name.split(' ').slice(1).join(' ') || '';
+    
+    console.log("Nome separado:", { firstName, lastName });
+    
     // Update the profile
-    const { error: updateError } = await supabase
+    const { data, error: updateError } = await supabase
       .from('profiles')
       .update({
-        first_name: params.name.split(' ')[0] || '',
-        last_name: params.name.split(' ').slice(1).join(' ') || '',
+        first_name: firstName,
+        last_name: lastName,
         contact_email: params.email,
         contact_phone: params.phone
       })
-      .eq('id', id);
+      .eq('id', id)
+      .select();
     
     if (updateError) {
       console.error("Erro ao atualizar perfil do proprietário:", updateError);
       throw updateError;
     }
     
-    console.log("Proprietário atualizado com sucesso. ID:", id);
+    console.log("Proprietário atualizado com sucesso:", data);
     return { userId: id };
   } catch (error) {
     console.error("Erro ao atualizar proprietário:", error);
