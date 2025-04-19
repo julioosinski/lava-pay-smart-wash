@@ -31,6 +31,8 @@ import {
   generatePixQRCode,
   activateMachine
 } from "@/lib/mercadoPago";
+import { usePaymentProcessing } from "@/hooks/usePaymentProcessing";
+import { useMachineMonitoring } from "@/hooks/useMachineMonitoring";
 
 const availableMachines = mockMachines.filter(machine => machine.status === "available");
 
@@ -47,6 +49,13 @@ export default function Totem() {
     expirationYear: "",
     securityCode: ""
   });
+
+  const { processPayment, isProcessing: paymentIsProcessing } = usePaymentProcessing({
+    onSuccess: () => setStep("success"),
+    onError: () => setStep("error")
+  });
+
+  useMachineMonitoring();
 
   const handleMachineSelect = (machine: Machine) => {
     setSelectedMachine(machine);
@@ -79,33 +88,14 @@ export default function Totem() {
     setStep("processing");
 
     try {
-      const token = await generatePaymentToken(cardDetails);
-      const payment = await processCardPayment(
-        token,
-        selectedMachine.price,
-        `Pagamento ${selectedMachine.type === 'washer' ? 'Lavadora' : 'Secadora'} #${selectedMachine.id}`,
-        "cliente@exemplo.com",
-        selectedMachine.id
+      await processPayment(
+        selectedMachine, 
+        paymentMethod === 'credit' ? 'credit' : 'debit',
+        selectedMachine.price
       );
-
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      if (payment.status === 'approved') {
-        const activated = await activateMachine(selectedMachine.id);
-        
-        if (activated) {
-          setStep("success");
-        } else {
-          setStep("error");
-        }
-      } else {
-        setStep("error");
-      }
     } catch (error) {
       console.error("Erro no pagamento:", error);
       setStep("error");
-    } finally {
-      setIsProcessing(false);
     }
   };
 
@@ -115,28 +105,11 @@ export default function Totem() {
     setIsProcessing(true);
     
     try {
-      const pixData = await generatePixQRCode(
-        selectedMachine.price,
-        `Pagamento ${selectedMachine.type === 'washer' ? 'Lavadora' : 'Secadora'} #${selectedMachine.id}`,
-        selectedMachine.id
-      );
-      
-      setPixQRCode(pixData.qrCodeBase64);
-      
-      setTimeout(async () => {
-        const activated = await activateMachine(selectedMachine.id);
-        
-        if (activated) {
-          setStep("success");
-        } else {
-          setStep("error");
-        }
-        
-        setIsProcessing(false);
-      }, 5000);
+      await processPayment(selectedMachine, 'pix', selectedMachine.price);
     } catch (error) {
       console.error("Erro no pagamento PIX:", error);
       setStep("error");
+    } finally {
       setIsProcessing(false);
     }
   };

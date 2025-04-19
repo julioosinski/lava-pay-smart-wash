@@ -4,6 +4,7 @@ import { StatusBadge } from "./StatusBadge";
 import { Machine } from "@/types";
 import { WashingMachine, Loader, Timer, Hash, Barcode } from "lucide-react";
 import { MachineForm } from "./admin/machines/MachineForm";
+import { useSessionTimer } from "@/hooks/useSessionTimer";
 
 interface MachineCardProps {
   machine: Machine;
@@ -13,6 +14,8 @@ interface MachineCardProps {
 }
 
 export function MachineCard({ machine, onSelect, showActions = true, showEdit = false }: MachineCardProps) {
+  const { timeRemaining, isActive, formattedTime } = useSessionTimer(machine);
+  
   const formattedPrice = new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL'
@@ -66,6 +69,14 @@ export function MachineCard({ machine, onSelect, showActions = true, showEdit = 
             </span>
             <span className="font-medium">{machine.machine_serial}</span>
           </div>
+          {isActive && (
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-500 flex items-center gap-1">
+                <Timer className="h-4 w-4" /> Tempo Restante
+              </span>
+              <span className="font-medium text-lavapay-600">{formattedTime}</span>
+            </div>
+          )}
         </div>
       </CardContent>
       {showActions && (
@@ -75,7 +86,9 @@ export function MachineCard({ machine, onSelect, showActions = true, showEdit = 
             disabled={machine.status !== 'available'}
             onClick={onSelect}
           >
-            {machine.status === 'available' ? 'Selecionar' : 'Indisponível'}
+            {machine.status === 'available' ? 'Selecionar' : 
+             machine.status === 'in-use' ? `Em uso ${formattedTime ? `(${formattedTime})` : ''}` : 
+             'Indisponível'}
           </Button>
         </CardFooter>
       )}
