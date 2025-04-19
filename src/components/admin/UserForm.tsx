@@ -59,26 +59,25 @@ export function UserForm({ onClose, onSuccess, user, mode = "create" }: UserForm
       
       let result;
       
+      // Garantimos que name é sempre uma string não vazia
+      const ownerData = {
+        name: values.name.trim(),
+        email: values.email,
+        phone: values.phone,
+      };
+      
+      // Verificamos se o nome está vazio
+      if (!ownerData.name) {
+        toast.error("Nome é obrigatório");
+        return;
+      }
+      
       if (mode === "edit" && user?.id) {
-        // Garantir que todos os campos obrigatórios estão presentes
-        const updateData = {
-          name: values.name, // Aqui name é string, não opcional
-          email: values.email,
-          phone: values.phone,
-        };
-        
         // Atualizar proprietário existente
-        result = await updateBusinessOwner(user.id, updateData);
+        result = await updateBusinessOwner(user.id, ownerData);
       } else {
         // Criar novo proprietário
-        const createData = {
-          name: values.name, // Aqui name é string, não opcional
-          email: values.email,
-          phone: values.phone,
-        };
-        
-        // Criar novo proprietário
-        result = await createBusinessOwner(createData);
+        result = await createBusinessOwner(ownerData);
       }
 
       if (result.userId) {
@@ -87,6 +86,7 @@ export function UserForm({ onClose, onSuccess, user, mode = "create" }: UserForm
             ? "Proprietário cadastrado com sucesso! Se for novo usuário, o login será feito com email e telefone como senha."
             : "Proprietário atualizado com sucesso!"
         );
+        
         // Invalidar a query de proprietários para forçar uma nova busca
         await queryClient.invalidateQueries({ queryKey: ['business-owners'] });
         onSuccess();
@@ -113,6 +113,7 @@ export function UserForm({ onClose, onSuccess, user, mode = "create" }: UserForm
             id="name"
             {...form.register("name")}
             className="mt-1"
+            required
           />
           {form.formState.errors.name && (
             <p className="text-sm text-red-500 mt-1">{form.formState.errors.name.message}</p>
@@ -126,6 +127,7 @@ export function UserForm({ onClose, onSuccess, user, mode = "create" }: UserForm
             type="email"
             {...form.register("email")}
             className="mt-1"
+            required
           />
           {form.formState.errors.email && (
             <p className="text-sm text-red-500 mt-1">{form.formState.errors.email.message}</p>
@@ -138,6 +140,7 @@ export function UserForm({ onClose, onSuccess, user, mode = "create" }: UserForm
             id="phone"
             {...form.register("phone")}
             className="mt-1"
+            required
           />
           {form.formState.errors.phone && (
             <p className="text-sm text-red-500 mt-1">{form.formState.errors.phone.message}</p>

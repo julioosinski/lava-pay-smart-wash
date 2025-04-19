@@ -22,7 +22,7 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
   const [showUserForm, setShowUserForm] = useState(false);
   const [selectedUser, setSelectedUser] = useState<BusinessOwner | null>(null);
   const [userToDelete, setUserToDelete] = useState<BusinessOwner | null>(null);
-  const { data: businessOwners = [], isLoading } = useBusinessOwners();
+  const { data: businessOwners = [], isLoading, refetch } = useBusinessOwners();
   const queryClient = useQueryClient();
 
   const filteredUsers = businessOwners.filter(user =>
@@ -48,18 +48,22 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
       try {
         console.log("Confirmando exclusão do usuário:", userToDelete.id);
         const result = await deleteBusinessOwner(userToDelete.id);
+        
         if (result.success) {
           toast.success("Proprietário excluído com sucesso");
-          // Invalida a cache para forçar uma nova busca
+          
+          // Força uma nova busca imediatamente
           await queryClient.invalidateQueries({ queryKey: ['business-owners'] });
+          await refetch();
         } else {
           toast.error(result.error || "Não foi possível excluir o proprietário");
         }
       } catch (error) {
         toast.error("Erro ao excluir proprietário");
         console.error("Error deleting business owner:", error);
+      } finally {
+        setUserToDelete(null);
       }
-      setUserToDelete(null);
     }
   };
   
@@ -68,10 +72,12 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
     setSelectedUser(null);
   };
 
-  const handleFormSuccess = () => {
+  const handleFormSuccess = async () => {
     setShowUserForm(false);
     setSelectedUser(null);
-    // A invalidação da query já é feita dentro do formulário
+    
+    // Força uma nova busca imediatamente
+    await refetch();
   };
 
   return (

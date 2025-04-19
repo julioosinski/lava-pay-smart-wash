@@ -118,8 +118,7 @@ export async function updateBusinessOwner(id: string, params: CreateBusinessOwne
         first_name: params.name.split(' ')[0] || '',
         last_name: params.name.split(' ').slice(1).join(' ') || '',
         contact_email: params.email,
-        contact_phone: params.phone,
-        role: 'business' as Database["public"]["Enums"]["user_role"]
+        contact_phone: params.phone
       })
       .eq('id', id);
     
@@ -161,23 +160,31 @@ export async function deleteBusinessOwner(id: string): Promise<{ success: boolea
       };
     }
     
-    // Como não temos acesso direto ao auth.users através do cliente, vamos apenas atualizar o perfil
-    // removendo os dados e mudando o role para 'user'
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({
-        role: 'user' as Database["public"]["Enums"]["user_role"],
-        contact_email: null,
-        contact_phone: null,
-      })
-      .eq('id', id);
+    // Alteramos a abordagem: em vez de apenas mudar o role para 'user',
+    // vamos remover completamente o proprietário usando auth.deleteUser
+    const { error: deleteError } = await supabase.auth.admin.deleteUser(id);
     
-    if (updateError) {
-      console.error("Erro ao desativar perfil do proprietário:", updateError);
-      throw updateError;
+    if (deleteError) {
+      console.error("Erro ao excluir usuário:", deleteError);
+      
+      // Plano B: Se não conseguir excluir o usuário, desativar o perfil
+      console.log("Tentando desativar perfil como alternativa...");
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          role: 'user' as Database["public"]["Enums"]["user_role"],
+          contact_email: null,
+          contact_phone: null
+        })
+        .eq('id', id);
+        
+      if (updateError) {
+        console.error("Erro ao desativar perfil:", updateError);
+        throw updateError;
+      }
     }
     
-    console.log("Proprietário desativado com sucesso. ID:", id);
+    console.log("Proprietário excluído com sucesso. ID:", id);
     return { success: true };
   } catch (error) {
     console.error("Erro ao deletar proprietário:", error);

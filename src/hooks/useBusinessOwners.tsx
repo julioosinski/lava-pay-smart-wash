@@ -41,7 +41,7 @@ export function useBusinessOwners() {
         throw error;
       }
     },
-    staleTime: 1000 * 60 * 5, // 5 minutos
+    staleTime: 0, // Reduzido para forçar refetch mais frequente
     refetchOnWindowFocus: true
   });
 }
