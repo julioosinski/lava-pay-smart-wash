@@ -1,11 +1,12 @@
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface PaymentSettings {
   id: string;
+  laundry_id: string;
   provider: string;
   access_token: string | null;
   public_key: string | null;
@@ -13,7 +14,6 @@ interface PaymentSettings {
   sandbox_mode: boolean;
 }
 
-// Update this interface to make properties optional
 interface UpdatePaymentSettingsData {
   access_token?: string;
   public_key?: string;
@@ -21,17 +21,19 @@ interface UpdatePaymentSettingsData {
   sandbox_mode?: boolean;
 }
 
-export function usePaymentSettings() {
+export function usePaymentSettings(laundryId: string) {
   const queryClient = useQueryClient();
   const [isUpdating, setIsUpdating] = useState(false);
 
   const { data: settings, isLoading } = useQuery({
-    queryKey: ['payment-settings'],
+    queryKey: ['payment-settings', laundryId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('payment_settings')
         .select('*')
-        .single();
+        .eq('laundry_id', laundryId)
+        .eq('provider', 'mercado_pago')
+        .maybeSingle();
 
       if (error) {
         console.error("Erro ao buscar configurações de pagamento:", error);
@@ -47,22 +49,37 @@ export function usePaymentSettings() {
     try {
       const updateData: UpdatePaymentSettingsData = {};
       
-      // Only include properties that are defined
       if (newSettings.access_token !== undefined) updateData.access_token = newSettings.access_token;
       if (newSettings.public_key !== undefined) updateData.public_key = newSettings.public_key;
       if (newSettings.integration_id !== undefined) updateData.integration_id = newSettings.integration_id;
       if (newSettings.sandbox_mode !== undefined) updateData.sandbox_mode = newSettings.sandbox_mode;
       
-      const { error } = await supabase
-        .from('payment_settings')
-        .update(updateData)
-        .eq('provider', 'mercado_pago');
+      if (settings?.id) {
+        // Atualizar configurações existentes
+        const { error } = await supabase
+          .from('payment_settings')
+          .update(updateData)
+          .eq('id', settings.id);
 
-      if (error) throw error;
+        if (error) throw error;
+      } else {
+        // Criar novas configurações
+        const { error } = await supabase
+          .from('payment_settings')
+          .insert([{
+            ...updateData,
+            laundry_id: laundryId,
+            provider: 'mercado_pago'
+          }]);
 
-      await queryClient.invalidateQueries({ queryKey: ['payment-settings'] });
+        if (error) throw error;
+      }
+
+      await queryClient.invalidateQueries({ queryKey: ['payment-settings', laundryId] });
+      toast.success("Configurações de pagamento atualizadas com sucesso");
     } catch (error) {
       console.error("Erro ao atualizar configurações:", error);
+      toast.error("Erro ao atualizar configurações de pagamento");
       throw error;
     } finally {
       setIsUpdating(false);

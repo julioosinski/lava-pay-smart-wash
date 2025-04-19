@@ -182,6 +182,7 @@ export type Database = {
           created_at: string
           id: string
           integration_id: string | null
+          laundry_id: string
           provider: string
           public_key: string | null
           sandbox_mode: boolean
@@ -192,6 +193,7 @@ export type Database = {
           created_at?: string
           id?: string
           integration_id?: string | null
+          laundry_id: string
           provider?: string
           public_key?: string | null
           sandbox_mode?: boolean
@@ -202,12 +204,21 @@ export type Database = {
           created_at?: string
           id?: string
           integration_id?: string | null
+          laundry_id?: string
           provider?: string
           public_key?: string | null
           sandbox_mode?: boolean
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "payment_settings_laundry_id_fkey"
+            columns: ["laundry_id"]
+            isOneToOne: false
+            referencedRelation: "laundries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payments: {
         Row: {
