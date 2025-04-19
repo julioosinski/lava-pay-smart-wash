@@ -42,7 +42,7 @@ export async function createBusinessOwner(params: CreateBusinessOwnerParams): Pr
           first_name: params.name.split(' ')[0] || '',
           last_name: params.name.split(' ').slice(1).join(' ') || '',
           contact_phone: params.phone,
-          role: 'business'
+          role: 'business' as Database["public"]["Enums"]["user_role"]
         })
         .eq('id', userId);
       
@@ -85,7 +85,7 @@ export async function createBusinessOwner(params: CreateBusinessOwnerParams): Pr
           last_name: params.name.split(' ').slice(1).join(' ') || '',
           contact_email: params.email,
           contact_phone: params.phone,
-          role: 'business'
+          role: 'business' as Database["public"]["Enums"]["user_role"]
         })
         .eq('id', userId);
 
@@ -106,7 +106,7 @@ export async function createBusinessOwner(params: CreateBusinessOwnerParams): Pr
   }
 }
 
-// Nova função para atualizar um proprietário existente
+// Função para atualizar um proprietário existente
 export async function updateBusinessOwner(id: string, params: CreateBusinessOwnerParams): Promise<CreateBusinessOwnerResult> {
   try {
     console.log("Atualizando proprietário:", id, params);
@@ -138,7 +138,7 @@ export async function updateBusinessOwner(id: string, params: CreateBusinessOwne
   }
 }
 
-// Nova função para deletar um proprietário
+// Função para deletar um proprietário
 export async function deleteBusinessOwner(id: string): Promise<{ success: boolean; error?: string }> {
   try {
     console.log("Deletando proprietário:", id);
@@ -161,9 +161,8 @@ export async function deleteBusinessOwner(id: string): Promise<{ success: boolea
       };
     }
     
-    // Temos que usar auth.admin para remover o usuário
     // Como não temos acesso direto ao auth.users através do cliente, vamos apenas atualizar o perfil
-    // removendo os dados e mudando o role para 'user' (em vez de 'inactive')
+    // removendo os dados e mudando o role para 'user'
     const { error: updateError } = await supabase
       .from('profiles')
       .update({

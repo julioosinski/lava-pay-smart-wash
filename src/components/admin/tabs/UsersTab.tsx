@@ -33,17 +33,20 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
   
   // Manipuladores para editar e excluir
   const handleEdit = (user: BusinessOwner) => {
+    console.log("Editando usuário:", user);
     setSelectedUser(user);
     setShowUserForm(true);
   };
   
   const handleDelete = (user: BusinessOwner) => {
+    console.log("Preparando para excluir usuário:", user);
     setUserToDelete(user);
   };
   
   const handleDeleteConfirm = async () => {
     if (userToDelete) {
       try {
+        console.log("Confirmando exclusão do usuário:", userToDelete.id);
         const result = await deleteBusinessOwner(userToDelete.id);
         if (result.success) {
           toast.success("Proprietário excluído com sucesso");
@@ -63,6 +66,12 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
   const handleFormClose = () => {
     setShowUserForm(false);
     setSelectedUser(null);
+  };
+
+  const handleFormSuccess = () => {
+    setShowUserForm(false);
+    setSelectedUser(null);
+    // A invalidação da query já é feita dentro do formulário
   };
 
   return (
@@ -87,7 +96,7 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
       {showUserForm && (
         <UserForm
           onClose={handleFormClose}
-          onSuccess={handleFormClose}
+          onSuccess={handleFormSuccess}
           user={selectedUser}
           mode={selectedUser ? "edit" : "create"}
         />

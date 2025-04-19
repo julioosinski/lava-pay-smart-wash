@@ -22,7 +22,7 @@ export function useBusinessOwners() {
           throw error;
         }
         
-        console.log("Proprietários encontrados:", owners);
+        console.log("Proprietários encontrados:", owners?.length || 0);
         
         // Transformação de dados para o formato esperado pelos componentes
         const formattedOwners = (owners || []).map(owner => ({
@@ -33,7 +33,7 @@ export function useBusinessOwners() {
           role: owner.role
         }));
         
-        console.log("Proprietários formatados:", formattedOwners);
+        console.log("Proprietários formatados:", formattedOwners.length);
         
         return formattedOwners;
       } catch (error) {

@@ -60,8 +60,15 @@ export function UserForm({ onClose, onSuccess, user, mode = "create" }: UserForm
       let result;
       
       if (mode === "edit" && user?.id) {
+        // Garantir que todos os campos obrigatórios estão presentes
+        const updateData = {
+          name: values.name,
+          email: values.email,
+          phone: values.phone,
+        };
+        
         // Atualizar proprietário existente
-        result = await updateBusinessOwner(user.id, values);
+        result = await updateBusinessOwner(user.id, updateData);
       } else {
         // Criar novo proprietário
         result = await createBusinessOwner(values);
