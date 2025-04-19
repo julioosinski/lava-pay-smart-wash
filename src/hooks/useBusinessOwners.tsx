@@ -8,7 +8,6 @@ export function useBusinessOwners() {
     queryKey: ['business-owners'],
     queryFn: async () => {
       try {
-        // Verificamos logs para identificar problemas na consulta
         console.log("Buscando proprietários de negócios...");
         
         // Query profiles com role = 'business'
@@ -41,7 +40,8 @@ export function useBusinessOwners() {
         throw error;
       }
     },
-    staleTime: 0, // Reduzido para forçar refetch mais frequente
-    refetchOnWindowFocus: true
+    staleTime: 0, // Sempre buscar dados novos
+    refetchOnMount: true, // Recarregar quando o componente montar
+    refetchOnWindowFocus: true // Recarregar quando a janela receber foco
   });
 }

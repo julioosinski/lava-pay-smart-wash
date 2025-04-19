@@ -52,9 +52,12 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
         if (result.success) {
           toast.success("Proprietário excluído com sucesso");
           
-          // Força uma nova busca imediatamente
+          // Forçar uma nova busca imediatamente
           await queryClient.invalidateQueries({ queryKey: ['business-owners'] });
-          await refetch();
+          // Esperar um curto intervalo antes de refetch para garantir que o servidor processou
+          setTimeout(() => {
+            refetch();
+          }, 100);
         } else {
           toast.error(result.error || "Não foi possível excluir o proprietário");
         }
@@ -76,8 +79,12 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
     setShowUserForm(false);
     setSelectedUser(null);
     
-    // Força uma nova busca imediatamente
-    await refetch();
+    // Forçar uma nova busca imediatamente
+    await queryClient.invalidateQueries({ queryKey: ['business-owners'] });
+    // Esperar um curto intervalo antes de refetch para garantir que o servidor processou
+    setTimeout(() => {
+      refetch();
+    }, 100);
   };
 
   return (

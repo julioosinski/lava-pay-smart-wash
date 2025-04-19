@@ -160,31 +160,24 @@ export async function deleteBusinessOwner(id: string): Promise<{ success: boolea
       };
     }
     
-    // Alteramos a abordagem: em vez de apenas mudar o role para 'user',
-    // vamos remover completamente o proprietário usando auth.deleteUser
-    const { error: deleteError } = await supabase.auth.admin.deleteUser(id);
-    
-    if (deleteError) {
-      console.error("Erro ao excluir usuário:", deleteError);
+    // Usamos diretamente a abordagem de mudar o role para 'user', já que a exclusão
+    // pelo auth.admin requer privilégios especiais que não estamos obtendo
+    console.log("Desativando perfil do proprietário...");
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({
+        role: 'user' as Database["public"]["Enums"]["user_role"],
+        contact_email: null,
+        contact_phone: null
+      })
+      .eq('id', id);
       
-      // Plano B: Se não conseguir excluir o usuário, desativar o perfil
-      console.log("Tentando desativar perfil como alternativa...");
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          role: 'user' as Database["public"]["Enums"]["user_role"],
-          contact_email: null,
-          contact_phone: null
-        })
-        .eq('id', id);
-        
-      if (updateError) {
-        console.error("Erro ao desativar perfil:", updateError);
-        throw updateError;
-      }
+    if (updateError) {
+      console.error("Erro ao desativar perfil:", updateError);
+      throw updateError;
     }
     
-    console.log("Proprietário excluído com sucesso. ID:", id);
+    console.log("Proprietário desativado com sucesso. ID:", id);
     return { success: true };
   } catch (error) {
     console.error("Erro ao deletar proprietário:", error);
