@@ -49,7 +49,6 @@ export default function Admin() {
 
           <TabsContent value="users">
             <UsersTab
-              users={[]}
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
             />

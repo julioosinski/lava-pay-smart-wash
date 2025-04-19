@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { Database } from "@/integrations/supabase/types";
 
 interface CreateBusinessOwnerParams {
   name: string;
@@ -118,7 +119,7 @@ export async function updateBusinessOwner(id: string, params: CreateBusinessOwne
         last_name: params.name.split(' ').slice(1).join(' ') || '',
         contact_email: params.email,
         contact_phone: params.phone,
-        role: 'business'
+        role: 'business' as Database["public"]["Enums"]["user_role"]
       })
       .eq('id', id);
     
@@ -162,11 +163,11 @@ export async function deleteBusinessOwner(id: string): Promise<{ success: boolea
     
     // Temos que usar auth.admin para remover o usuário
     // Como não temos acesso direto ao auth.users através do cliente, vamos apenas atualizar o perfil
-    // removendo os dados e mudando o role para 'inactive' (ou outro status)
+    // removendo os dados e mudando o role para 'user' (em vez de 'inactive')
     const { error: updateError } = await supabase
       .from('profiles')
       .update({
-        role: 'inactive',
+        role: 'user' as Database["public"]["Enums"]["user_role"],
         contact_email: null,
         contact_phone: null,
       })
