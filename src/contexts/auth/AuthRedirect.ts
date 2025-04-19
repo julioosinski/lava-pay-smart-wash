@@ -43,39 +43,38 @@ export async function redirectBasedOnRole(userId: string, navigate: (path: strin
     } else {
       console.log(`User ${userId} has no laundries associated`);
       
-      // If user already has business role, try to assign a test laundry
+      // If user already has business role, create and assign a test laundry
       if (role === 'business') {
-        console.log("User has business role but no laundries. Checking for available laundries...");
+        console.log("User has business role but no laundries. Creating a test laundry...");
         
-        // Find a laundry without an owner and assign it to this user
-        const { data: availableLaundries, error: availableError } = await supabase
-          .from('laundries')
-          .select('id')
-          .is('owner_id', null)
-          .limit(1);
-        
-        if (availableError) {
-          console.error("Error checking for available laundries:", availableError);
-        } else if (availableLaundries && availableLaundries.length > 0) {
-          console.log("Found available laundry, assigning to user:", availableLaundries[0].id);
-          
-          const { error: updateError } = await supabase
+        try {
+          // Create a test laundry for this business user
+          const testLaundryName = `Test Laundry ${Math.floor(Math.random() * 1000)}`;
+          const { data: newLaundry, error: createError } = await supabase
             .from('laundries')
-            .update({ owner_id: userId })
-            .eq('id', availableLaundries[0].id);
-          
-          if (updateError) {
-            console.error("Error assigning laundry to user:", updateError);
-            toast.error("Erro ao atribuir lavanderia ao proprietário");
-          } else {
-            console.log("Successfully assigned laundry to user, redirecting to owner dashboard");
-            toast.success("Lavanderia atribuída ao proprietário com sucesso");
+            .insert({
+              name: testLaundryName,
+              address: '123 Test Street, Test City',
+              contact_email: 'test@example.com',
+              contact_phone: '(555) 123-4567',
+              owner_id: userId,
+              status: 'active'
+            })
+            .select()
+            .single();
+            
+          if (createError) {
+            console.error("Error creating test laundry:", createError);
+            toast.error("Erro ao criar lavanderia de teste");
+          } else if (newLaundry) {
+            console.log("Successfully created test laundry:", newLaundry);
+            toast.success("Lavanderia de teste criada com sucesso");
             navigate('/owner', { replace: true });
             return;
           }
-        } else {
-          console.log("No available laundries found for assignment");
-          toast.warning("Não há lavanderias disponíveis para atribuir ao proprietário");
+        } catch (error) {
+          console.error("Error in test laundry creation:", error);
+          toast.error("Erro ao criar lavanderia de teste");
         }
       }
     }
