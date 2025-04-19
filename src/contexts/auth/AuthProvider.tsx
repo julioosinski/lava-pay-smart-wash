@@ -47,7 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             
             // Only redirect if not already on auth page
             if (location.pathname !== '/auth') {
-              console.log("Redirecting to auth page");
+              console.log("Redirecting to auth page from auth listener");
               navigate('/auth', { replace: true });
             }
           } else if (event === 'SIGNED_IN' && newSession?.user) {

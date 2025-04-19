@@ -15,34 +15,31 @@ export const useSignOut = ({ setUser, setSession, setLoading, navigate }: SignOu
       console.log("Starting logout process");
       setLoading(true);
       
-      // First clear local state to ensure UI updates immediately
+      // First clear local state immediately to prevent redirects during logout
       setUser(null);
       setSession(null);
       
+      // Immediate redirect to prevent any loops
+      console.log("Navigating to auth page immediately");
+      navigate('/auth', { replace: true });
+      
+      // Then attempt to sign out from Supabase
       try {
-        // Then sign out from Supabase
         await supabase.auth.signOut();
         console.log("Successfully signed out from Supabase");
         toast.success("Você foi desconectado com sucesso");
       } catch (error: any) {
-        // Handle the "Auth session missing" error gracefully
+        // Handle the "Auth session missing" error silently
         if (error.message?.includes('Auth session missing')) {
-          console.log("No active session found, proceeding with logout");
-          // We continue the logout process as the session is already gone
+          console.log("No active session found, logout already completed");
         } else {
-          // For other errors, show a toast but still proceed with navigation
           console.error("Error during Supabase signOut:", error);
-          toast.error("Erro ao sair da sua conta");
+          // Don't show error to user since we've already redirected
         }
       }
-      
     } catch (error) {
       console.error("Exception during sign out process:", error);
-      toast.error("Erro ao sair da sua conta");
     } finally {
-      // Always navigate to auth page and reset loading state
-      console.log("Navigating to auth page after logout");
-      navigate('/auth', { replace: true });
       setLoading(false);
     }
   };

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { WashingMachine, Menu, X, LogOut } from "lucide-react";
@@ -27,16 +28,20 @@ export function Header() {
     navigate('/auth', { state: { role: 'business' } });
   };
 
-  const handleLogout = async () => {
+  const handleLogout = async (event: React.MouseEvent) => {
+    event.preventDefault(); // Prevent any default navigation
+    event.stopPropagation(); // Stop event bubbling
+    
     try {
       console.log("Header: Logout button clicked");
-      await signOut();
-    } catch (error) {
-      console.error("Header: Logout error:", error);
-    } finally {
+      // Close mobile menu first if open
       if (mobileMenuOpen) {
         setMobileMenuOpen(false);
       }
+      // Then perform logout
+      await signOut();
+    } catch (error) {
+      console.error("Header: Logout error:", error);
     }
   };
 
