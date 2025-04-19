@@ -41,9 +41,9 @@ export function UserForm({ onClose, onSuccess }: UserFormProps) {
     try {
       setIsLoading(true);
       
-      console.log("Criando proprietário:", values);
+      console.log("Criando ou atualizando proprietário:", values);
       
-      // Criar conta de proprietário
+      // Criar ou atualizar conta de proprietário
       const result = await createBusinessOwner({
         name: values.name,
         email: values.email,
@@ -51,16 +51,16 @@ export function UserForm({ onClose, onSuccess }: UserFormProps) {
       });
 
       if (result.userId) {
-        toast.success("Proprietário cadastrado com sucesso! Login com email e telefone como senha.");
+        toast.success("Proprietário cadastrado/atualizado com sucesso! Se for novo usuário, o login será feito com email e telefone como senha.");
         // Invalidar a query de proprietários para forçar uma nova busca
         await queryClient.invalidateQueries({ queryKey: ['business-owners'] });
         onSuccess();
       } else {
-        throw new Error("Não foi possível criar o proprietário");
+        throw new Error(result.error || "Não foi possível criar ou atualizar o proprietário");
       }
     } catch (error) {
-      console.error("Error creating business owner:", error);
-      toast.error("Erro ao criar proprietário: " + 
+      console.error("Error creating/updating business owner:", error);
+      toast.error("Erro ao processar proprietário: " + 
         (error instanceof Error ? error.message : "Erro desconhecido"));
     } finally {
       setIsLoading(false);
