@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -128,7 +129,9 @@ export const useUpdateMachine = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (machine: Partial<Machine> & { id: string }) => {
+    mutationFn: async (machine: Partial<Machine> & { id: string, laundry_id: string }) => {
+      console.log("Updating machine with data:", machine);
+      
       const { data, error } = await supabase
         .from('machines')
         .update({
@@ -148,6 +151,7 @@ export const useUpdateMachine = () => {
         throw error;
       }
       
+      console.log("Machine updated successfully:", data);
       return data as Machine;
     },
     onSuccess: (_, variables) => {

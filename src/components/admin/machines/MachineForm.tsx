@@ -55,7 +55,12 @@ export function MachineForm({ laundryId, machine, variant = "create", triggerEle
         await updateMachine.mutateAsync({
           id: machine.id,
           laundry_id: laundryId,
-          ...data
+          type: data.type,
+          price: data.price,
+          time_minutes: data.time_minutes,
+          machine_number: data.machine_number,
+          store_id: data.store_id,
+          machine_serial: data.machine_serial
         });
       } else {
         await createMachine.mutateAsync({
