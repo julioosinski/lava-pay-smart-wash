@@ -1,5 +1,16 @@
 
-import { Machine, Payment } from "@/types";
+import { Machine, Payment, LaundryLocation } from "@/types";
+
+interface OwnerStats {
+  totalRevenue: number;
+  totalMachines: number;
+  availableMachines: number;
+  inUseMachines: number;
+  maintenanceMachines: number;
+  availablePercentage: number;
+  inUsePercentage: number;
+  maintenancePercentage: number;
+}
 
 export function useOwnerStats(ownerMachines: Machine[], ownerPayments: Payment[]) {
   const totalMachines = ownerMachines.length;
@@ -15,17 +26,6 @@ export function useOwnerStats(ownerMachines: Machine[], ownerPayments: Payment[]
     .filter(payment => payment.status === 'approved')
     .reduce((sum, payment) => sum + payment.amount, 0);
 
-  // Sample revenue data (you might want to implement actual calculation)
-  const revenueByDay = [
-    { day: 'Seg', amount: 320 },
-    { day: 'Ter', amount: 280 },
-    { day: 'Qua', amount: 340 },
-    { day: 'Qui', amount: 380 },
-    { day: 'Sex', amount: 450 },
-    { day: 'Sáb', amount: 520 },
-    { day: 'Dom', amount: 390 },
-  ];
-
   return {
     stats: {
       totalRevenue,
@@ -37,6 +37,5 @@ export function useOwnerStats(ownerMachines: Machine[], ownerPayments: Payment[]
       inUsePercentage,
       maintenancePercentage,
     },
-    revenueByDay
   };
 }
