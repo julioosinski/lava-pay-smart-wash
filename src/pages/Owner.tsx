@@ -10,9 +10,12 @@ import { useOwnerDashboard } from "@/hooks/useOwnerDashboard";
 import { Loader2, AlertTriangle } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/auth";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Owner() {
   const { user } = useAuth();
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const {
     ownerLaundries,
     ownerMachines,
@@ -24,6 +27,32 @@ export default function Owner() {
     revenueByDay
   } = useOwnerDashboard();
 
+  useEffect(() => {
+    const checkAdminRole = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .maybeSingle();
+          
+        if (error) {
+          console.error("Error checking user role:", error);
+          return;
+        }
+        
+        setIsAdmin(data?.role === 'admin');
+        console.log("User is admin:", data?.role === 'admin');
+      } catch (error) {
+        console.error("Error checking admin status:", error);
+      }
+    };
+    
+    checkAdminRole();
+  }, [user?.id]);
+
   console.log("Owner page - user ID:", user?.id);
   console.log("Owner page - laundries count:", ownerLaundries.length);
 
@@ -32,7 +61,7 @@ export default function Owner() {
       <Layout>
         <div className="container mx-auto px-4 py-8 text-center">
           <Loader2 className="h-8 w-8 animate-spin text-lavapay-600 mx-auto mb-3" />
-          <div className="text-lg">Carregando dados do administrador...</div>
+          <div className="text-lg">Carregando dados...</div>
           <div className="text-sm text-gray-500 mt-2">Verificando lavanderias e máquinas associadas...</div>
         </div>
       </Layout>
@@ -44,7 +73,9 @@ export default function Owner() {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-8">
-          <h1 className="text-3xl font-bold mb-4">Painel do Administrador</h1>
+          <h1 className="text-3xl font-bold mb-4">
+            {isAdmin ? "Painel do Administrador" : "Painel do Proprietário"}
+          </h1>
           
           <Alert variant="default" className="bg-amber-50 border-amber-200">
             <AlertTriangle className="h-5 w-5 text-amber-600" />
@@ -64,8 +95,8 @@ export default function Owner() {
     <Layout>
       <div className="container mx-auto px-4 py-8">
         <OwnerDashboardHeader 
-          title="Painel do Administrador"
-          subtitle="Gerencie suas lavanderias e máquinas"
+          title={isAdmin ? "Painel do Administrador" : "Painel do Proprietário"}
+          subtitle={isAdmin ? "Gerencie todas as lavanderias e máquinas" : "Gerencie suas lavanderias e máquinas"}
         />
 
         <Tabs defaultValue="dashboard">

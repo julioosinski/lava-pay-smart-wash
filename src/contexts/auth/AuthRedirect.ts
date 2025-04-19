@@ -21,6 +21,17 @@ export async function redirectBasedOnRole(userId: string, navigate: (path: strin
     const role = profileData?.role;
     console.log("User role from profile:", role);
     
+    // If we reach here, use the role to determine where to redirect
+    if (role === 'admin') {
+      console.log("Admin role detected, redirecting to admin page");
+      navigate('/admin', { replace: true });
+      return;
+    } else if (role === 'business') {
+      console.log("Business role detected, redirecting to owner page");
+      navigate('/owner', { replace: true });
+      return;
+    }
+    
     // Then check if the user has any laundries (business owner)
     const { data: laundryCheck, error: laundryError } = await supabase
       .from('laundries')
@@ -79,17 +90,8 @@ export async function redirectBasedOnRole(userId: string, navigate: (path: strin
       }
     }
 
-    // If we reach here, use the role to determine where to redirect
-    if (role === 'admin') {
-      console.log("Admin role detected, redirecting to admin page");
-      navigate('/admin', { replace: true });
-    } else if (role === 'business') {
-      console.log("Business role detected, redirecting to owner page");
-      navigate('/owner', { replace: true });
-    } else {
-      console.log("No specific role detected or user role, redirecting to home");
-      navigate('/', { replace: true });
-    }
+    console.log("No specific role detected or user role, redirecting to home");
+    navigate('/', { replace: true });
   } catch (error) {
     console.error("Error in redirectBasedOnRole:", error);
     toast.error("Erro no redirecionamento baseado no papel do usuário");

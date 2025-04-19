@@ -6,6 +6,7 @@ import { usePayments } from "@/hooks/usePayments";
 import { useAuth } from "@/contexts/auth";
 import { LaundryLocation, Machine, Payment } from "@/types";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface UseOwnerDashboardReturn {
   ownerLaundries: LaundryLocation[];
@@ -30,16 +31,45 @@ interface UseOwnerDashboardReturn {
 export function useOwnerDashboard(): UseOwnerDashboardReturn {
   const { user } = useAuth();
   const [selectedLocation, setSelectedLocation] = useState<string>("all");
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
   
   console.log("Owner ID:", user?.id);
   
-  // Fetch owner laundries with forceShowAll: true to get all laundries as admin
+  // Check if user is an admin
+  useEffect(() => {
+    const checkAdminRole = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .maybeSingle();
+          
+        if (error) {
+          console.error("Error checking user role:", error);
+          return;
+        }
+        
+        setIsAdmin(data?.role === 'admin');
+        console.log("User is admin:", data?.role === 'admin');
+      } catch (error) {
+        console.error("Error checking admin status:", error);
+      }
+    };
+    
+    checkAdminRole();
+  }, [user?.id]);
+  
+  // Fetch owner laundries, with forceShowAll only if user is admin
   const { 
     data: ownerLaundries = [], 
     isLoading: isLoadingLaundries,
     error: laundriesError
   } = useLaundries({ 
-    forceShowAll: true,
+    ownerId: !isAdmin ? user?.id : undefined,
+    forceShowAll: isAdmin,
     options: {
       enabled: !!user?.id,
       retry: 3,
@@ -82,10 +112,16 @@ export function useOwnerDashboard(): UseOwnerDashboardReturn {
     }
   }, [machinesError]);
   
-  // Make sure we have the machines for all laundries
-  console.log("All machines:", allMachines);
-  // Setting owner machines to all machines since this is the admin panel
-  const ownerMachines = allMachines;
+  // Filter machines based on user role
+  let ownerMachines = allMachines;
+  
+  // If not admin, only show machines for owner's laundries
+  if (!isAdmin && ownerLaundryIds.length > 0) {
+    ownerMachines = allMachines.filter(machine => 
+      ownerLaundryIds.includes(machine.laundry_id)
+    );
+  }
+  
   console.log("Owner machines filtered:", ownerMachines);
 
   // Get payments for all machines
