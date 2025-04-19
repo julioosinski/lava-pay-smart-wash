@@ -111,6 +111,11 @@ export async function updateBusinessOwner(id: string, params: CreateBusinessOwne
   try {
     console.log("Atualizando proprietário:", id, params);
     
+    // Verificar se o ID é válido
+    if (!id || id.trim() === '') {
+      throw new Error("ID do proprietário inválido");
+    }
+    
     // Extrair primeiro nome e sobrenome do nome completo
     const firstName = params.name.split(' ')[0] || '';
     const lastName = params.name.split(' ').slice(1).join(' ') || '';
@@ -124,7 +129,8 @@ export async function updateBusinessOwner(id: string, params: CreateBusinessOwne
         first_name: firstName,
         last_name: lastName,
         contact_email: params.email,
-        contact_phone: params.phone
+        contact_phone: params.phone,
+        role: 'business' as Database["public"]["Enums"]["user_role"] // Garantir que o papel é 'business'
       })
       .eq('id', id)
       .select();
@@ -167,26 +173,35 @@ export async function deleteBusinessOwner(id: string): Promise<{ success: boolea
       };
     }
     
-    // Desativamos o perfil mudando a role para 'user' e removendo os dados de contato
-    console.log("Desativando perfil do proprietário...");
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({
-        role: 'user' as Database["public"]["Enums"]["user_role"],
-        contact_email: null,
-        contact_phone: null,
-        first_name: null,
-        last_name: null
-      })
-      .eq('id', id);
+    // Primeiro tentamos excluir o usuário Auth (isso pode falhar se o usuário não tiver permissões de admin)
+    try {
+      await supabase.auth.admin.deleteUser(id);
+      console.log("Usuário Auth excluído com sucesso:", id);
+      return { success: true };
+    } catch (error) {
+      console.error("Erro ao excluir usuário:", error);
+      console.log("Tentando desativar perfil como alternativa...");
       
-    if (updateError) {
-      console.error("Erro ao desativar perfil:", updateError);
-      throw updateError;
+      // Se falhar em excluir o usuário Auth, desativamos o perfil mudando o papel para 'user'
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          role: 'user' as Database["public"]["Enums"]["user_role"],
+          contact_email: null,
+          contact_phone: null,
+          first_name: null,
+          last_name: null
+        })
+        .eq('id', id);
+        
+      if (updateError) {
+        console.error("Erro ao desativar perfil:", updateError);
+        throw updateError;
+      }
+      
+      console.log("Proprietário excluído com sucesso. ID:", id);
+      return { success: true };
     }
-    
-    console.log("Proprietário desativado com sucesso. ID:", id);
-    return { success: true };
   } catch (error) {
     console.error("Erro ao deletar proprietário:", error);
     return { 

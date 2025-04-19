@@ -22,6 +22,7 @@ export function useUserActions(refetchFn: () => Promise<unknown>) {
   
   const handleDelete = (user: BusinessOwner) => {
     if (isProcessingAction) return;
+    console.log("Preparando para excluir usuário:", user);
     setUserToDelete(user);
   };
   
@@ -29,6 +30,7 @@ export function useUserActions(refetchFn: () => Promise<unknown>) {
     if (userToDelete && !isProcessingAction) {
       try {
         setIsProcessingAction(true);
+        console.log("Confirmando exclusão do usuário:", userToDelete.id);
         const result = await deleteBusinessOwner(userToDelete.id);
         
         if (result.success) {
@@ -37,7 +39,7 @@ export function useUserActions(refetchFn: () => Promise<unknown>) {
           
           setTimeout(async () => {
             await refetchFn();
-          }, 1000);
+          }, 500);
         } else {
           toast.error(result.error || "Não foi possível excluir o proprietário");
         }
@@ -69,7 +71,7 @@ export function useUserActions(refetchFn: () => Promise<unknown>) {
       
       setTimeout(async () => {
         await refetchFn();
-      }, 1000);
+      }, 500);
     } finally {
       setIsProcessingAction(false);
     }
