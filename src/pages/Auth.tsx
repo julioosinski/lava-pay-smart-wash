@@ -38,6 +38,8 @@ export default function Auth() {
     if (forcedLogout) {
       console.log("Forced logout flag detected in Auth page, not redirecting");
       localStorage.removeItem('force_logout');
+      // Clear Supabase token as well for extra safety
+      localStorage.removeItem('sb-ftvvhclqjwtthquokzii-auth-token');
       return;
     }
 

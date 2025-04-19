@@ -19,8 +19,9 @@ export const useSignOut = ({ setUser, setSession, setLoading, navigate }: SignOu
       setUser(null);
       setSession(null);
       
-      // Add a localStorage flag to indicate a forced logout
+      // Add a localStorage flag to indicate a forced logout and clear any Supabase session
       localStorage.setItem('force_logout', 'true');
+      localStorage.removeItem('sb-ftvvhclqjwtthquokzii-auth-token');
       
       // Immediate redirect to prevent any loops
       console.log("Navigating to auth page immediately");
@@ -28,7 +29,7 @@ export const useSignOut = ({ setUser, setSession, setLoading, navigate }: SignOu
       
       // Then attempt to sign out from Supabase
       try {
-        await supabase.auth.signOut();
+        await supabase.auth.signOut({ scope: 'local' });
         console.log("Successfully signed out from Supabase");
         toast.success("Você foi desconectado com sucesso");
       } catch (error: any) {

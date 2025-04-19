@@ -68,14 +68,12 @@ export function useOwnerDashboard(): UseOwnerDashboardReturn {
   const ownerLaundryIds = ownerLaundries.map(location => location.id);
   console.log("Owner laundry IDs:", ownerLaundryIds);
   
-  // Fetch machines for the owner's laundries
+  // Fetch ALL machines first and then filter for the owner's machines
   const { 
     data: allMachines = [], 
     isLoading: isLoadingMachines,
     error: machinesError
-  } = useMachines(
-    selectedLocation !== "all" ? selectedLocation : undefined
-  );
+  } = useMachines();
   
   useEffect(() => {
     if (machinesError) {
@@ -85,10 +83,15 @@ export function useOwnerDashboard(): UseOwnerDashboardReturn {
   }, [machinesError]);
   
   // Filter machines to only show those from owner's laundries
-  const ownerMachines = allMachines.filter(machine => 
-    ownerLaundryIds.includes(machine.laundry_id)
-  );
+  const ownerMachines = allMachines.filter(machine => {
+    const belongs = ownerLaundryIds.includes(machine.laundry_id);
+    if (belongs) {
+      console.log(`Machine ${machine.id} belongs to owner's laundry ${machine.laundry_id}`);
+    }
+    return belongs;
+  });
 
+  console.log("All machines:", allMachines);
   console.log("Owner machines filtered:", ownerMachines);
 
   // Get payments for owner's machines
@@ -143,10 +146,10 @@ export function useOwnerDashboard(): UseOwnerDashboardReturn {
   return {
     ownerLaundries,
     ownerMachines,
-    ownerPayments,
     selectedLocation,
     setSelectedLocation,
     isLoading,
+    ownerPayments,
     stats: {
       totalRevenue,
       totalMachines,
