@@ -98,7 +98,7 @@ export function useOwnerDashboard(): UseOwnerDashboardReturn {
     selectedLocation,
     setSelectedLocation,
     isLoading,
-    ...stats,
+    stats,
     revenueByDay
   };
 }
