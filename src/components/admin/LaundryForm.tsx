@@ -13,7 +13,7 @@ import { LaundryLocation } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-// Define the form schema outside of the component to avoid recursive type issues
+// Define the form schema outside of the component
 const formSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
   address: z.string().min(1, "Endereço é obrigatório"),
@@ -21,8 +21,13 @@ const formSchema = z.object({
   contact_email: z.string().email("Email inválido").min(1, "Email é obrigatório"),
 });
 
-// Define the type for form values explicitly
-type FormValues = z.infer<typeof formSchema>;
+// Define the form values type explicitly without using z.infer
+type FormValues = {
+  name: string;
+  address: string;
+  contact_phone: string;
+  contact_email: string;
+};
 
 interface LaundryFormProps {
   initialData?: LaundryLocation;
