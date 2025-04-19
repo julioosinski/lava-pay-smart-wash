@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
 
@@ -173,6 +174,7 @@ export async function deleteBusinessOwner(id: string): Promise<{ success: boolea
     }
     
     // Desativamos o perfil mudando o papel para 'user'
+    // Não tentamos mais excluir o usuário Auth diretamente, pois isso requer privilégios de admin
     console.log("Desativando perfil do usuário:", id);
     
     const { error: updateError } = await supabase
@@ -191,7 +193,7 @@ export async function deleteBusinessOwner(id: string): Promise<{ success: boolea
       throw updateError;
     }
     
-    console.log("Proprietário excluído com sucesso. ID:", id);
+    console.log("Proprietário desativado com sucesso. ID:", id);
     return { success: true };
   } catch (error) {
     console.error("Erro ao deletar proprietário:", error);
