@@ -7,7 +7,11 @@ interface CreateBusinessOwnerProps {
   phone: string;
 }
 
-export async function createBusinessOwner({ email, phone }: CreateBusinessOwnerProps) {
+interface CreateBusinessOwnerResult {
+  userId: string | undefined;
+}
+
+export async function createBusinessOwner({ email, phone }: CreateBusinessOwnerProps): Promise<CreateBusinessOwnerResult> {
   try {
     // Check if user already exists
     const { data: existingUser } = await supabase

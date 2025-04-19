@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { LaundryLocation } from "@/types";
 import { convertToLaundry, LaundryDB } from "@/types/laundry";
 
-interface CreateLaundryParams {
+export interface CreateLaundryParams {
   name: string;
   address: string;
   contact_phone: string;

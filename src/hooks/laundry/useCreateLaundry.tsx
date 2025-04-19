@@ -1,25 +1,15 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { LaundryLocation } from "@/types";
 import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
-import { createLaundryInDB } from "@/services/laundry";
-
-// Define a type that matches what createLaundryInDB expects
-type CreateLaundryInput = {
-  name: string;
-  address: string;
-  contact_phone: string;
-  contact_email: string;
-  owner_id: string;
-};
+import { createLaundryInDB, CreateLaundryParams } from "@/services/laundry";
 
 export function useCreateLaundry() {
   const queryClient = useQueryClient();
   const { session } = useAuth();
 
   return useMutation({
-    mutationFn: async (laundry: CreateLaundryInput) => {
+    mutationFn: async (laundry: CreateLaundryParams) => {
       if (!session?.user) {
         console.error("Authentication required: No authenticated user found");
         throw new Error('Você precisa estar autenticado para criar uma lavanderia');
