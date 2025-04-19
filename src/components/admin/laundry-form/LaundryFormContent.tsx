@@ -1,15 +1,18 @@
 
 import { Button } from "@/components/ui/button";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
 import { FormValues } from "./schema";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2 } from "lucide-react";
 
 interface BusinessOwner {
   id: string;
   name?: string;
   email?: string;
+  phone?: string;
+  role?: string;
 }
 
 interface LaundryFormContentProps {
@@ -65,9 +68,9 @@ export function LaundryFormContent({ form, onSubmit, mode, isLoading, businessOw
                 <Select
                   value={field.value}
                   onValueChange={field.onChange}
-                  disabled={businessOwners.length === 0}
+                  disabled={businessOwners.length === 0 || isLoading}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Selecione um proprietário" />
                   </SelectTrigger>
                   <SelectContent>
@@ -78,13 +81,16 @@ export function LaundryFormContent({ form, onSubmit, mode, isLoading, businessOw
                     ) : (
                       businessOwners.map((owner) => (
                         <SelectItem key={owner.id} value={owner.id}>
-                          {owner.name || owner.email || owner.id}
+                          {owner.name || owner.email || `ID: ${owner.id.slice(0, 8)}...`}
                         </SelectItem>
                       ))
                     )}
                   </SelectContent>
                 </Select>
               </FormControl>
+              <FormDescription>
+                {businessOwners.length === 0 ? "Nenhum proprietário cadastrado. Adicione um proprietário primeiro." : ""}
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -120,7 +126,14 @@ export function LaundryFormContent({ form, onSubmit, mode, isLoading, businessOw
 
         <div className="flex justify-end gap-2 pt-4">
           <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Salvando..." : mode === "create" ? "Criar" : "Salvar Alterações"}
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {mode === "create" ? "Criando..." : "Salvando..."}
+              </>
+            ) : (
+              mode === "create" ? "Criar" : "Salvar Alterações"
+            )}
           </Button>
         </div>
       </form>

@@ -31,17 +31,24 @@ export function useBusinessOwners() {
         
         console.log("Proprietários encontrados:", owners);
         
-        return (owners || []).map(owner => ({
+        // Transformação de dados para o formato esperado pelos componentes
+        const formattedOwners = (owners || []).map(owner => ({
           id: owner.id,
           name: `${owner.first_name || ''} ${owner.last_name || ''}`.trim() || 'Sem nome',
           email: owner.contact_email,
           phone: owner.contact_phone,
           role: owner.role
         }));
+        
+        console.log("Proprietários formatados:", formattedOwners);
+        
+        return formattedOwners;
       } catch (error) {
         console.error("Erro no hook useBusinessOwners:", error);
         throw error;
       }
-    }
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutos
+    refetchOnWindowFocus: true
   });
 }

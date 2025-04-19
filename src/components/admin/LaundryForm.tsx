@@ -1,7 +1,7 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -21,7 +21,14 @@ export function LaundryForm({ initialData, mode = "create" }: LaundryFormProps) 
   const [open, setOpen] = useState(false);
   const createLaundry = useCreateLaundry();
   const updateLaundry = useUpdateLaundry();
-  const { data: businessOwners = [], isLoading: isLoadingOwners } = useBusinessOwners();
+  const { data: businessOwners = [], isLoading: isLoadingOwners, refetch } = useBusinessOwners();
+  
+  // Adicionando um refetch ao abrir o modal para garantir dados atualizados
+  useEffect(() => {
+    if (open) {
+      refetch();
+    }
+  }, [open, refetch]);
   
   // Debug para ver se temos proprietários disponíveis
   console.log("LaundryForm - businessOwners:", businessOwners);
@@ -42,6 +49,13 @@ export function LaundryForm({ initialData, mode = "create" }: LaundryFormProps) 
       owner_id: businessOwners.length > 0 ? businessOwners[0].id : ""
     },
   });
+
+  // Atualizar o campo owner_id quando os proprietários carregarem
+  useEffect(() => {
+    if (businessOwners.length > 0 && !initialData && !form.getValues('owner_id')) {
+      form.setValue('owner_id', businessOwners[0].id);
+    }
+  }, [businessOwners, form, initialData]);
 
   const onSubmit = async (values: FormValues) => {
     try {
@@ -96,9 +110,12 @@ export function LaundryForm({ initialData, mode = "create" }: LaundryFormProps) 
           <Plus className="h-4 w-4" /> Nova Lavanderia
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-w-xl">
         <DialogHeader>
           <DialogTitle>Adicionar Nova Lavanderia</DialogTitle>
+          <DialogDescription>
+            Preencha os dados para criar uma nova lavanderia
+          </DialogDescription>
         </DialogHeader>
         {formContent}
       </DialogContent>
