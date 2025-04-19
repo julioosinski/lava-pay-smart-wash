@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -38,12 +39,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         (event, newSession) => {
           console.log("Auth state changed:", event);
           
-          // Fix the TypeScript error by checking against specific event types
-          if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+          // Fix the TypeScript error by using a type-safe approach to check events
+          if (event === 'SIGNED_OUT') {
             // Clear the session and user state
             setSession(null);
             setUser(null);
-            console.log("User signed out or deleted");
+            console.log("User signed out");
           } else {
             // Update session and user for other events
             setSession(newSession);
