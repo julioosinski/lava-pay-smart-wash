@@ -1,7 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { useState } from 'react';
+import { toast } from 'sonner';
 
 interface SignOutProps {
   setUser: (user: null) => void;
@@ -11,27 +10,28 @@ interface SignOutProps {
 }
 
 export const useSignOut = ({ setUser, setSession, setLoading, navigate }: SignOutProps) => {
-  // Important: Initialize all hooks at the top level, before any conditional logic
-  const { toast } = useToast();
-  
   const signOut = async () => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error("Sign out error:", error);
-        throw error;
-      }
+      // First, reset the local state regardless of API response
       setUser(null);
       setSession(null);
+      
+      // Then try to sign out from Supabase
+      try {
+        await supabase.auth.signOut();
+      } catch (error) {
+        // We've already reset local state, so just log the error
+        console.log("Supabase signOut API error (non-critical):", error);
+        // This is non-critical as we've already cleared local state
+      }
+      
+      // Redirect to auth page
       navigate('/auth', { replace: true });
+      toast.success("Você foi desconectado com sucesso");
     } catch (error) {
       console.error("Error during sign out:", error);
-      toast({
-        variant: "destructive",
-        title: "Erro ao sair",
-        description: "Não foi possível desconectar sua sessão."
-      });
+      toast.error("Erro ao sair da sua conta");
     } finally {
       setLoading(false);
     }

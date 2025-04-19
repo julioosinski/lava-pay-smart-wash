@@ -14,6 +14,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
   
   // Then initialize other hooks
   const navigate = useNavigate();
@@ -33,32 +34,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("Setting up auth state listener");
       setLoading(true);
       
+      // Set up the subscription first
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         (event, newSession) => {
           console.log("Auth state changed:", event);
-          setSession(newSession);
-          setUser(newSession?.user ?? null);
           
-          if (event === 'SIGNED_IN' && newSession?.user) {
-            console.log("User signed in, will redirect based on role");
+          if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+            // Clear the session and user state
+            setSession(null);
+            setUser(null);
+            console.log("User signed out or deleted");
+          } else {
+            // Update session and user for other events
+            setSession(newSession);
+            setUser(newSession?.user ?? null);
             
-            // Check if we're already on a protected route
-            const isOnAuthPage = location.pathname === '/auth';
-            
-            if (isOnAuthPage) {
-              // Only redirect if on auth page
-              setTimeout(() => {
-                redirectBasedOnRole(newSession.user.id, navigate);
-              }, 0);
+            if (event === 'SIGNED_IN' && newSession?.user) {
+              console.log("User signed in, will redirect based on role");
+              
+              // Check if we're on auth page
+              const isOnAuthPage = location.pathname === '/auth';
+              
+              if (isOnAuthPage) {
+                // Only redirect if on auth page
+                setTimeout(() => {
+                  redirectBasedOnRole(newSession.user.id, navigate);
+                }, 0);
+              }
             }
-          } else if (event === 'SIGNED_OUT') {
-            console.log("User signed out");
+          }
+          
+          // Ensure loading is set to false after processing auth state change
+          if (!initialized) {
+            setInitialized(true);
             setLoading(false);
-            
-            // Redirect to auth page on sign out if not already there
-            if (location.pathname !== '/auth') {
-              navigate('/auth', { replace: true });
-            }
           }
         }
       );
@@ -73,7 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (currentSession?.user) {
           console.log("Session found during initialization for user:", currentSession.user.id);
           
-          // Check if we're already on a protected route
+          // Check if we're on auth page
           const isOnAuthPage = location.pathname === '/auth';
           
           if (isOnAuthPage) {
@@ -82,25 +91,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               redirectBasedOnRole(currentSession.user.id, navigate);
             }, 0);
           }
-        } else {
-          console.log("No session found, setting loading to false");
-          setLoading(false);
-          
-          // If no session and on a protected route, the ProtectedRoute component will handle redirection
         }
       } catch (error) {
         console.error("Error getting session:", error);
-        setLoading(false);
         toast.error("Erro ao verificar a sessão");
+      } finally {
+        // Always set initialized and loading to false after getting session
+        setInitialized(true);
+        setLoading(false);
       }
       
       return () => subscription.unsubscribe();
     };
 
     const safetyTimeout = setTimeout(() => {
-      console.log("Safety timeout triggered - forcing loading state to false");
-      setLoading(false);
-    }, 5000);
+      if (loading && !initialized) {
+        console.log("Safety timeout triggered - forcing loading state to false");
+        setInitialized(true);
+        setLoading(false);
+      }
+    }, 3000); // Reduced from 5000ms to 3000ms for faster fallback
 
     setupAuth();
     
@@ -118,7 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={contextValue}>
-      {loading ? (
+      {loading && !initialized ? (
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <Loader2 className="h-12 w-12 animate-spin text-lavapay-600 mx-auto mb-4" />
