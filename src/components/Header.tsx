@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { WashingMachine, Menu, X, LogOut } from "lucide-react";
@@ -31,10 +30,13 @@ export function Header() {
   const handleLogout = async () => {
     try {
       console.log("Header: Logout button clicked");
-      // Chamar signOut diretamente, que cuidará da navegação
       await signOut();
     } catch (error) {
       console.error("Header: Logout error:", error);
+    } finally {
+      if (mobileMenuOpen) {
+        setMobileMenuOpen(false);
+      }
     }
   };
 
@@ -95,10 +97,7 @@ export function Header() {
                   {user && (
                     <button
                       className="px-4 py-3 hover:bg-lavapay-500 transition-colors text-left flex items-center gap-2"
-                      onClick={() => {
-                        handleLogout();
-                        setMobileMenuOpen(false);
-                      }}
+                      onClick={handleLogout}
                     >
                       <LogOut className="h-4 w-4" />
                       Sair

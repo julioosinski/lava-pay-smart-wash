@@ -45,24 +45,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(null);
             console.log("User signed out, redirecting to auth page");
             navigate('/auth', { replace: true });
+          } else if (event === 'SIGNED_IN' && newSession?.user) {
+            console.log("User signed in, will redirect based on role");
+            // Update session and user for SIGNED_IN event
+            setSession(newSession);
+            setUser(newSession.user);
+            
+            // Check if we're on auth page
+            const isOnAuthPage = location.pathname === '/auth';
+            
+            if (isOnAuthPage) {
+              // Only redirect if on auth page
+              setTimeout(() => {
+                redirectBasedOnRole(newSession.user.id, navigate);
+              }, 0);
+            }
           } else {
             // Update session and user for other events
             setSession(newSession);
             setUser(newSession?.user ?? null);
-            
-            if (event === 'SIGNED_IN' && newSession?.user) {
-              console.log("User signed in, will redirect based on role");
-              
-              // Check if we're on auth page
-              const isOnAuthPage = location.pathname === '/auth';
-              
-              if (isOnAuthPage) {
-                // Only redirect if on auth page
-                setTimeout(() => {
-                  redirectBasedOnRole(newSession.user.id, navigate);
-                }, 0);
-              }
-            }
           }
           
           // Ensure loading is set to false after processing auth state change

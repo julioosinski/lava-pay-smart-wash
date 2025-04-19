@@ -28,11 +28,11 @@ export const useSignOut = ({ setUser, setSession, setLoading, navigate }: SignOu
       } else {
         console.log("Successfully signed out from Supabase");
         toast.success("Você foi desconectado com sucesso");
-        
-        // Forced navigation to auth page with replace to prevent going back
-        console.log("Navigating to auth page after logout");
-        navigate('/auth', { replace: true });
       }
+      
+      // Always navigate to auth page regardless of success or failure
+      console.log("Navigating to auth page after logout");
+      navigate('/auth', { replace: true });
     } catch (error) {
       console.error("Exception during sign out process:", error);
       toast.error("Erro ao sair da sua conta");
