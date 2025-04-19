@@ -94,11 +94,11 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     );
   }
 
-  // If there's no authenticated user, redirect to login page
+  // If there's no authenticated user, redirect to login page with the required role
   if (!user) {
     console.log("ProtectedRoute: No authenticated user, redirecting to auth page");
-    // If a specific role was required, pass it as state to the auth page
-    return <Navigate to="/auth" state={{ role: requiredRole }} replace />;
+    // Make sure we're passing the role correctly to the state
+    return <Navigate to="/auth" state={{ role: requiredRole || 'user' }} replace />;
   }
 
   // If a specific role is required, check if user has that role

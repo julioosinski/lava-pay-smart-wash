@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { WashingMachine, Menu, X, LogOut } from "lucide-react";
@@ -18,10 +19,12 @@ export function Header() {
   };
 
   const handleAdminAccess = () => {
+    console.log("Header: Redirecting to admin auth page");
     navigate('/auth', { state: { role: 'admin' } });
   };
 
   const handleOwnerAccess = () => {
+    console.log("Header: Redirecting to business owner auth page");
     navigate('/auth', { state: { role: 'business' } });
   };
 

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -11,10 +12,12 @@ export default function Home() {
   const { user } = useAuth();
 
   const handleAdminAccess = () => {
+    console.log("Redirecting to admin auth page");
     navigate('/auth', { state: { role: 'admin' } });
   };
 
   const handleOwnerAccess = () => {
+    console.log("Redirecting to business owner auth page");
     navigate('/auth', { state: { role: 'business' } });
   };
 
