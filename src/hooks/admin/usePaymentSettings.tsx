@@ -13,11 +13,12 @@ interface PaymentSettings {
   sandbox_mode: boolean;
 }
 
+// Update this interface to make properties optional
 interface UpdatePaymentSettingsData {
-  access_token: string;
-  public_key: string;
-  integration_id: string;
-  sandbox_mode: boolean;
+  access_token?: string;
+  public_key?: string;
+  integration_id?: string;
+  sandbox_mode?: boolean;
 }
 
 export function usePaymentSettings() {
@@ -44,14 +45,17 @@ export function usePaymentSettings() {
   const updateSettings = async (newSettings: UpdatePaymentSettingsData) => {
     setIsUpdating(true);
     try {
+      const updateData: UpdatePaymentSettingsData = {};
+      
+      // Only include properties that are defined
+      if (newSettings.access_token !== undefined) updateData.access_token = newSettings.access_token;
+      if (newSettings.public_key !== undefined) updateData.public_key = newSettings.public_key;
+      if (newSettings.integration_id !== undefined) updateData.integration_id = newSettings.integration_id;
+      if (newSettings.sandbox_mode !== undefined) updateData.sandbox_mode = newSettings.sandbox_mode;
+      
       const { error } = await supabase
         .from('payment_settings')
-        .update({
-          access_token: newSettings.access_token,
-          public_key: newSettings.public_key,
-          integration_id: newSettings.integration_id,
-          sandbox_mode: newSettings.sandbox_mode
-        })
+        .update(updateData)
         .eq('provider', 'mercado_pago');
 
       if (error) throw error;
