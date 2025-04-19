@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -57,7 +56,6 @@ export async function redirectBasedOnRole(userId: string, navigate: (path: strin
     } else {
       console.log(`User ${userId} has no laundries associated`);
       
-      // Fix the type comparison by ensuring we're comparing string values
       if (role === 'business') {
         console.log("User has business role but no laundries. Creating a test laundry...");
         
