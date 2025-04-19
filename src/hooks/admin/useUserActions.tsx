@@ -1,0 +1,89 @@
+
+import { useState } from "react";
+import { BusinessOwner } from "@/types";
+import { useQueryClient } from "@tanstack/react-query";
+import { deleteBusinessOwner } from "@/services/businessOwner";
+import { toast } from "sonner";
+
+export function useUserActions(refetch: () => Promise<void>) {
+  const [selectedUser, setSelectedUser] = useState<BusinessOwner | null>(null);
+  const [userToDelete, setUserToDelete] = useState<BusinessOwner | null>(null);
+  const [isProcessingAction, setIsProcessingAction] = useState(false);
+  const [showUserForm, setShowUserForm] = useState(false);
+  const queryClient = useQueryClient();
+
+  const handleEdit = (user: BusinessOwner) => {
+    if (isProcessingAction) return;
+    setSelectedUser(user);
+    setShowUserForm(true);
+  };
+  
+  const handleDelete = (user: BusinessOwner) => {
+    if (isProcessingAction) return;
+    setUserToDelete(user);
+  };
+  
+  const handleDeleteConfirm = async () => {
+    if (userToDelete && !isProcessingAction) {
+      try {
+        setIsProcessingAction(true);
+        const result = await deleteBusinessOwner(userToDelete.id);
+        
+        if (result.success) {
+          toast.success("Proprietário excluído com sucesso");
+          await queryClient.invalidateQueries({ queryKey: ['business-owners'] });
+          
+          setTimeout(async () => {
+            await refetch();
+          }, 1000);
+        } else {
+          toast.error(result.error || "Não foi possível excluir o proprietário");
+        }
+      } catch (error) {
+        toast.error("Erro ao excluir proprietário");
+        console.error("Error deleting business owner:", error);
+      } finally {
+        setUserToDelete(null);
+        setIsProcessingAction(false);
+      }
+    }
+  };
+  
+  const handleFormClose = () => {
+    if (isProcessingAction) return;
+    setShowUserForm(false);
+    setSelectedUser(null);
+  };
+
+  const handleFormSuccess = async () => {
+    if (isProcessingAction) return;
+    
+    try {
+      setIsProcessingAction(true);
+      setShowUserForm(false);
+      setSelectedUser(null);
+      
+      await queryClient.invalidateQueries({ queryKey: ['business-owners'] });
+      
+      setTimeout(async () => {
+        await refetch();
+      }, 1000);
+    } finally {
+      setIsProcessingAction(false);
+    }
+  };
+
+  return {
+    selectedUser,
+    userToDelete,
+    showUserForm,
+    isProcessingAction,
+    handleEdit,
+    handleDelete,
+    handleDeleteConfirm,
+    handleFormClose,
+    handleFormSuccess,
+    setShowUserForm,
+    setSelectedUser
+  };
+}
