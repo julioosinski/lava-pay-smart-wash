@@ -2,6 +2,9 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+// Define a type for the roles to ensure consistent typing
+type UserRole = 'admin' | 'business' | 'user';
+
 export async function redirectBasedOnRole(userId: string, navigate: (path: string, options: { replace: boolean }) => void) {
   try {
     console.log("Checking role for user ID:", userId);
@@ -18,7 +21,7 @@ export async function redirectBasedOnRole(userId: string, navigate: (path: strin
       // Don't return yet, we'll check for laundries first
     }
 
-    const role = profileData?.role;
+    const role = profileData?.role as UserRole | null;
     console.log("User role from profile:", role);
     
     // If we reach here, use the role to determine where to redirect
@@ -55,7 +58,7 @@ export async function redirectBasedOnRole(userId: string, navigate: (path: strin
       console.log(`User ${userId} has no laundries associated`);
       
       // Fix the type comparison by ensuring we're comparing string values
-      if (typeof role === 'string' && role === 'business') {
+      if (role === 'business') {
         console.log("User has business role but no laundries. Creating a test laundry...");
         
         try {
@@ -100,7 +103,7 @@ export async function redirectBasedOnRole(userId: string, navigate: (path: strin
   }
 }
 
-async function updateUserRoleIfNeeded(userId: string, role: 'business' | 'user' | 'admin') {
+async function updateUserRoleIfNeeded(userId: string, role: UserRole) {
   try {
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
