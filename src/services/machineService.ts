@@ -29,10 +29,10 @@ export async function getMachineStatus(machineId: string): Promise<Machine | nul
 
 export async function checkMachineSessions() {
   // The function expects laundry_id and user_id parameters, but we want to call it without parameters
-  // We'll use type assertion to work around TypeScript's type checking
-  const { data, error } = await supabase.rpc(
-    'check_machine_sessions' as unknown as string,
-    {} as { laundry_id: string; user_id: string },
+  // We'll use a proper type assertion to work around TypeScript's type checking
+  const { data, error } = await (supabase.rpc as any)(
+    'check_machine_sessions',
+    {},
     { count: 'exact' }
   );
 
