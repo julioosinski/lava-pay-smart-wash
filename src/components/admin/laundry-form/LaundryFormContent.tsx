@@ -1,19 +1,13 @@
 
+import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/components/ui/form";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UseFormReturn } from "react-hook-form";
 import { FormValues } from "./schema";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
-
-interface BusinessOwner {
-  id: string;
-  name?: string;
-  email?: string;
-  phone?: string;
-  role?: string;
-}
+import { BusinessOwner } from "@/types";
 
 interface LaundryFormContentProps {
   form: UseFormReturn<FormValues>;
@@ -24,9 +18,17 @@ interface LaundryFormContentProps {
 }
 
 export function LaundryFormContent({ form, onSubmit, mode, isLoading, businessOwners = [] }: LaundryFormContentProps) {
-  // Debug para ver se estamos recebendo proprietários
   console.log("LaundryFormContent - businessOwners:", businessOwners);
   
+  const handleOwnerChange = (ownerId: string) => {
+    const selectedOwner = businessOwners.find(owner => owner.id === ownerId);
+    if (selectedOwner) {
+      // Auto-fill contact information
+      form.setValue('contact_email', selectedOwner.email || '');
+      form.setValue('contact_phone', selectedOwner.phone || '');
+    }
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -46,20 +48,6 @@ export function LaundryFormContent({ form, onSubmit, mode, isLoading, businessOw
 
         <FormField
           control={form.control}
-          name="address"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Endereço</FormLabel>
-              <FormControl>
-                <Input placeholder="Rua, número, complemento" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
           name="owner_id"
           render={({ field }) => (
             <FormItem>
@@ -67,7 +55,10 @@ export function LaundryFormContent({ form, onSubmit, mode, isLoading, businessOw
               <FormControl>
                 <Select
                   value={field.value}
-                  onValueChange={field.onChange}
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    handleOwnerChange(value);
+                  }}
                   disabled={businessOwners.length === 0 || isLoading}
                 >
                   <SelectTrigger className="w-full">
@@ -88,9 +79,20 @@ export function LaundryFormContent({ form, onSubmit, mode, isLoading, businessOw
                   </SelectContent>
                 </Select>
               </FormControl>
-              <FormDescription>
-                {businessOwners.length === 0 ? "Nenhum proprietário cadastrado. Adicione um proprietário primeiro." : ""}
-              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="address"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Endereço</FormLabel>
+              <FormControl>
+                <Input placeholder="Rua, número, complemento" {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
