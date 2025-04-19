@@ -15,16 +15,21 @@ export function useBusinessOwners() {
     queryKey: ['business-owners'],
     queryFn: async () => {
       try {
-        // Query profiles with role = 'business'
+        // Verificamos logs para identificar problemas na consulta
+        console.log("Buscando proprietários de negócios...");
+        
+        // Query profiles com role = 'business'
         const { data: owners, error } = await supabase
           .from('profiles')
           .select('id, first_name, last_name, contact_email, contact_phone, role')
           .eq('role', 'business');
           
         if (error) {
-          console.error("Error fetching business owners:", error);
+          console.error("Erro ao buscar proprietários:", error);
           throw error;
         }
+        
+        console.log("Proprietários encontrados:", owners);
         
         return (owners || []).map(owner => ({
           id: owner.id,
@@ -34,7 +39,7 @@ export function useBusinessOwners() {
           role: owner.role
         }));
       } catch (error) {
-        console.error("Error in useBusinessOwners hook:", error);
+        console.error("Erro no hook useBusinessOwners:", error);
         throw error;
       }
     }

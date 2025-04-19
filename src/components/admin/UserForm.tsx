@@ -9,6 +9,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { createBusinessOwner } from "@/services/businessOwner";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface UserFormProps {
   onClose: () => void;
@@ -25,6 +26,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 export function UserForm({ onClose, onSuccess }: UserFormProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -39,14 +41,19 @@ export function UserForm({ onClose, onSuccess }: UserFormProps) {
     try {
       setIsLoading(true);
       
-      // Create business owner account
-      const { userId } = await createBusinessOwner({
+      console.log("Criando proprietário:", values);
+      
+      // Criar conta de proprietário
+      const result = await createBusinessOwner({
+        name: values.name,
         email: values.email,
         phone: values.phone,
       });
 
-      if (userId) {
+      if (result.userId) {
         toast.success("Proprietário cadastrado com sucesso! Login com email e telefone como senha.");
+        // Invalidar a query de proprietários para forçar uma nova busca
+        await queryClient.invalidateQueries({ queryKey: ['business-owners'] });
         onSuccess();
       } else {
         throw new Error("Não foi possível criar o proprietário");

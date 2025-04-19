@@ -21,6 +21,9 @@ interface LaundryFormContentProps {
 }
 
 export function LaundryFormContent({ form, onSubmit, mode, isLoading, businessOwners = [] }: LaundryFormContentProps) {
+  // Debug para ver se estamos recebendo proprietários
+  console.log("LaundryFormContent - businessOwners:", businessOwners);
+  
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -62,7 +65,7 @@ export function LaundryFormContent({ form, onSubmit, mode, isLoading, businessOw
                 <Select
                   value={field.value}
                   onValueChange={field.onChange}
-                  disabled={businessOwners.length === 0 || mode === "edit"}
+                  disabled={businessOwners.length === 0}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione um proprietário" />

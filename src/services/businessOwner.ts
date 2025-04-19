@@ -1,66 +1,65 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
-interface CreateBusinessOwnerProps {
+interface CreateBusinessOwnerParams {
+  name: string;
   email: string;
   phone: string;
 }
 
 interface CreateBusinessOwnerResult {
-  userId: string | undefined;
+  userId?: string;
+  error?: string;
 }
 
-export async function createBusinessOwner({ email, phone }: CreateBusinessOwnerProps): Promise<CreateBusinessOwnerResult> {
+export async function createBusinessOwner(params: CreateBusinessOwnerParams): Promise<CreateBusinessOwnerResult> {
   try {
-    // Check if user already exists
-    const { data: existingUser } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('contact_email', email)
-      .maybeSingle();
-
-    if (existingUser) {
-      return { userId: existingUser.id };
-    }
-
-    // Create new user if doesn't exist
-    const { data: newUser, error: signUpError } = await supabase.auth.signUp({
-      email: email,
-      password: phone.replace(/\D/g, ''),
+    console.log("Criando proprietário com parâmetros:", params);
+    
+    // Primeiro, crie o usuário Auth
+    const { data: userData, error: authError } = await supabase.auth.signUp({
+      email: params.email,
+      password: params.phone, // Usando o telefone como senha inicial
       options: {
         data: {
-          role: 'business'
+          role: 'business',
         }
       }
     });
 
-    if (signUpError) {
-      console.error("Error creating user:", signUpError);
-      throw new Error("Erro ao criar usuário");
+    if (authError) {
+      console.error("Erro ao criar auth do proprietário:", authError);
+      throw authError;
     }
 
-    const userId = newUser.user?.id;
-
-    if (userId) {
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ 
-          role: 'business',
-          contact_email: email,
-          contact_phone: phone
-        })
-        .eq('id', userId);
-
-      if (updateError) {
-        console.error("Error updating user profile:", updateError);
-        throw new Error("Erro ao atualizar perfil do usuário");
-      }
+    const userId = userData.user?.id;
+    if (!userId) {
+      throw new Error("ID do usuário não foi gerado");
     }
 
-    return { userId: newUser.user?.id };
+    // Em seguida, atualize o perfil do usuário
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({
+        first_name: params.name.split(' ')[0] || '',
+        last_name: params.name.split(' ').slice(1).join(' ') || '',
+        contact_email: params.email,
+        contact_phone: params.phone,
+        role: 'business'
+      })
+      .eq('id', userId);
+
+    if (profileError) {
+      console.error("Erro ao atualizar perfil do proprietário:", profileError);
+      throw profileError;
+    }
+
+    console.log("Proprietário criado com sucesso. ID:", userId);
+    return { userId };
   } catch (error) {
-    console.error("Error in createBusinessOwner:", error);
-    throw error;
+    console.error("Erro ao criar proprietário:", error);
+    return { 
+      error: error instanceof Error ? error.message : "Erro desconhecido" 
+    };
   }
 }

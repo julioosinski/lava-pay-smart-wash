@@ -21,7 +21,10 @@ export function LaundryForm({ initialData, mode = "create" }: LaundryFormProps) 
   const [open, setOpen] = useState(false);
   const createLaundry = useCreateLaundry();
   const updateLaundry = useUpdateLaundry();
-  const { data: businessOwners = [] } = useBusinessOwners();
+  const { data: businessOwners = [], isLoading: isLoadingOwners } = useBusinessOwners();
+  
+  // Debug para ver se temos proprietários disponíveis
+  console.log("LaundryForm - businessOwners:", businessOwners);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -43,7 +46,7 @@ export function LaundryForm({ initialData, mode = "create" }: LaundryFormProps) 
   const onSubmit = async (values: FormValues) => {
     try {
       if (mode === "create") {
-        // Create the laundry with the selected owner
+        // Garantimos que todos os campos obrigatórios estão presentes
         await createLaundry.mutateAsync({
           name: values.name,
           address: values.address,
@@ -78,7 +81,7 @@ export function LaundryForm({ initialData, mode = "create" }: LaundryFormProps) 
       onSubmit={onSubmit} 
       mode={mode} 
       businessOwners={businessOwners}
-      isLoading={createLaundry.isPending || updateLaundry.isPending}
+      isLoading={createLaundry.isPending || updateLaundry.isPending || isLoadingOwners}
     />
   );
 
