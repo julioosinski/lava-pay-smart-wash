@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OwnerDashboardHeader } from "@/components/owner/dashboard/OwnerDashboardHeader";
@@ -6,7 +5,7 @@ import { OwnerDashboardOverview } from "@/components/owner/dashboard/OwnerDashbo
 import { MachinesTab } from "@/components/owner/tabs/MachinesTab";
 import { LocationsTab } from "@/components/owner/tabs/LocationsTab";
 import { PaymentsTab } from "@/components/owner/tabs/PaymentsTab";
-import { useOwnerDashboard } from "@/hooks/useOwnerDashboard";
+import { useOwnerDashboard } from "@/hooks/owner";
 import { Loader2, AlertTriangle, RefreshCw } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/auth";
