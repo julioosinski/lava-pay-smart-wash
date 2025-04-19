@@ -6,6 +6,8 @@ import { AlertCircle, WashingMachine, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { EditLaundryDialog } from "@/components/admin/EditLaundryDialog";
+import { DeleteLaundryDialog } from "@/components/admin/DeleteLaundryDialog";
+import { useDeleteLaundry } from "@/hooks/laundry/useDeleteLaundry";
 
 interface LocationsTabProps {
   ownerLaundries: LaundryLocation[];
@@ -15,6 +17,8 @@ interface LocationsTabProps {
 
 export function LocationsTab({ ownerLaundries, machines, onSelectLocation }: LocationsTabProps) {
   const [selectedLaundry, setSelectedLaundry] = useState<LaundryLocation | null>(null);
+  const [laundryToDelete, setLaundryToDelete] = useState<LaundryLocation | null>(null);
+  const deleteLaundry = useDeleteLaundry();
 
   // Count machines per laundry
   const getMachineCount = (laundryId: string) => {
@@ -30,6 +34,17 @@ export function LocationsTab({ ownerLaundries, machines, onSelectLocation }: Loc
 
   const handleManage = (location: LaundryLocation) => {
     setSelectedLaundry(location);
+  };
+
+  const handleDelete = (location: LaundryLocation) => {
+    setLaundryToDelete(location);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (laundryToDelete) {
+      await deleteLaundry.mutateAsync(laundryToDelete.id);
+      setLaundryToDelete(null);
+    }
   };
 
   return (
@@ -81,6 +96,13 @@ export function LocationsTab({ ownerLaundries, machines, onSelectLocation }: Loc
                         >
                           Gerenciar
                         </Button>
+                        <Button 
+                          variant="outline" 
+                          className="text-red-500 hover:text-red-700"
+                          onClick={() => handleDelete(location)}
+                        >
+                          Excluir
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -98,6 +120,12 @@ export function LocationsTab({ ownerLaundries, machines, onSelectLocation }: Loc
           laundry={selectedLaundry}
         />
       )}
+
+      <DeleteLaundryDialog
+        laundry={laundryToDelete}
+        onClose={() => setLaundryToDelete(null)}
+        onConfirm={handleDeleteConfirm}
+      />
     </div>
   );
 }
