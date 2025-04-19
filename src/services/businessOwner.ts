@@ -54,7 +54,7 @@ export async function createBusinessOwner({ email, phone }: CreateBusinessOwnerP
       }
     }
 
-    return { userId };
+    return { userId: newUser.user?.id };
   } catch (error) {
     console.error("Error in createBusinessOwner:", error);
     throw error;

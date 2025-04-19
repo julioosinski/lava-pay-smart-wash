@@ -5,12 +5,21 @@ import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
 import { createLaundryInDB } from "@/services/laundry";
 
+// Define a type that matches what createLaundryInDB expects
+type CreateLaundryInput = {
+  name: string;
+  address: string;
+  contact_phone: string;
+  contact_email: string;
+  owner_id: string;
+};
+
 export function useCreateLaundry() {
   const queryClient = useQueryClient();
   const { session } = useAuth();
 
   return useMutation({
-    mutationFn: async (laundry: Pick<LaundryLocation, 'name' | 'address' | 'contact_phone' | 'contact_email'> & { owner_id: string }) => {
+    mutationFn: async (laundry: CreateLaundryInput) => {
       if (!session?.user) {
         console.error("Authentication required: No authenticated user found");
         throw new Error('Você precisa estar autenticado para criar uma lavanderia');
