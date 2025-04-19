@@ -28,9 +28,9 @@ export async function getMachineStatus(machineId: string): Promise<Machine | nul
 }
 
 export async function checkMachineSessions() {
-  // Use rpc without specifying a predefined function type
+  // Use rpc with any to bypass the type checking since the function exists in the database
   const { data, error } = await supabase.rpc(
-    'check_machine_sessions', 
+    'check_machine_sessions' as any, 
     {}, 
     { count: 'exact' }
   );
