@@ -10,7 +10,7 @@ import { LaundryLocation } from "@/types";
 import { toast } from "sonner";
 import { LaundryFormContent } from "./laundry-form/LaundryFormContent";
 import { formSchema, FormValues } from "./laundry-form/schema";
-import { createBusinessOwner } from "@/services/businessOwner";
+import { useBusinessOwners } from "@/hooks/useBusinessOwners";
 
 interface LaundryFormProps {
   initialData?: LaundryLocation;
@@ -21,6 +21,7 @@ export function LaundryForm({ initialData, mode = "create" }: LaundryFormProps) 
   const [open, setOpen] = useState(false);
   const createLaundry = useCreateLaundry();
   const updateLaundry = useUpdateLaundry();
+  const { data: businessOwners = [] } = useBusinessOwners();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -29,38 +30,27 @@ export function LaundryForm({ initialData, mode = "create" }: LaundryFormProps) 
       address: initialData.address,
       contact_phone: initialData.contact_phone || "",
       contact_email: initialData.contact_email || "",
+      owner_id: initialData.owner_id
     } : {
       name: "",
       address: "",
       contact_phone: "",
       contact_email: "",
+      owner_id: businessOwners.length > 0 ? businessOwners[0].id : ""
     },
   });
 
   const onSubmit = async (values: FormValues) => {
     try {
       if (mode === "create") {
-        // First create the business owner
-        const { userId } = await createBusinessOwner({
-          email: values.contact_email,
-          phone: values.contact_phone
-        });
-
-        if (!userId) {
-          throw new Error("Erro ao criar ou encontrar o usuário proprietário");
-        }
-
-        console.log("Business owner created or found with ID:", userId);
-
-        // Then create the laundry associated with that owner
+        // Create the laundry with the selected owner
         await createLaundry.mutateAsync({
           ...values,
-          owner_id: userId
         });
         
         setOpen(false);
         form.reset();
-        toast.success("Lavanderia criada com sucesso! O proprietário pode fazer login usando o email e o telefone como senha.");
+        toast.success("Lavanderia criada com sucesso!");
       } else if (initialData?.id) {
         await updateLaundry.mutateAsync({
           id: initialData.id,
@@ -79,6 +69,7 @@ export function LaundryForm({ initialData, mode = "create" }: LaundryFormProps) 
       form={form} 
       onSubmit={onSubmit} 
       mode={mode} 
+      businessOwners={businessOwners}
       isLoading={createLaundry.isPending || updateLaundry.isPending}
     />
   );
