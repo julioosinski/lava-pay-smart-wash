@@ -13,12 +13,16 @@ import { LaundryLocation } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+// Define the form schema outside of the component to avoid recursive type issues
 const formSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
   address: z.string().min(1, "Endereço é obrigatório"),
   contact_phone: z.string().min(1, "Telefone é obrigatório"),
   contact_email: z.string().email("Email inválido").min(1, "Email é obrigatório"),
 });
+
+// Define the type for form values explicitly
+type FormValues = z.infer<typeof formSchema>;
 
 interface LaundryFormProps {
   initialData?: LaundryLocation;
@@ -30,9 +34,15 @@ export function LaundryForm({ initialData, mode = "create" }: LaundryFormProps) 
   const createLaundry = useCreateLaundry();
   const updateLaundry = useUpdateLaundry();
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  // Initialize the form with default values or initial data
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: initialData || {
+    defaultValues: initialData ? {
+      name: initialData.name,
+      address: initialData.address,
+      contact_phone: initialData.contact_phone || "",
+      contact_email: initialData.contact_email || "",
+    } : {
       name: "",
       address: "",
       contact_phone: "",
@@ -40,7 +50,7 @@ export function LaundryForm({ initialData, mode = "create" }: LaundryFormProps) 
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: FormValues) => {
     try {
       if (mode === "create") {
         // Primeiro, verifica se já existe um usuário com este email
@@ -106,9 +116,13 @@ export function LaundryForm({ initialData, mode = "create" }: LaundryFormProps) 
 
         toast.success("Lavanderia criada com sucesso! O proprietário pode fazer login usando o email e o telefone como senha.");
       } else if (initialData?.id) {
+        // For update, ensure we're sending all required fields with their values
         await updateLaundry.mutateAsync({
           id: initialData.id,
-          ...values
+          name: values.name,
+          address: values.address,
+          contact_phone: values.contact_phone,
+          contact_email: values.contact_email
         });
       }
     } catch (error) {
