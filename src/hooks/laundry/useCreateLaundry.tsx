@@ -11,21 +11,17 @@ export function useCreateLaundry() {
   const { session } = useAuth();
 
   return useMutation({
-    mutationFn: async (laundry: Pick<LaundryLocation, 'name' | 'address' | 'contact_phone' | 'contact_email'>) => {
+    mutationFn: async (laundry: Pick<LaundryLocation, 'name' | 'address' | 'contact_phone' | 'contact_email'> & { owner_id: string }) => {
       if (!session?.user) {
         console.error("Authentication required: No authenticated user found");
         throw new Error('Você precisa estar autenticado para criar uma lavanderia');
       }
       
-      console.log("Creating laundry with user:", session.user.id);
+      console.log("Creating laundry with owner:", laundry.owner_id);
       
       if (!laundry.name || !laundry.address || !laundry.contact_email || !laundry.contact_phone) {
         throw new Error('Nome, endereço, email e telefone são obrigatórios');
       }
-      
-      // Certifique-se de que o owner_id é sempre enviado como string válida
-      const ownerID = session.user.id;
-      console.log("Using owner ID:", ownerID);
       
       try {
         const { data, error } = await supabase
@@ -35,7 +31,7 @@ export function useCreateLaundry() {
             address: laundry.address,
             contact_phone: laundry.contact_phone,
             contact_email: laundry.contact_email,
-            owner_id: ownerID,
+            owner_id: laundry.owner_id,
             status: 'active'
           })
           .select()

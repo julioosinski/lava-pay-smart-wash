@@ -7,10 +7,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useCreateLaundry, useUpdateLaundry } from "@/hooks/useLaundries";
 import { LaundryLocation } from "@/types";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LaundryFormContent } from "./laundry-form/LaundryFormContent";
 import { formSchema, FormValues } from "./laundry-form/schema";
+import { createBusinessOwner } from "@/services/businessOwner";
 
 interface LaundryFormProps {
   initialData?: LaundryLocation;
@@ -40,49 +40,13 @@ export function LaundryForm({ initialData, mode = "create" }: LaundryFormProps) 
   const onSubmit = async (values: FormValues) => {
     try {
       if (mode === "create") {
-        const { data: existingUser } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('contact_email', values.contact_email)
-          .maybeSingle();
+        const { userId } = await createBusinessOwner({
+          email: values.contact_email,
+          phone: values.contact_phone
+        });
 
-        let userId;
-
-        if (existingUser) {
-          userId = existingUser.id;
-        } else {
-          const { data: newUser, error: signUpError } = await supabase.auth.signUp({
-            email: values.contact_email,
-            password: values.contact_phone.replace(/\D/g, ''),
-            options: {
-              data: {
-                role: 'business'
-              }
-            }
-          });
-
-          if (signUpError) {
-            console.error("Error creating user:", signUpError);
-            toast.error("Erro ao criar usuário");
-            return;
-          }
-
-          userId = newUser.user?.id;
-
-          if (userId) {
-            const { error: updateError } = await supabase
-              .from('profiles')
-              .update({ 
-                role: 'business',
-                contact_email: values.contact_email,
-                contact_phone: values.contact_phone
-              })
-              .eq('id', userId);
-
-            if (updateError) {
-              console.error("Error updating user profile:", updateError);
-            }
-          }
+        if (!userId) {
+          throw new Error("Erro ao criar usuário");
         }
 
         await createLaundry.mutateAsync({
@@ -101,6 +65,7 @@ export function LaundryForm({ initialData, mode = "create" }: LaundryFormProps) 
       }
     } catch (error) {
       console.error("Error in form submission:", error);
+      toast.error("Erro ao criar lavanderia");
     }
   };
 
