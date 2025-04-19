@@ -176,6 +176,39 @@ export type Database = {
           },
         ]
       }
+      payment_settings: {
+        Row: {
+          access_token: string | null
+          created_at: string
+          id: string
+          integration_id: string | null
+          provider: string
+          public_key: string | null
+          sandbox_mode: boolean
+          updated_at: string
+        }
+        Insert: {
+          access_token?: string | null
+          created_at?: string
+          id?: string
+          integration_id?: string | null
+          provider?: string
+          public_key?: string | null
+          sandbox_mode?: boolean
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string | null
+          created_at?: string
+          id?: string
+          integration_id?: string | null
+          provider?: string
+          public_key?: string | null
+          sandbox_mode?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number
