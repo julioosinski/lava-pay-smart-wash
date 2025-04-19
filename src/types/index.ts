@@ -29,6 +29,9 @@ export interface Machine {
   machine_number: number;
   store_id: string;
   machine_serial: string;
+  current_session_start?: string;
+  expected_end_time?: string;
+  current_payment_id?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -40,6 +43,7 @@ export interface Payment {
   status: 'pending' | 'approved' | 'rejected';
   method: 'credit' | 'debit' | 'pix';
   user_id: string;
+  laundry_id?: string;
   created_at: Date;
   transaction_id?: string;
 }

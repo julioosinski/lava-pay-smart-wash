@@ -14,12 +14,26 @@ export async function getMachineStatus(machineId: string): Promise<Machine | nul
     return null;
   }
 
-  return data;
+  // Ensure the type is correctly cast to 'washer' or 'dryer'
+  if (data) {
+    const machineData = {
+      ...data,
+      type: data.type === 'washer' ? 'washer' : 'dryer'
+    } as Machine;
+    
+    return machineData;
+  }
+  
+  return null;
 }
 
 export async function checkMachineSessions() {
-  const { data, error } = await supabase
-    .rpc('check_machine_sessions');
+  // Use rpc without specifying a predefined function type
+  const { data, error } = await supabase.rpc(
+    'check_machine_sessions', 
+    {}, 
+    { count: 'exact' }
+  );
 
   if (error) {
     console.error('Error checking machine sessions:', error);
