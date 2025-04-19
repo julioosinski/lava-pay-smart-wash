@@ -37,14 +37,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Set up the subscription first
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         (event, newSession) => {
-          console.log("Auth state changed:", event);
+          console.log("Auth state changed:", event, newSession ? "Session exists" : "No session");
           
-          if (event === 'SIGNED_OUT') {
-            // Clear the session and user state
+          if (event === 'SIGNED_OUT' || (!newSession && event !== 'INITIAL_SESSION')) {
+            // Handle both explicit signout and session expiration
+            console.log("User signed out or session expired, clearing state");
             setSession(null);
             setUser(null);
-            console.log("User signed out, redirecting to auth page");
-            navigate('/auth', { replace: true });
+            
+            // Only redirect if not already on auth page
+            if (location.pathname !== '/auth') {
+              console.log("Redirecting to auth page");
+              navigate('/auth', { replace: true });
+            }
           } else if (event === 'SIGNED_IN' && newSession?.user) {
             console.log("User signed in, will redirect based on role");
             // Update session and user for SIGNED_IN event
