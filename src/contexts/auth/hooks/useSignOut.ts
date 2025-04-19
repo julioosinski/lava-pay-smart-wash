@@ -19,6 +19,9 @@ export const useSignOut = ({ setUser, setSession, setLoading, navigate }: SignOu
       setUser(null);
       setSession(null);
       
+      // Add a localStorage flag to indicate a forced logout
+      localStorage.setItem('force_logout', 'true');
+      
       // Immediate redirect to prevent any loops
       console.log("Navigating to auth page immediately");
       navigate('/auth', { replace: true });

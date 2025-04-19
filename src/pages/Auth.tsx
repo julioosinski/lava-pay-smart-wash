@@ -33,6 +33,14 @@ export default function Auth() {
 
   // This effect redirects the user if they're already authenticated
   useEffect(() => {
+    // Check for forced logout flag first
+    const forcedLogout = localStorage.getItem('force_logout') === 'true';
+    if (forcedLogout) {
+      console.log("Forced logout flag detected in Auth page, not redirecting");
+      localStorage.removeItem('force_logout');
+      return;
+    }
+
     const checkSession = async () => {
       console.log("Checking session in Auth page");
       // No need to get the session again as we're using the user from context

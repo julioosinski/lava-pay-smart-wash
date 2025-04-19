@@ -34,6 +34,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("Setting up auth state listener");
       setLoading(true);
       
+      // Check for forced logout flag
+      const forcedLogout = localStorage.getItem('force_logout') === 'true';
+      if (forcedLogout) {
+        console.log("Forced logout flag detected, clearing local state");
+        setSession(null);
+        setUser(null);
+        localStorage.removeItem('force_logout');
+        setLoading(false);
+        setInitialized(true);
+        return;
+      }
+      
       // Set up the subscription first
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         (event, newSession) => {
@@ -80,6 +92,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       );
 
       try {
+        // Check for forced logout again before getting session
+        if (localStorage.getItem('force_logout') === 'true') {
+          console.log("Forced logout flag detected before session check, skipping");
+          localStorage.removeItem('force_logout');
+          setSession(null);
+          setUser(null);
+          setLoading(false);
+          setInitialized(true);
+          return;
+        }
+        
         const { data: { session: currentSession } } = await supabase.auth.getSession();
         console.log("Checking for existing session:", currentSession ? "Found" : "None");
         
