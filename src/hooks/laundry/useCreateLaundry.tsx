@@ -1,10 +1,9 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { LaundryLocation } from "@/types";
 import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
-import { convertToLaundry, LaundryDB } from "@/types/laundry";
+import { createLaundryInDB } from "@/services/laundry";
 
 export function useCreateLaundry() {
   const queryClient = useQueryClient();
@@ -22,32 +21,8 @@ export function useCreateLaundry() {
       if (!laundry.name || !laundry.address || !laundry.contact_email || !laundry.contact_phone) {
         throw new Error('Nome, endereço, email e telefone são obrigatórios');
       }
-      
-      try {
-        const { data, error } = await supabase
-          .from('laundries')
-          .insert({
-            name: laundry.name,
-            address: laundry.address,
-            contact_phone: laundry.contact_phone,
-            contact_email: laundry.contact_email,
-            owner_id: laundry.owner_id,
-            status: 'active'
-          })
-          .select()
-          .single();
 
-        if (error) {
-          console.error("Supabase error creating laundry:", error);
-          throw new Error(`Erro ao criar lavanderia: ${error.message}`);
-        }
-        
-        console.log("Laundry created successfully:", data);
-        return convertToLaundry(data as LaundryDB);
-      } catch (error: any) {
-        console.error("Exception in laundry creation:", error);
-        throw new Error(`Erro ao criar lavanderia: ${error.message}`);
-      }
+      return createLaundryInDB(laundry);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['laundries'] });
