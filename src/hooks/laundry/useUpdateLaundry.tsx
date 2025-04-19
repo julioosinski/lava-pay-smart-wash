@@ -11,7 +11,7 @@ export function useUpdateLaundry() {
   const { session } = useAuth();
 
   return useMutation({
-    mutationFn: async (laundry: Pick<LaundryLocation, 'id' | 'name' | 'address' | 'contact_phone' | 'contact_email'>) => {
+    mutationFn: async (laundry: Pick<LaundryLocation, 'id' | 'name' | 'address' | 'contact_phone' | 'contact_email' | 'owner_id'>) => {
       if (!session?.user) {
         throw new Error('Você precisa estar autenticado para atualizar uma lavanderia');
       }
@@ -24,6 +24,7 @@ export function useUpdateLaundry() {
             address: laundry.address,
             contact_phone: laundry.contact_phone,
             contact_email: laundry.contact_email,
+            owner_id: laundry.owner_id
           })
           .eq('id', laundry.id)
           .select()
