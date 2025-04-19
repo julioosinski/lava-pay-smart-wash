@@ -160,8 +160,7 @@ export async function deleteBusinessOwner(id: string): Promise<{ success: boolea
       };
     }
     
-    // Usamos diretamente a abordagem de mudar o role para 'user', já que a exclusão
-    // pelo auth.admin requer privilégios especiais que não estamos obtendo
+    // Desativamos o perfil mudando a role para 'user'
     console.log("Desativando perfil do proprietário...");
     const { error: updateError } = await supabase
       .from('profiles')

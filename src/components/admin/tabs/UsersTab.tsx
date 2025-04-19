@@ -22,6 +22,7 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
   const [showUserForm, setShowUserForm] = useState(false);
   const [selectedUser, setSelectedUser] = useState<BusinessOwner | null>(null);
   const [userToDelete, setUserToDelete] = useState<BusinessOwner | null>(null);
+  const [isProcessingAction, setIsProcessingAction] = useState(false);
   const { data: businessOwners = [], isLoading, refetch } = useBusinessOwners();
   const queryClient = useQueryClient();
 
@@ -44,8 +45,9 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
   };
   
   const handleDeleteConfirm = async () => {
-    if (userToDelete) {
+    if (userToDelete && !isProcessingAction) {
       try {
+        setIsProcessingAction(true);
         console.log("Confirmando exclusão do usuário:", userToDelete.id);
         const result = await deleteBusinessOwner(userToDelete.id);
         
@@ -54,10 +56,11 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
           
           // Forçar uma nova busca imediatamente
           await queryClient.invalidateQueries({ queryKey: ['business-owners'] });
-          // Esperar um curto intervalo antes de refetch para garantir que o servidor processou
-          setTimeout(() => {
-            refetch();
-          }, 100);
+          
+          // Esperar um curto intervalo e então forçar refetch
+          setTimeout(async () => {
+            await refetch();
+          }, 300);
         } else {
           toast.error(result.error || "Não foi possível excluir o proprietário");
         }
@@ -66,6 +69,7 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
         console.error("Error deleting business owner:", error);
       } finally {
         setUserToDelete(null);
+        setIsProcessingAction(false);
       }
     }
   };
@@ -76,15 +80,23 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
   };
 
   const handleFormSuccess = async () => {
-    setShowUserForm(false);
-    setSelectedUser(null);
+    if (isProcessingAction) return;
     
-    // Forçar uma nova busca imediatamente
-    await queryClient.invalidateQueries({ queryKey: ['business-owners'] });
-    // Esperar um curto intervalo antes de refetch para garantir que o servidor processou
-    setTimeout(() => {
-      refetch();
-    }, 100);
+    try {
+      setIsProcessingAction(true);
+      setShowUserForm(false);
+      setSelectedUser(null);
+      
+      // Forçar uma nova busca imediatamente
+      await queryClient.invalidateQueries({ queryKey: ['business-owners'] });
+      
+      // Esperar um curto intervalo e então forçar refetch
+      setTimeout(async () => {
+        await refetch();
+      }, 300);
+    } finally {
+      setIsProcessingAction(false);
+    }
   };
 
   return (
@@ -165,6 +177,7 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
                       size="icon" 
                       className="h-8 w-8 mr-1"
                       onClick={() => handleEdit(user)}
+                      disabled={isProcessingAction}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -173,6 +186,7 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
                       size="icon" 
                       className="h-8 w-8 text-red-500"
                       onClick={() => handleDelete(user)}
+                      disabled={isProcessingAction}
                     >
                       <Trash className="h-4 w-4" />
                     </Button>

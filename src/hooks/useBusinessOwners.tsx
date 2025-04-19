@@ -42,6 +42,7 @@ export function useBusinessOwners() {
     },
     staleTime: 0, // Sempre buscar dados novos
     refetchOnMount: true, // Recarregar quando o componente montar
-    refetchOnWindowFocus: true // Recarregar quando a janela receber foco
+    refetchOnWindowFocus: true, // Recarregar quando a janela receber foco
+    refetchInterval: 5000 // Recarregar a cada 5 segundos
   });
 }
