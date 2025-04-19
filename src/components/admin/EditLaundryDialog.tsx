@@ -5,11 +5,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LaundryForm } from "./LaundryForm";
 import { MachineForm } from "./machines/MachineForm";
 import { LaundryLocation } from "@/types";
-import { Building2, WashingMachine } from "lucide-react";
+import { Building2, WashingMachine, CreditCard } from "lucide-react";
 import { MachineCard } from "@/components/MachineCard";
 import { useMachines } from "@/hooks/useMachines";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQueryClient } from "@tanstack/react-query";
+import { PaymentSettingsTab } from "./payment-settings/PaymentSettingsTab";
 
 interface EditLaundryDialogProps {
   open: boolean;
@@ -22,9 +23,7 @@ export function EditLaundryDialog({ open, onOpenChange, laundry }: EditLaundryDi
   const { data: machines = [] } = useMachines(laundry.id);
   const queryClient = useQueryClient();
 
-  // Add a success handler for form submissions
   const handleFormSuccess = async () => {
-    // Invalidate and refetch both laundries and machines queries
     await queryClient.invalidateQueries({ queryKey: ['laundries'] });
     await queryClient.invalidateQueries({ queryKey: ['machines', laundry.id] });
   };
@@ -45,6 +44,10 @@ export function EditLaundryDialog({ open, onOpenChange, laundry }: EditLaundryDi
             <TabsTrigger value="machines" className="flex items-center gap-2">
               <WashingMachine className="h-4 w-4" />
               Máquinas
+            </TabsTrigger>
+            <TabsTrigger value="payment-settings" className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4" />
+              Pagamentos
             </TabsTrigger>
           </TabsList>
 
@@ -84,6 +87,10 @@ export function EditLaundryDialog({ open, onOpenChange, laundry }: EditLaundryDi
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="payment-settings">
+            <PaymentSettingsTab laundryId={laundry.id} />
           </TabsContent>
         </Tabs>
       </DialogContent>

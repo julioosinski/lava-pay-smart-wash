@@ -9,9 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { usePaymentSettings } from "@/hooks/admin/usePaymentSettings";
-import { useParams } from "react-router-dom";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
 
 const paymentSettingsSchema = z.object({
   access_token: z.string().min(1, "Token de acesso é obrigatório"),
@@ -22,9 +19,12 @@ const paymentSettingsSchema = z.object({
 
 type PaymentSettingsForm = z.infer<typeof paymentSettingsSchema>;
 
-export function PaymentSettingsTab() {
-  const { laundryId } = useParams<{ laundryId: string }>();
-  const { settings, isLoading, updateSettings } = usePaymentSettings(laundryId || '');
+interface PaymentSettingsTabProps {
+  laundryId: string;
+}
+
+export function PaymentSettingsTab({ laundryId }: PaymentSettingsTabProps) {
+  const { settings, isLoading, updateSettings } = usePaymentSettings(laundryId);
   
   const form = useForm<PaymentSettingsForm>({
     resolver: zodResolver(paymentSettingsSchema),
@@ -46,17 +46,6 @@ export function PaymentSettingsTab() {
       });
     }
   }, [settings, form]);
-
-  if (!laundryId) {
-    return (
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>
-          Selecione uma lavanderia para configurar os pagamentos
-        </AlertDescription>
-      </Alert>
-    );
-  }
 
   const onSubmit = async (data: PaymentSettingsForm) => {
     try {

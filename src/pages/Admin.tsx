@@ -2,12 +2,11 @@
 import { useState } from "react";
 import { Layout } from "@/components/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MapPin, Calendar, WashingMachine, Users, CreditCard } from "lucide-react";
+import { MapPin, Calendar, WashingMachine, Users } from "lucide-react";
 import { LaundryTab } from "@/components/admin/tabs/LaundryTab";
 import { SubscriptionsTab } from "@/components/admin/tabs/SubscriptionsTab";
 import { MachinesTab } from "@/components/admin/tabs/MachinesTab";
 import { UsersTab } from "@/components/admin/tabs/UsersTab";
-import { PaymentSettingsTab } from "@/components/admin/payment-settings/PaymentSettingsTab";
 import { useMachines } from "@/hooks/useMachines";
 import { useLaundries } from "@/hooks/useLaundries";
 import { LaundryLocation } from "@/types";
@@ -46,9 +45,6 @@ export default function Admin() {
             <TabsTrigger value="subscriptions" className="flex items-center gap-2">
               <Calendar className="h-4 w-4" /> Mensalidades
             </TabsTrigger>
-            <TabsTrigger value="payment-settings" className="flex items-center gap-2">
-              <CreditCard className="h-4 w-4" /> Pagamentos
-            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="users">
@@ -79,10 +75,6 @@ export default function Admin() {
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
             />
-          </TabsContent>
-
-          <TabsContent value="payment-settings">
-            <PaymentSettingsTab />
           </TabsContent>
         </Tabs>
       </div>
