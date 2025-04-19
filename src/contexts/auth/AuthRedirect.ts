@@ -54,9 +54,8 @@ export async function redirectBasedOnRole(userId: string, navigate: (path: strin
     } else {
       console.log(`User ${userId} has no laundries associated`);
       
-      // The problematic comparison is here - need to fix the type comparison
-      // Fixing the role comparison to use consistent string types
-      if (role === 'business') {
+      // Fix the type comparison by ensuring we're comparing string values
+      if (typeof role === 'string' && role === 'business') {
         console.log("User has business role but no laundries. Creating a test laundry...");
         
         try {
