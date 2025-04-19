@@ -2,8 +2,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
 
-interface CreateBusinessOwnerParams {
-  name: string;
+export interface CreateBusinessOwnerParams {
+  name: string;  // Ensuring name is required, not optional
   email: string;
   phone: string;
 }

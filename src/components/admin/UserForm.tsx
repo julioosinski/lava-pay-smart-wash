@@ -62,7 +62,7 @@ export function UserForm({ onClose, onSuccess, user, mode = "create" }: UserForm
       if (mode === "edit" && user?.id) {
         // Garantir que todos os campos obrigatórios estão presentes
         const updateData = {
-          name: values.name,
+          name: values.name, // Aqui name é string, não opcional
           email: values.email,
           phone: values.phone,
         };
@@ -71,7 +71,14 @@ export function UserForm({ onClose, onSuccess, user, mode = "create" }: UserForm
         result = await updateBusinessOwner(user.id, updateData);
       } else {
         // Criar novo proprietário
-        result = await createBusinessOwner(values);
+        const createData = {
+          name: values.name, // Aqui name é string, não opcional
+          email: values.email,
+          phone: values.phone,
+        };
+        
+        // Criar novo proprietário
+        result = await createBusinessOwner(createData);
       }
 
       if (result.userId) {
