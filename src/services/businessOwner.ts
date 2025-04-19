@@ -104,3 +104,86 @@ export async function createBusinessOwner(params: CreateBusinessOwnerParams): Pr
     };
   }
 }
+
+// Nova função para atualizar um proprietário existente
+export async function updateBusinessOwner(id: string, params: CreateBusinessOwnerParams): Promise<CreateBusinessOwnerResult> {
+  try {
+    console.log("Atualizando proprietário:", id, params);
+    
+    // Update the profile
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({
+        first_name: params.name.split(' ')[0] || '',
+        last_name: params.name.split(' ').slice(1).join(' ') || '',
+        contact_email: params.email,
+        contact_phone: params.phone,
+        role: 'business'
+      })
+      .eq('id', id);
+    
+    if (updateError) {
+      console.error("Erro ao atualizar perfil do proprietário:", updateError);
+      throw updateError;
+    }
+    
+    console.log("Proprietário atualizado com sucesso. ID:", id);
+    return { userId: id };
+  } catch (error) {
+    console.error("Erro ao atualizar proprietário:", error);
+    return { 
+      error: error instanceof Error ? error.message : "Erro desconhecido" 
+    };
+  }
+}
+
+// Nova função para deletar um proprietário
+export async function deleteBusinessOwner(id: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    console.log("Deletando proprietário:", id);
+    
+    // Verificamos se o proprietário tem lavanderias associadas
+    const { data: laundries, error: laundryError } = await supabase
+      .from('laundries')
+      .select('id')
+      .eq('owner_id', id);
+    
+    if (laundryError) {
+      console.error("Erro ao verificar lavanderias do proprietário:", laundryError);
+      throw laundryError;
+    }
+    
+    if (laundries && laundries.length > 0) {
+      return { 
+        success: false, 
+        error: `Este proprietário possui ${laundries.length} lavanderias associadas e não pode ser excluído.` 
+      };
+    }
+    
+    // Temos que usar auth.admin para remover o usuário
+    // Como não temos acesso direto ao auth.users através do cliente, vamos apenas atualizar o perfil
+    // removendo os dados e mudando o role para 'inactive' (ou outro status)
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({
+        role: 'inactive',
+        contact_email: null,
+        contact_phone: null,
+      })
+      .eq('id', id);
+    
+    if (updateError) {
+      console.error("Erro ao desativar perfil do proprietário:", updateError);
+      throw updateError;
+    }
+    
+    console.log("Proprietário desativado com sucesso. ID:", id);
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao deletar proprietário:", error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Erro desconhecido" 
+    };
+  }
+}

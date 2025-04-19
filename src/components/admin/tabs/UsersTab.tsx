@@ -5,25 +5,65 @@ import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Edit, Trash, Mail, Phone } from "lucide-react";
 import { SearchBar } from "../SearchBar";
-import { User } from "@/types";
+import { BusinessOwner } from "@/types";
 import { UserForm } from "../UserForm";
 import { useBusinessOwners } from "@/hooks/useBusinessOwners";
+import { DeleteUserDialog } from "../DeleteUserDialog";
+import { deleteBusinessOwner } from "@/services/businessOwner";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface UsersTabProps {
-  users: User[];
   searchQuery: string;
   onSearchChange: (value: string) => void;
 }
 
 export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
   const [showUserForm, setShowUserForm] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<BusinessOwner | null>(null);
+  const [userToDelete, setUserToDelete] = useState<BusinessOwner | null>(null);
   const { data: businessOwners = [], isLoading } = useBusinessOwners();
+  const queryClient = useQueryClient();
 
   const filteredUsers = businessOwners.filter(user =>
     user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.phone?.includes(searchQuery)
   );
+  
+  // Manipuladores para editar e excluir
+  const handleEdit = (user: BusinessOwner) => {
+    setSelectedUser(user);
+    setShowUserForm(true);
+  };
+  
+  const handleDelete = (user: BusinessOwner) => {
+    setUserToDelete(user);
+  };
+  
+  const handleDeleteConfirm = async () => {
+    if (userToDelete) {
+      try {
+        const result = await deleteBusinessOwner(userToDelete.id);
+        if (result.success) {
+          toast.success("Proprietário excluído com sucesso");
+          // Invalida a cache para forçar uma nova busca
+          await queryClient.invalidateQueries({ queryKey: ['business-owners'] });
+        } else {
+          toast.error(result.error || "Não foi possível excluir o proprietário");
+        }
+      } catch (error) {
+        toast.error("Erro ao excluir proprietário");
+        console.error("Error deleting business owner:", error);
+      }
+      setUserToDelete(null);
+    }
+  };
+  
+  const handleFormClose = () => {
+    setShowUserForm(false);
+    setSelectedUser(null);
+  };
 
   return (
     <div className="space-y-6">
@@ -35,7 +75,10 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
         />
         <Button 
           className="bg-lavapay-500 hover:bg-lavapay-600"
-          onClick={() => setShowUserForm(true)}
+          onClick={() => {
+            setSelectedUser(null);
+            setShowUserForm(true);
+          }}
         >
           <Plus className="mr-2 h-4 w-4" /> Novo Proprietário
         </Button>
@@ -43,8 +86,10 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
 
       {showUserForm && (
         <UserForm
-          onClose={() => setShowUserForm(false)}
-          onSuccess={() => setShowUserForm(false)}
+          onClose={handleFormClose}
+          onSuccess={handleFormClose}
+          user={selectedUser}
+          mode={selectedUser ? "edit" : "create"}
         />
       )}
 
@@ -93,10 +138,20 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
                     Proprietário
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 mr-1">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 mr-1"
+                      onClick={() => handleEdit(user)}
+                    >
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-red-500"
+                      onClick={() => handleDelete(user)}
+                    >
                       <Trash className="h-4 w-4" />
                     </Button>
                   </TableCell>
@@ -106,6 +161,12 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
           </TableBody>
         </Table>
       </Card>
+
+      <DeleteUserDialog
+        user={userToDelete}
+        onClose={() => setUserToDelete(null)}
+        onConfirm={handleDeleteConfirm}
+      />
     </div>
   );
 }
