@@ -7,15 +7,21 @@ import { MachinesTab } from "@/components/owner/tabs/MachinesTab";
 import { LocationsTab } from "@/components/owner/tabs/LocationsTab";
 import { PaymentsTab } from "@/components/owner/tabs/PaymentsTab";
 import { useOwnerDashboard } from "@/hooks/useOwnerDashboard";
-import { Loader2, AlertTriangle } from "lucide-react";
+import { Loader2, AlertTriangle, RefreshCw } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/auth";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { LaundryForm } from "@/components/admin/LaundryForm";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 export default function Owner() {
   const { user } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const queryClient = useQueryClient();
   const {
     ownerLaundries,
     ownerMachines,
@@ -53,6 +59,24 @@ export default function Owner() {
     checkAdminRole();
   }, [user?.id]);
 
+  const handleRefreshData = async () => {
+    if (!user?.id) return;
+    
+    setIsRefreshing(true);
+    try {
+      // Invalidate and refetch all relevant queries
+      await queryClient.invalidateQueries({ queryKey: ['laundries'] });
+      await queryClient.invalidateQueries({ queryKey: ['machines'] });
+      await queryClient.invalidateQueries({ queryKey: ['payments'] });
+      toast.success("Dados atualizados com sucesso!");
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+      toast.error("Erro ao atualizar os dados");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   console.log("Owner page - user ID:", user?.id);
   console.log("Owner page - laundries count:", ownerLaundries.length);
 
@@ -73,19 +97,42 @@ export default function Owner() {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-8">
-          <h1 className="text-3xl font-bold mb-4">
-            {isAdmin ? "Painel do Administrador" : "Painel do Proprietário"}
-          </h1>
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-3xl font-bold">
+              {isAdmin ? "Painel do Administrador" : "Painel do Proprietário"}
+            </h1>
+            <Button 
+              variant="outline"
+              onClick={handleRefreshData}
+              disabled={isRefreshing}
+              className="flex items-center gap-2"
+            >
+              {isRefreshing ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" /> 
+                  Atualizando...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="h-4 w-4" /> 
+                  Atualizar Dados
+                </>
+              )}
+            </Button>
+          </div>
           
-          <Alert variant="default" className="bg-amber-50 border-amber-200">
+          <Alert variant="default" className="bg-amber-50 border-amber-200 mb-6">
             <AlertTriangle className="h-5 w-5 text-amber-600" />
             <AlertTitle className="text-amber-800">Nenhuma lavanderia encontrada</AlertTitle>
             <AlertDescription className="text-amber-700">
-              <p>Você não possui lavanderias cadastradas. Por favor, contate o administrador do sistema.</p>
+              <p>Você não possui lavanderias cadastradas. Por favor, crie uma nova lavanderia abaixo.</p>
               <p className="text-sm mt-2">ID do usuário: {user?.id}</p>
             </AlertDescription>
           </Alert>
           
+          <div className="flex justify-center mt-8">
+            <LaundryForm mode="create" />
+          </div>
         </div>
       </Layout>
     );
@@ -94,10 +141,31 @@ export default function Owner() {
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
-        <OwnerDashboardHeader 
-          title={isAdmin ? "Painel do Administrador" : "Painel do Proprietário"}
-          subtitle={isAdmin ? "Gerencie todas as lavanderias e máquinas" : "Gerencie suas lavanderias e máquinas"}
-        />
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+          <OwnerDashboardHeader 
+            title={isAdmin ? "Painel do Administrador" : "Painel do Proprietário"}
+            subtitle={isAdmin ? "Gerencie todas as lavanderias e máquinas" : "Gerencie suas lavanderias e máquinas"}
+          />
+          
+          <Button 
+            variant="outline"
+            onClick={handleRefreshData}
+            disabled={isRefreshing}
+            className="flex items-center gap-2"
+          >
+            {isRefreshing ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" /> 
+                Atualizando...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="h-4 w-4" /> 
+                Atualizar Dados
+              </>
+            )}
+          </Button>
+        </div>
 
         <Tabs defaultValue="dashboard">
           <TabsList className="mb-6">

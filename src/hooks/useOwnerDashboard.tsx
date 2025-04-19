@@ -66,7 +66,8 @@ export function useOwnerDashboard(): UseOwnerDashboardReturn {
   const { 
     data: ownerLaundries = [], 
     isLoading: isLoadingLaundries,
-    error: laundriesError
+    error: laundriesError,
+    refetch: refetchLaundries
   } = useLaundries({ 
     ownerId: !isAdmin ? user?.id : undefined,
     forceShowAll: isAdmin,
@@ -76,6 +77,37 @@ export function useOwnerDashboard(): UseOwnerDashboardReturn {
       staleTime: 30000,
     }
   });
+
+  // Retry fetching laundries if owner_id exists but no laundries were found
+  useEffect(() => {
+    if (user?.id && !isLoadingLaundries && ownerLaundries.length === 0) {
+      // Check directly in Supabase if there are laundries for this owner
+      const checkDirectLaundries = async () => {
+        console.log("Direct check for laundries with owner_id:", user.id);
+        try {
+          const { data, error } = await supabase
+            .from('laundries')
+            .select('*')
+            .eq('owner_id', user.id);
+            
+          if (error) {
+            console.error("Error in direct laundry check:", error);
+            return;
+          }
+          
+          if (data && data.length > 0) {
+            console.log("Found laundries directly:", data);
+            // If laundries exist but weren't returned by the hook, refetch
+            refetchLaundries();
+          }
+        } catch (err) {
+          console.error("Error checking laundries directly:", err);
+        }
+      };
+      
+      checkDirectLaundries();
+    }
+  }, [user?.id, isLoadingLaundries, ownerLaundries.length, refetchLaundries]);
   
   useEffect(() => {
     if (laundriesError) {
