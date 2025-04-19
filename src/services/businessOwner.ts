@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
 
@@ -173,35 +172,27 @@ export async function deleteBusinessOwner(id: string): Promise<{ success: boolea
       };
     }
     
-    // Primeiro tentamos excluir o usuário Auth (isso pode falhar se o usuário não tiver permissões de admin)
-    try {
-      await supabase.auth.admin.deleteUser(id);
-      console.log("Usuário Auth excluído com sucesso:", id);
-      return { success: true };
-    } catch (error) {
-      console.error("Erro ao excluir usuário:", error);
-      console.log("Tentando desativar perfil como alternativa...");
+    // Desativamos o perfil mudando o papel para 'user'
+    console.log("Desativando perfil do usuário:", id);
+    
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({
+        role: 'user' as Database["public"]["Enums"]["user_role"],
+        contact_email: null,
+        contact_phone: null,
+        first_name: null,
+        last_name: null
+      })
+      .eq('id', id);
       
-      // Se falhar em excluir o usuário Auth, desativamos o perfil mudando o papel para 'user'
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          role: 'user' as Database["public"]["Enums"]["user_role"],
-          contact_email: null,
-          contact_phone: null,
-          first_name: null,
-          last_name: null
-        })
-        .eq('id', id);
-        
-      if (updateError) {
-        console.error("Erro ao desativar perfil:", updateError);
-        throw updateError;
-      }
-      
-      console.log("Proprietário excluído com sucesso. ID:", id);
-      return { success: true };
+    if (updateError) {
+      console.error("Erro ao desativar perfil:", updateError);
+      throw updateError;
     }
+    
+    console.log("Proprietário excluído com sucesso. ID:", id);
+    return { success: true };
   } catch (error) {
     console.error("Erro ao deletar proprietário:", error);
     return { 
