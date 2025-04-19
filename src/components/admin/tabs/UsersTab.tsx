@@ -13,6 +13,8 @@ interface UsersTabProps {
 
 export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
   const { data: businessOwners = [], isLoading, refetch } = useBusinessOwners();
+  
+  // Pass the refetch function directly - it will be compatible with Promise<unknown>
   const { 
     selectedUser,
     userToDelete,

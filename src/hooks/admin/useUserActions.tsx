@@ -5,7 +5,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { deleteBusinessOwner } from "@/services/businessOwner";
 import { toast } from "sonner";
 
-export function useUserActions(refetch: () => Promise<void>) {
+// Update the refetch parameter type to match what tanstack/react-query returns
+export function useUserActions(refetchFn: () => Promise<unknown>) {
   const [selectedUser, setSelectedUser] = useState<BusinessOwner | null>(null);
   const [userToDelete, setUserToDelete] = useState<BusinessOwner | null>(null);
   const [isProcessingAction, setIsProcessingAction] = useState(false);
@@ -34,7 +35,7 @@ export function useUserActions(refetch: () => Promise<void>) {
           await queryClient.invalidateQueries({ queryKey: ['business-owners'] });
           
           setTimeout(async () => {
-            await refetch();
+            await refetchFn();
           }, 1000);
         } else {
           toast.error(result.error || "Não foi possível excluir o proprietário");
@@ -66,7 +67,7 @@ export function useUserActions(refetch: () => Promise<void>) {
       await queryClient.invalidateQueries({ queryKey: ['business-owners'] });
       
       setTimeout(async () => {
-        await refetch();
+        await refetchFn();
       }, 1000);
     } finally {
       setIsProcessingAction(false);
