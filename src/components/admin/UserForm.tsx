@@ -89,7 +89,12 @@ export function UserForm({ onClose, onSuccess, user, mode = "create" }: UserForm
         
         // Invalidar a query de proprietários para forçar uma nova busca
         await queryClient.invalidateQueries({ queryKey: ['business-owners'] });
-        onSuccess();
+        
+        // Aguardar um curto período antes de executar o callback de sucesso
+        // para garantir que os dados tenham tempo de serem atualizados no servidor
+        setTimeout(() => {
+          onSuccess();
+        }, 500);
       } else {
         throw new Error(result.error || `Não foi possível ${mode === "create" ? "criar" : "atualizar"} o proprietário`);
       }

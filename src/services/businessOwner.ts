@@ -160,14 +160,16 @@ export async function deleteBusinessOwner(id: string): Promise<{ success: boolea
       };
     }
     
-    // Desativamos o perfil mudando a role para 'user'
+    // Desativamos o perfil mudando a role para 'user' e removendo os dados de contato
     console.log("Desativando perfil do proprietário...");
     const { error: updateError } = await supabase
       .from('profiles')
       .update({
         role: 'user' as Database["public"]["Enums"]["user_role"],
         contact_email: null,
-        contact_phone: null
+        contact_phone: null,
+        first_name: null,
+        last_name: null
       })
       .eq('id', id);
       

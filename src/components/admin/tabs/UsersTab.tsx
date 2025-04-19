@@ -34,12 +34,14 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
   
   // Manipuladores para editar e excluir
   const handleEdit = (user: BusinessOwner) => {
+    if (isProcessingAction) return;
     console.log("Editando usuário:", user);
     setSelectedUser(user);
     setShowUserForm(true);
   };
   
   const handleDelete = (user: BusinessOwner) => {
+    if (isProcessingAction) return;
     console.log("Preparando para excluir usuário:", user);
     setUserToDelete(user);
   };
@@ -57,10 +59,10 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
           // Forçar uma nova busca imediatamente
           await queryClient.invalidateQueries({ queryKey: ['business-owners'] });
           
-          // Esperar um curto intervalo e então forçar refetch
+          // Esperar um intervalo maior e então forçar refetch
           setTimeout(async () => {
             await refetch();
-          }, 300);
+          }, 1000);
         } else {
           toast.error(result.error || "Não foi possível excluir o proprietário");
         }
@@ -75,6 +77,7 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
   };
   
   const handleFormClose = () => {
+    if (isProcessingAction) return;
     setShowUserForm(false);
     setSelectedUser(null);
   };
@@ -90,10 +93,10 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
       // Forçar uma nova busca imediatamente
       await queryClient.invalidateQueries({ queryKey: ['business-owners'] });
       
-      // Esperar um curto intervalo e então forçar refetch
+      // Esperar um intervalo maior e então forçar refetch
       setTimeout(async () => {
         await refetch();
-      }, 300);
+      }, 1000);
     } finally {
       setIsProcessingAction(false);
     }
@@ -110,9 +113,11 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
         <Button 
           className="bg-lavapay-500 hover:bg-lavapay-600"
           onClick={() => {
+            if (isProcessingAction) return;
             setSelectedUser(null);
             setShowUserForm(true);
           }}
+          disabled={isProcessingAction}
         >
           <Plus className="mr-2 h-4 w-4" /> Novo Proprietário
         </Button>
