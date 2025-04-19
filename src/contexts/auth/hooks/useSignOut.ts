@@ -11,27 +11,36 @@ interface SignOutProps {
 
 export const useSignOut = ({ setUser, setSession, setLoading, navigate }: SignOutProps) => {
   const signOut = async () => {
-    setLoading(true);
     try {
-      // First, reset the local state regardless of API response
+      console.log("Starting logout process");
+      setLoading(true);
+      
+      // First clear local state to ensure UI updates immediately
       setUser(null);
       setSession(null);
       
-      // Then try to sign out from Supabase
-      try {
-        await supabase.auth.signOut();
-      } catch (error) {
-        // We've already reset local state, so just log the error
-        console.log("Supabase signOut API error (non-critical):", error);
-        // This is non-critical as we've already cleared local state
-      }
+      // Then sign out from Supabase
+      const { error } = await supabase.auth.signOut();
       
-      // Redirect to auth page
-      navigate('/auth', { replace: true });
-      toast.success("Você foi desconectado com sucesso");
+      if (error) {
+        console.error("Error during Supabase signOut:", error);
+        toast.error("Erro ao sair da sua conta");
+      } else {
+        console.log("Successfully signed out from Supabase");
+        toast.success("Você foi desconectado com sucesso");
+        
+        // Forced navigation to auth page with replace to prevent going back
+        setTimeout(() => {
+          console.log("Navigating to auth page after logout");
+          navigate('/auth', { replace: true });
+        }, 100);
+      }
     } catch (error) {
-      console.error("Error during sign out:", error);
+      console.error("Exception during sign out process:", error);
       toast.error("Erro ao sair da sua conta");
+      
+      // Even on error, force navigation to auth
+      navigate('/auth', { replace: true });
     } finally {
       setLoading(false);
     }

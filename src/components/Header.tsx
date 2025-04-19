@@ -30,10 +30,11 @@ export function Header() {
 
   const handleLogout = async () => {
     try {
+      console.log("Header: Logout button clicked");
+      // We don't need to navigate here, the signOut function will handle navigation
       await signOut();
-      navigate('/');
     } catch (error) {
-      console.error("Logout error:", error);
+      console.error("Header: Logout error:", error);
     }
   };
 
