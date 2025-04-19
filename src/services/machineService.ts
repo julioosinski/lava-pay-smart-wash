@@ -28,7 +28,8 @@ export async function getMachineStatus(machineId: string): Promise<Machine | nul
 }
 
 export async function checkMachineSessions() {
-  const { data, error } = await supabase.rpc(
+  // Use type assertion to bypass TypeScript's restriction on RPC function names
+  const { data, error } = await (supabase.rpc as any)(
     'check_machine_sessions',
     {},
     { count: 'exact' }
