@@ -10,6 +10,7 @@ import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useCreateLaundry, useUpdateLaundry } from "@/hooks/useLaundries";
 import { LaundryLocation } from "@/types";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const formSchema = z.object({
@@ -42,28 +43,76 @@ export function LaundryForm({ initialData, mode = "create" }: LaundryFormProps) 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       if (mode === "create") {
+        // Primeiro, verifica se já existe um usuário com este email
+        const { data: existingUser } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('contact_email', values.contact_email)
+          .single();
+
+        let userId;
+
+        if (existingUser) {
+          userId = existingUser.id;
+        } else {
+          // Cria um novo usuário com o email e telefone como senha
+          const { data: newUser, error: signUpError } = await supabase.auth.signUp({
+            email: values.contact_email,
+            password: values.contact_phone.replace(/\D/g, ''), // Remove caracteres não numéricos
+            options: {
+              data: {
+                role: 'business'
+              }
+            }
+          });
+
+          if (signUpError) {
+            console.error("Error creating user:", signUpError);
+            toast.error("Erro ao criar usuário");
+            return;
+          }
+
+          userId = newUser.user?.id;
+
+          // Atualiza o perfil do usuário com o papel de business
+          if (userId) {
+            const { error: updateError } = await supabase
+              .from('profiles')
+              .update({ 
+                role: 'business',
+                contact_email: values.contact_email,
+                contact_phone: values.contact_phone
+              })
+              .eq('id', userId);
+
+            if (updateError) {
+              console.error("Error updating user profile:", updateError);
+            }
+          }
+        }
+
+        // Cria a lavanderia com o owner_id definido
         const laundryData = {
           name: values.name,
           address: values.address,
           contact_phone: values.contact_phone,
           contact_email: values.contact_email,
+          owner_id: userId
         };
         
         await createLaundry.mutateAsync(laundryData);
         setOpen(false);
         form.reset();
+
+        toast.success("Lavanderia criada com sucesso! O proprietário pode fazer login usando o email e o telefone como senha.");
       } else if (initialData?.id) {
         await updateLaundry.mutateAsync({
           id: initialData.id,
-          name: values.name,
-          address: values.address,
-          contact_phone: values.contact_phone,
-          contact_email: values.contact_email,
+          ...values
         });
       }
     } catch (error) {
       console.error("Error in form submission:", error);
-      // Error is now handled by the mutation's onError callback
     }
   };
 

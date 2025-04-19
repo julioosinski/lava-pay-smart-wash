@@ -1,4 +1,3 @@
-
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { checkLaundryOwnership, updateLaundryOwner, updateUserRole, updateUserContact } from '../utils/authUtils';
@@ -78,73 +77,23 @@ export const useSignIn = ({ setUser, setSession, setLoading }: SignInProps) => {
                 // Atualiza o perfil com os dados de contato da lavanderia
                 await updateUserContact(signUpData.user.id, email, password);
                 
-                // Login after signup
-                const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({ 
-                  email, 
-                  password 
-                });
-                
-                if (loginError) {
-                  console.error("Error logging in after signup:", loginError);
-                  throw loginError;
-                }
-                
-                setUser(loginData.user);
-                setSession(loginData.session);
+                setUser(signUpData.user);
+                setSession(signUpData.session);
                 return;
               }
             } catch (error) {
               console.error("Error during business owner authentication:", error);
               throw error;
             }
-          } else {
-            console.log("No matching laundry found with this email/phone");
-            throw new Error("no matching laundry found");
           }
-        } catch (laundryError) {
-          console.error("Error checking laundry ownership:", laundryError);
-          throw laundryError;
+        } catch (error) {
+          console.error("Error in sign in process:", error);
+          throw error;
         }
       } else {
-        console.log("Standard login successful, user:", data.user?.id);
+        console.log("Standard login successful");
         setUser(data.user);
         setSession(data.session);
-
-        if (data.user) {
-          // Check if user is a laundry owner
-          const { data: laundryCheck } = await supabase
-            .from('laundries')
-            .select('id')
-            .eq('owner_id', data.user.id)
-            .maybeSingle();
-            
-          if (laundryCheck) {
-            console.log("User is a laundry owner, updating role to business");
-            await updateUserRole(data.user.id, 'business');
-          } else {
-            // Also check if user's email matches any laundry's contact email
-            const { data: emailCheck } = await supabase
-              .from('laundries')
-              .select('id')
-              .eq('contact_email', email)
-              .maybeSingle();
-              
-            if (emailCheck) {
-              console.log("User's email matches a laundry contact email, updating role and owner");
-              await updateLaundryOwner(emailCheck.id, data.user.id);
-              await updateUserRole(data.user.id, 'business');
-            }
-          }
-          
-          // After potentially updating role, check current profile
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', data.user.id)
-            .maybeSingle();
-          
-          console.log("User role after checks:", profileData?.role);
-        }
       }
     } catch (error) {
       console.error("Error during sign in:", error);
