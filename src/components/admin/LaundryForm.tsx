@@ -45,7 +45,11 @@ export function LaundryForm({ initialData, mode = "create" }: LaundryFormProps) 
       if (mode === "create") {
         // Create the laundry with the selected owner
         await createLaundry.mutateAsync({
-          ...values,
+          name: values.name,
+          address: values.address,
+          contact_phone: values.contact_phone,
+          contact_email: values.contact_email,
+          owner_id: values.owner_id
         });
         
         setOpen(false);
@@ -54,7 +58,11 @@ export function LaundryForm({ initialData, mode = "create" }: LaundryFormProps) 
       } else if (initialData?.id) {
         await updateLaundry.mutateAsync({
           id: initialData.id,
-          ...values
+          name: values.name,
+          address: values.address,
+          contact_phone: values.contact_phone,
+          contact_email: values.contact_email,
+          owner_id: values.owner_id
         });
         toast.success("Lavanderia atualizada com sucesso!");
       }
