@@ -33,13 +33,13 @@ export function useOwnerDashboard(): UseOwnerDashboardReturn {
   
   console.log("Owner ID:", user?.id);
   
-  // Fetch owner laundries with forceShowAll: false to only get laundries owned by current user
+  // Fetch owner laundries with forceShowAll: true to get all laundries as admin
   const { 
     data: ownerLaundries = [], 
     isLoading: isLoadingLaundries,
     error: laundriesError
   } = useLaundries({ 
-    ownerId: user?.id,
+    forceShowAll: true,
     options: {
       enabled: !!user?.id,
       retry: 3,
@@ -50,13 +50,13 @@ export function useOwnerDashboard(): UseOwnerDashboardReturn {
   useEffect(() => {
     if (laundriesError) {
       console.error("Error fetching owner laundries:", laundriesError);
-      toast.error("Erro ao carregar as lavanderias do proprietário");
+      toast.error("Erro ao carregar as lavanderias");
     }
   }, [laundriesError]);
 
   console.log("Owner laundries fetched:", ownerLaundries);
 
-  // Update selectedLocation when owner laundries change
+  // Update selectedLocation when laundries change
   useEffect(() => {
     if (ownerLaundries.length > 0 && (selectedLocation === "all" || !selectedLocation)) {
       setSelectedLocation(ownerLaundries[0]?.id || "all");
@@ -64,11 +64,11 @@ export function useOwnerDashboard(): UseOwnerDashboardReturn {
     }
   }, [ownerLaundries, selectedLocation]);
   
-  // Get laundry IDs owned by the current user
+  // Get all laundry IDs
   const ownerLaundryIds = ownerLaundries.map(location => location.id);
   console.log("Owner laundry IDs:", ownerLaundryIds);
   
-  // First, fetch all machines (we'll filter them later)
+  // Fetch all machines 
   const { 
     data: allMachines = [], 
     isLoading: isLoadingMachines,
@@ -82,15 +82,13 @@ export function useOwnerDashboard(): UseOwnerDashboardReturn {
     }
   }, [machinesError]);
   
-  // Now explicitly filter machines to only include those belonging to this owner's laundries
-  const ownerMachines = ownerLaundryIds.length > 0 
-    ? allMachines.filter(machine => ownerLaundryIds.includes(machine.laundry_id))
-    : [];
-
+  // Make sure we have the machines for all laundries
   console.log("All machines:", allMachines);
+  // Setting owner machines to all machines since this is the admin panel
+  const ownerMachines = allMachines;
   console.log("Owner machines filtered:", ownerMachines);
 
-  // Get payments for owner's machines
+  // Get payments for all machines
   const { 
     data: allPayments = [], 
     isLoading: isLoadingPayments,
@@ -104,7 +102,7 @@ export function useOwnerDashboard(): UseOwnerDashboardReturn {
     }
   }, [paymentsError]);
   
-  // Filter payments to only include those for the owner's machines
+  // Get all machine IDs
   const ownerMachineIds = ownerMachines.map(machine => machine.id);
   const ownerPayments = allPayments.filter(payment => 
     ownerMachineIds.includes(payment.machine_id)

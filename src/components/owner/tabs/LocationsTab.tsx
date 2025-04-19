@@ -4,6 +4,8 @@ import { LaundryForm } from "@/components/admin/LaundryForm";
 import { LaundryLocation, Machine } from "@/types";
 import { AlertCircle, WashingMachine, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { EditLaundryDialog } from "@/components/admin/EditLaundryDialog";
 
 interface LocationsTabProps {
   ownerLaundries: LaundryLocation[];
@@ -12,6 +14,8 @@ interface LocationsTabProps {
 }
 
 export function LocationsTab({ ownerLaundries, machines, onSelectLocation }: LocationsTabProps) {
+  const [selectedLaundry, setSelectedLaundry] = useState<LaundryLocation | null>(null);
+
   // Count machines per laundry
   const getMachineCount = (laundryId: string) => {
     return machines.filter(machine => machine.laundry_id === laundryId).length;
@@ -24,12 +28,16 @@ export function LocationsTab({ ownerLaundries, machines, onSelectLocation }: Loc
     ).length;
   };
 
+  const handleManage = (location: LaundryLocation) => {
+    setSelectedLaundry(location);
+  };
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between">
           <div>
-            <CardTitle>Suas Lavanderias</CardTitle>
+            <CardTitle>Lavanderias</CardTitle>
             <CardDescription>Gerenciamento de locais</CardDescription>
           </div>
           <LaundryForm />
@@ -38,7 +46,7 @@ export function LocationsTab({ ownerLaundries, machines, onSelectLocation }: Loc
           {ownerLaundries.length === 0 ? (
             <div className="text-center py-8">
               <AlertCircle className="h-10 w-10 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-500">Você ainda não possui lavanderias cadastradas.</p>
+              <p className="text-gray-500">Nenhuma lavanderia cadastrada.</p>
             </div>
           ) : (
             ownerLaundries.map(location => {
@@ -69,7 +77,7 @@ export function LocationsTab({ ownerLaundries, machines, onSelectLocation }: Loc
                       <div className="flex gap-2">
                         <Button 
                           variant="outline"
-                          onClick={() => onSelectLocation(location.id)}
+                          onClick={() => handleManage(location)}
                         >
                           Gerenciar
                         </Button>
@@ -82,6 +90,14 @@ export function LocationsTab({ ownerLaundries, machines, onSelectLocation }: Loc
           )}
         </CardContent>
       </Card>
+
+      {selectedLaundry && (
+        <EditLaundryDialog
+          open={!!selectedLaundry}
+          onOpenChange={(open) => !open && setSelectedLaundry(null)}
+          laundry={selectedLaundry}
+        />
+      )}
     </div>
   );
 }

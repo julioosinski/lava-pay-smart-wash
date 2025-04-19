@@ -14,7 +14,7 @@ export function OwnerDashboardHeader({ title, subtitle }: OwnerDashboardHeaderPr
         <h1 className="text-3xl font-bold">{title}</h1>
         <Button variant="outline" className="h-9">
           <ChevronDown className="h-4 w-4 mr-2" />
-          Suas Lavanderias
+          Lavanderias
         </Button>
       </div>
       <p className="text-gray-500">{subtitle}</p>

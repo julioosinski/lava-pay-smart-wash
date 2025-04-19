@@ -32,7 +32,7 @@ export default function Owner() {
       <Layout>
         <div className="container mx-auto px-4 py-8 text-center">
           <Loader2 className="h-8 w-8 animate-spin text-lavapay-600 mx-auto mb-3" />
-          <div className="text-lg">Carregando dados do proprietário...</div>
+          <div className="text-lg">Carregando dados do administrador...</div>
           <div className="text-sm text-gray-500 mt-2">Verificando lavanderias e máquinas associadas...</div>
         </div>
       </Layout>
@@ -44,7 +44,7 @@ export default function Owner() {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-8">
-          <h1 className="text-3xl font-bold mb-4">Painel do Proprietário</h1>
+          <h1 className="text-3xl font-bold mb-4">Painel do Administrador</h1>
           
           <Alert variant="default" className="bg-amber-50 border-amber-200">
             <AlertTriangle className="h-5 w-5 text-amber-600" />
@@ -64,7 +64,7 @@ export default function Owner() {
     <Layout>
       <div className="container mx-auto px-4 py-8">
         <OwnerDashboardHeader 
-          title="Painel do Proprietário"
+          title="Painel do Administrador"
           subtitle="Gerencie suas lavanderias e máquinas"
         />
 
