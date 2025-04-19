@@ -18,9 +18,10 @@ interface MachineFormProps {
   machine?: Machine;
   variant?: "create" | "edit";
   triggerElement?: React.ReactNode;
+  onSuccess?: () => void;
 }
 
-export function MachineForm({ laundryId, machine, variant = "create", triggerElement }: MachineFormProps) {
+export function MachineForm({ laundryId, machine, variant = "create", triggerElement, onSuccess }: MachineFormProps) {
   const [open, setOpen] = useState(false);
   const createMachine = useCreateMachine();
   const updateMachine = useUpdateMachine();
@@ -69,6 +70,7 @@ export function MachineForm({ laundryId, machine, variant = "create", triggerEle
       }
       setOpen(false);
       form.reset();
+      onSuccess?.();
     } catch (error) {
       console.error("Error saving machine:", error);
     }

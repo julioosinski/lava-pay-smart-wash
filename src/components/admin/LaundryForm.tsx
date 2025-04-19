@@ -15,9 +15,10 @@ import { useBusinessOwners } from "@/hooks/useBusinessOwners";
 interface LaundryFormProps {
   initialData?: LaundryLocation;
   mode?: "create" | "edit";
+  onSuccess?: () => void;
 }
 
-export function LaundryForm({ initialData, mode = "create" }: LaundryFormProps) {
+export function LaundryForm({ initialData, mode = "create", onSuccess }: LaundryFormProps) {
   const [open, setOpen] = useState(false);
   const createLaundry = useCreateLaundry();
   const updateLaundry = useUpdateLaundry();
@@ -60,7 +61,6 @@ export function LaundryForm({ initialData, mode = "create" }: LaundryFormProps) 
   const onSubmit = async (values: FormValues) => {
     try {
       if (mode === "create") {
-        // Garantimos que todos os campos obrigatórios estão presentes
         await createLaundry.mutateAsync({
           name: values.name,
           address: values.address,
@@ -71,6 +71,7 @@ export function LaundryForm({ initialData, mode = "create" }: LaundryFormProps) 
         
         setOpen(false);
         form.reset();
+        onSuccess?.();
         toast.success("Lavanderia criada com sucesso!");
       } else if (initialData?.id) {
         await updateLaundry.mutateAsync({
@@ -81,6 +82,7 @@ export function LaundryForm({ initialData, mode = "create" }: LaundryFormProps) 
           contact_email: values.contact_email,
           owner_id: values.owner_id
         });
+        onSuccess?.();
         toast.success("Lavanderia atualizada com sucesso!");
       }
     } catch (error) {

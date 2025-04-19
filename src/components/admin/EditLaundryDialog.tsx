@@ -9,6 +9,7 @@ import { Building2, WashingMachine } from "lucide-react";
 import { MachineCard } from "@/components/MachineCard";
 import { useMachines } from "@/hooks/useMachines";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface EditLaundryDialogProps {
   open: boolean;
@@ -19,6 +20,14 @@ interface EditLaundryDialogProps {
 export function EditLaundryDialog({ open, onOpenChange, laundry }: EditLaundryDialogProps) {
   const [activeTab, setActiveTab] = useState("details");
   const { data: machines = [] } = useMachines(laundry.id);
+  const queryClient = useQueryClient();
+
+  // Add a success handler for form submissions
+  const handleFormSuccess = async () => {
+    // Invalidate and refetch both laundries and machines queries
+    await queryClient.invalidateQueries({ queryKey: ['laundries'] });
+    await queryClient.invalidateQueries({ queryKey: ['machines', laundry.id] });
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -40,14 +49,21 @@ export function EditLaundryDialog({ open, onOpenChange, laundry }: EditLaundryDi
           </TabsList>
 
           <TabsContent value="details">
-            <LaundryForm initialData={laundry} mode="edit" />
+            <LaundryForm 
+              initialData={laundry} 
+              mode="edit" 
+              onSuccess={handleFormSuccess}
+            />
           </TabsContent>
 
           <TabsContent value="machines">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
                 <CardTitle className="text-lg font-semibold">Máquinas</CardTitle>
-                <MachineForm laundryId={laundry.id} />
+                <MachineForm 
+                  laundryId={laundry.id} 
+                  onSuccess={handleFormSuccess}
+                />
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
