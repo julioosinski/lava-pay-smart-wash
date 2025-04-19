@@ -40,15 +40,19 @@ export function LaundryForm({ initialData, mode = "create" }: LaundryFormProps) 
   const onSubmit = async (values: FormValues) => {
     try {
       if (mode === "create") {
+        // First create the business owner
         const { userId } = await createBusinessOwner({
           email: values.contact_email,
           phone: values.contact_phone
         });
 
         if (!userId) {
-          throw new Error("Erro ao criar usuário");
+          throw new Error("Erro ao criar ou encontrar o usuário proprietário");
         }
 
+        console.log("Business owner created or found with ID:", userId);
+
+        // Then create the laundry associated with that owner
         await createLaundry.mutateAsync({
           ...values,
           owner_id: userId
@@ -62,10 +66,11 @@ export function LaundryForm({ initialData, mode = "create" }: LaundryFormProps) 
           id: initialData.id,
           ...values
         });
+        toast.success("Lavanderia atualizada com sucesso!");
       }
     } catch (error) {
       console.error("Error in form submission:", error);
-      toast.error("Erro ao criar lavanderia");
+      toast.error("Erro ao processar a lavanderia: " + (error instanceof Error ? error.message : "Erro desconhecido"));
     }
   };
 

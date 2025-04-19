@@ -34,7 +34,7 @@ export function useFetchLaundries(options?: {
         }
         
         const laundries = (data || []).map(laundry => convertToLaundry(laundry as LaundryDB));
-        console.log(`Successfully fetched ${laundries.length} laundries:`, laundries);
+        console.log(`Successfully fetched ${laundries.length} laundries for owner ${options?.ownerId}:`, laundries);
         return laundries;
       } catch (error) {
         console.error("Error in useFetchLaundries hook:", error);

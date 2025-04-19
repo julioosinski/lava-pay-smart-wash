@@ -33,32 +33,13 @@ export const useAuthForm = (expectedRole: string = 'user') => {
         console.log("Attempting login with email:", email);
         
         if (expectedRole === 'business') {
-          console.log("Checking business login with phone as password");
+          console.log("Business login attempt with email and phone");
           
           try {
-            // First create test data if needed
-            const { data: existingLaundries } = await supabase
-              .from('laundries')
-              .select('count')
-              .limit(1);
-            
-            if (!existingLaundries || existingLaundries.length === 0) {
-              console.log("No laundries found, creating a test laundry");
-              sonnerToast.info("Criando dados de teste para lavanderia");
-              
-              await supabase.from('laundries').insert({
-                name: 'Test Laundry',
-                contact_email: email.trim(),
-                contact_phone: password.trim(),
-                address: 'Test Address',
-                status: 'active'
-              });
-            }
-            
-            // Try login
             await signIn(email.trim(), password.trim());
             console.log("Business login successful");
             sonnerToast.success("Login realizado com sucesso!");
+            navigate('/owner');
           } catch (error) {
             console.error("Business login failed:", error);
             
@@ -70,7 +51,7 @@ export const useAuthForm = (expectedRole: string = 'user') => {
               if (error.message.includes("no matching laundry")) {
                 errorMessage = "Não encontramos uma lavanderia com esse email e telefone. Verifique se estão corretos.";
               } else if (error.message.includes("Invalid login")) {
-                errorMessage = "Credenciais inválidas. Se esta é sua primeira vez fazendo login, tente criar uma conta primeiro.";
+                errorMessage = "Credenciais inválidas. Verifique se o email e telefone estão corretos.";
               }
             }
             
@@ -79,39 +60,9 @@ export const useAuthForm = (expectedRole: string = 'user') => {
               title: "Erro de autenticação",
               description: errorMessage
             });
-            
-            // Attempt to create a user account if authentication failed
-            console.log("Attempting to create user account after failed login");
-            try {
-              sonnerToast.info("Tentando criar uma nova conta");
-              
-              const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-                email: email.trim(),
-                password: password.trim()
-              });
-              
-              if (signUpError) {
-                console.error("Error creating user account:", signUpError);
-                sonnerToast.error("Erro ao criar conta");
-              } else if (signUpData.user) {
-                console.log("User account created successfully, attempting login");
-                sonnerToast.success("Conta criada com sucesso! Tentando login...");
-                
-                try {
-                  await signIn(email.trim(), password.trim());
-                  sonnerToast.success("Login realizado com sucesso!");
-                } catch (loginError) {
-                  console.error("Login after signup failed:", loginError);
-                  sonnerToast.error("Erro ao fazer login após criar a conta");
-                }
-              }
-            } catch (signUpAttemptError) {
-              console.error("Error in signup attempt:", signUpAttemptError);
-              sonnerToast.error("Erro ao tentar criar conta");
-            }
           }
         } else {
-          // Login normal para outros tipos de usuário
+          // Normal login for other user types
           try {
             await signIn(email.trim(), password.trim());
             sonnerToast.success("Login realizado com sucesso!");
@@ -125,12 +76,12 @@ export const useAuthForm = (expectedRole: string = 'user') => {
           }
         }
       } else {
-        // Fluxo de cadastro
+        // Registration flow
         try {
           await signUp(email.trim(), password.trim());
           sonnerToast.success("Registro realizado com sucesso!");
           
-          // Adicionar role baseado no contexto da tela de autenticação
+          // Add role based on authentication screen context
           if (expectedRole) {
             // Fix: Cast the expectedRole to the appropriate union type
             const validRole = (expectedRole === 'admin' || expectedRole === 'business' || expectedRole === 'user') 

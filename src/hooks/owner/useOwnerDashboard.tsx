@@ -38,7 +38,8 @@ export function useOwnerDashboard(): UseOwnerDashboardReturn {
   const { 
     data: ownerLaundries = [], 
     isLoading: isLoadingLaundries,
-    error: laundriesError 
+    error: laundriesError,
+    refetch: refetchLaundries 
   } = useLaundries({ 
     ownerId: !isAdmin ? user?.id : undefined,
     forceShowAll: isAdmin,
@@ -48,6 +49,8 @@ export function useOwnerDashboard(): UseOwnerDashboardReturn {
       staleTime: 30000,
     }
   });
+
+  console.log("Owner laundries fetched:", ownerLaundries);
 
   // Get location selection
   const { selectedLocation, setSelectedLocation } = useLocationSelection(ownerLaundries);
