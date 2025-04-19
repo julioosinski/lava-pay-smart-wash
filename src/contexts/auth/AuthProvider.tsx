@@ -39,12 +39,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         (event, newSession) => {
           console.log("Auth state changed:", event);
           
-          // Fix the TypeScript error by using a type-safe approach to check events
           if (event === 'SIGNED_OUT') {
             // Clear the session and user state
             setSession(null);
             setUser(null);
-            console.log("User signed out");
+            console.log("User signed out, redirecting to auth page");
+            navigate('/auth', { replace: true });
           } else {
             // Update session and user for other events
             setSession(newSession);
@@ -111,7 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setInitialized(true);
         setLoading(false);
       }
-    }, 3000); // Reduced from 5000ms to 3000ms for faster fallback
+    }, 3000);
 
     setupAuth();
     

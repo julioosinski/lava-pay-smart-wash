@@ -30,10 +30,8 @@ export const useSignOut = ({ setUser, setSession, setLoading, navigate }: SignOu
         toast.success("Você foi desconectado com sucesso");
         
         // Forced navigation to auth page with replace to prevent going back
-        setTimeout(() => {
-          console.log("Navigating to auth page after logout");
-          navigate('/auth', { replace: true });
-        }, 100);
+        console.log("Navigating to auth page after logout");
+        navigate('/auth', { replace: true });
       }
     } catch (error) {
       console.error("Exception during sign out process:", error);
