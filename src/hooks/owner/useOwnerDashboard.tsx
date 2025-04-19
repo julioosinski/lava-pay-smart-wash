@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useLaundries } from "@/hooks/useLaundries";
 import { useMachines } from "@/hooks/useMachines";
@@ -64,7 +63,7 @@ export function useOwnerDashboard(): UseOwnerDashboardReturn {
   
   // Fetch owner laundries, with forceShowAll only if user is admin
   const { 
-    data: ownerLaundries = [], 
+    data: ownerLaundries = [] as LaundryLocation[], 
     isLoading: isLoadingLaundries,
     error: laundriesError,
     refetch: refetchLaundries
@@ -132,7 +131,7 @@ export function useOwnerDashboard(): UseOwnerDashboardReturn {
   
   // Fetch all machines 
   const { 
-    data: allMachines = [], 
+    data: allMachines = [] as Machine[], 
     isLoading: isLoadingMachines,
     error: machinesError
   } = useMachines();
@@ -158,7 +157,7 @@ export function useOwnerDashboard(): UseOwnerDashboardReturn {
 
   // Get payments for all machines
   const { 
-    data: allPayments = [], 
+    data: allPayments = [] as Payment[], 
     isLoading: isLoadingPayments,
     error: paymentsError
   } = usePayments();

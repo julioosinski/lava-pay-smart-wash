@@ -21,7 +21,7 @@ interface LaundryTabProps {
 
 export function LaundryTab({ searchQuery, onSearchChange, laundries: externalLaundries }: LaundryTabProps) {
   // Only fetch laundries if they weren't provided externally
-  const { data: fetchedLaundries = [], isLoading } = useLaundries({ 
+  const { data: fetchedLaundries = [] as LaundryLocation[], isLoading } = useLaundries({ 
     forceShowAll: true,
     // Skip fetch if laundries were provided externally
     options: { enabled: !externalLaundries }

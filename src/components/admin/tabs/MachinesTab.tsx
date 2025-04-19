@@ -17,7 +17,7 @@ interface MachinesTabProps {
 }
 
 export function MachinesTab({ machines, searchQuery, onSearchChange }: MachinesTabProps) {
-  const { data: laundries = [] } = useLaundries();
+  const { data: laundries = [] as LaundryLocation[] } = useLaundries();
   const [selectedLaundryId, setSelectedLaundryId] = useState<string>("all");
   const deleteMachine = useDeleteMachine();
   const [machineToDelete, setMachineToDelete] = useState<Machine | null>(null);

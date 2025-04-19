@@ -18,7 +18,7 @@ export default function LaundryDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   
   // Force showing all laundries to find the one with the matching ID
-  const { data: laundries = [] } = useLaundries({ forceShowAll: true });
+  const { data: laundries = [] as LaundryLocation[] } = useLaundries({ forceShowAll: true });
   const { data: machines = [], isLoading: machinesLoading } = useMachines(laundryId);
   const { data: payments = [], isLoading: paymentsLoading } = usePayments(laundryId);
   

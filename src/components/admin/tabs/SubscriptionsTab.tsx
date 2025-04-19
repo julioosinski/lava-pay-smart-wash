@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { SubscriptionForm } from "../SubscriptionForm";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { LaundryLocation } from "@/types";
+import { LaundryLocation, Subscription } from "@/types";
 
 interface SubscriptionsTabProps {
   searchQuery: string;
@@ -20,7 +20,7 @@ interface SubscriptionsTabProps {
 
 export function SubscriptionsTab({ searchQuery, onSearchChange }: SubscriptionsTabProps) {
   const [selectedLaundryId, setSelectedLaundryId] = useState<string>("all");
-  const { data: laundries = [] } = useLaundries();
+  const { data: laundries = [] as LaundryLocation[] } = useLaundries();
   const { data: subscriptions = [], isLoading } = useSubscriptions(selectedLaundryId === "all" ? undefined : selectedLaundryId);
 
   const formatCurrency = (value: number) => {

@@ -11,7 +11,7 @@ export interface UseFetchLaundriesOptions {
 }
 
 export function useFetchLaundries(options?: UseFetchLaundriesOptions) {
-  return useQuery({
+  return useQuery<LaundryLocation[], Error>({
     queryKey: ['laundries', options?.ownerId, options?.forceShowAll],
     queryFn: async () => {
       try {
@@ -40,7 +40,7 @@ export function useFetchLaundries(options?: UseFetchLaundriesOptions) {
         return laundries;
       } catch (error) {
         console.error("Error in useFetchLaundries hook:", error);
-        throw error;
+        throw error as Error;
       }
     },
     ...(options?.options || {})

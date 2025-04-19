@@ -15,7 +15,7 @@ export default function Admin() {
   const [activeTab, setActiveTab] = useState("locations");
   
   // Force showing all laundries for admin
-  const { data: allLaundries = [] } = useLaundries({ forceShowAll: true });
+  const { data: allLaundries = [] as LaundryLocation[] } = useLaundries({ forceShowAll: true });
   const { data: machines = [] } = useMachines();
 
   return (
@@ -47,7 +47,7 @@ export default function Admin() {
             <LaundryTab
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
-              laundries={allLaundries as LaundryLocation[]}
+              laundries={allLaundries}
             />
           </TabsContent>
 
