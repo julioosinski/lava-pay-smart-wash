@@ -10,6 +10,7 @@ import { PaymentsTab } from "@/components/admin/tabs/PaymentsTab";
 import { useMachines } from "@/hooks/useMachines";
 import { usePayments } from "@/hooks/usePayments";
 import { useLaundries } from "@/hooks/useLaundries";
+import { LaundryLocation } from "@/types";
 
 export default function LaundryDashboard() {
   const { laundryId } = useParams();

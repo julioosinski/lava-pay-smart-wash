@@ -1,7 +1,7 @@
 
 import { Card } from "@/components/ui/card";
 import { SearchBar } from "../SearchBar";
-import { Machine } from "@/types";
+import { Machine, LaundryLocation } from "@/types";
 import { useLaundries } from "@/hooks/useLaundries";
 import { useDeleteMachine } from "@/hooks/useMachines";
 import { useState } from "react";

@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { SubscriptionForm } from "../SubscriptionForm";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { LaundryLocation } from "@/types";
 
 interface SubscriptionsTabProps {
   searchQuery: string;

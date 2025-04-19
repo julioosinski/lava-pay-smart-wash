@@ -8,6 +8,7 @@ import { SubscriptionsTab } from "@/components/admin/tabs/SubscriptionsTab";
 import { MachinesTab } from "@/components/admin/tabs/MachinesTab";
 import { useMachines } from "@/hooks/useMachines";
 import { useLaundries } from "@/hooks/useLaundries";
+import { LaundryLocation } from "@/types";
 
 export default function Admin() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -46,7 +47,7 @@ export default function Admin() {
             <LaundryTab
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
-              laundries={allLaundries}
+              laundries={allLaundries as LaundryLocation[]}
             />
           </TabsContent>
 

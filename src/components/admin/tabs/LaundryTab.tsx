@@ -28,7 +28,7 @@ export function LaundryTab({ searchQuery, onSearchChange, laundries: externalLau
   });
   
   // Use external laundries if provided, otherwise use fetched laundries
-  const laundries = externalLaundries || fetchedLaundries;
+  const laundries: LaundryLocation[] = externalLaundries || fetchedLaundries;
   
   const { data: allMachines = [] } = useMachines();
   const [selectedLaundry, setSelectedLaundry] = useState<LaundryLocation | null>(null);

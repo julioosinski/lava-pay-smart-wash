@@ -145,7 +145,7 @@ export function useOwnerDashboard(): UseOwnerDashboardReturn {
   }, [machinesError]);
   
   // Filter machines based on user role
-  let ownerMachines = allMachines;
+  let ownerMachines: Machine[] = allMachines;
   
   // If not admin, only show machines for owner's laundries
   if (!isAdmin && ownerLaundryIds.length > 0) {
@@ -173,7 +173,7 @@ export function useOwnerDashboard(): UseOwnerDashboardReturn {
   // Get all machine IDs
   const ownerMachineIds = ownerMachines.map(machine => machine.id);
   const ownerPayments = allPayments.filter(payment => 
-    ownerMachineIds.includes(payment.machine_id)
+    ownerMachineIds.includes(payment.machine_id || '')
   );
 
   console.log("Owner payments filtered:", ownerPayments);
