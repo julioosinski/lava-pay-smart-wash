@@ -1,20 +1,21 @@
 
 import { useState } from "react";
 import { Layout } from "@/components/Layout";
-import { Machine } from "@/types";
-import { mockMachines } from "@/lib/mockData";
+import { LaundryLocation, Machine } from "@/types";
 import { usePaymentProcessing } from "@/hooks/usePaymentProcessing";
 import { useMachineMonitoring } from "@/hooks/useMachineMonitoring";
+import { useLaundries } from "@/hooks/useLaundries";
+import { useMachines } from "@/hooks/useMachines";
+import { LaundrySelection } from "@/components/totem/LaundrySelection";
 import { MachineSelection } from "@/components/totem/MachineSelection";
 import { PaymentMethodSelector } from "@/components/totem/PaymentMethodSelector";
 import { ProcessingPayment } from "@/components/totem/ProcessingPayment";
 import { PaymentSuccess } from "@/components/totem/PaymentSuccess";
 import { PaymentError } from "@/components/totem/PaymentError";
 
-const availableMachines = mockMachines.filter(machine => machine.status === "available");
-
 export default function Totem() {
-  const [step, setStep] = useState<"select-machine" | "payment" | "processing" | "success" | "error">("select-machine");
+  const [step, setStep] = useState<"select-laundry" | "select-machine" | "payment" | "processing" | "success" | "error">("select-laundry");
+  const [selectedLaundry, setSelectedLaundry] = useState<LaundryLocation | null>(null);
   const [selectedMachine, setSelectedMachine] = useState<Machine | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<"credit" | "debit" | "pix">("credit");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -27,6 +28,10 @@ export default function Totem() {
     securityCode: ""
   });
 
+  // Fetch laundries and machines
+  const { data: laundries = [] } = useLaundries();
+  const { data: machines = [] } = useMachines(selectedLaundry?.id);
+
   const { processPayment, isProcessing: paymentIsProcessing } = usePaymentProcessing({
     onSuccess: () => setStep("success"),
     onError: () => setStep("error")
@@ -34,9 +39,21 @@ export default function Totem() {
 
   useMachineMonitoring();
 
+  const handleLaundrySelect = (laundry: LaundryLocation) => {
+    setSelectedLaundry(laundry);
+    setStep("select-machine");
+  };
+
   const handleMachineSelect = (machine: Machine) => {
     setSelectedMachine(machine);
     setStep("payment");
+  };
+
+  const handleBackToLaundries = () => {
+    setSelectedLaundry(null);
+    setSelectedMachine(null);
+    setStep("select-laundry");
+    setPixQRCode(null);
   };
 
   const handleBackToMachines = () => {
@@ -101,9 +118,20 @@ export default function Totem() {
     );
   };
 
+  // Filter available machines for the selected laundry
+  const availableMachines = machines.filter(machine => 
+    machine.status === "available" && machine.laundry_id === selectedLaundry?.id
+  );
+
   return (
     <Layout>
-      {step === "select-machine" && (
+      {step === "select-laundry" && (
+        <LaundrySelection 
+          laundries={laundries} 
+          onLaundrySelect={handleLaundrySelect}
+        />
+      )}
+      {step === "select-machine" && selectedLaundry && (
         <MachineSelection 
           machines={availableMachines} 
           onMachineSelect={handleMachineSelect}
@@ -125,13 +153,13 @@ export default function Totem() {
       {step === "success" && (
         <PaymentSuccess 
           machine={selectedMachine}
-          onBackToStart={handleBackToMachines}
+          onBackToStart={handleBackToLaundries}
         />
       )}
       {step === "error" && (
         <PaymentError
           onRetry={handleBackToPayment}
-          onBackToStart={handleBackToMachines}
+          onBackToStart={handleBackToLaundries}
         />
       )}
     </Layout>
