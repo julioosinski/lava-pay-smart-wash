@@ -32,7 +32,6 @@ export function usePaymentProcessing({ onSuccess, onError }: UsePaymentProcessin
       // Create payment record in Supabase
       const paymentData = {
         machine_id: machine.id,
-        laundry_id: machine.laundry_id,
         amount: amount,
         method: paymentMethod,
         status: 'pending',
