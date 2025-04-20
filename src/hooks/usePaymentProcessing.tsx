@@ -2,8 +2,9 @@
 import { useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Machine, Payment } from "@/types";
+import { Machine } from "@/types";
 import { getMachineStatus } from "@/services/machineService";
+import { createPayment } from "@/services/mercadoPagoService";
 
 interface UsePaymentProcessingProps {
   onSuccess?: () => void;
@@ -57,17 +58,22 @@ export function usePaymentProcessing({ onSuccess, onError }: UsePaymentProcessin
       
       console.log("Payment record created:", payment);
 
-      // Simulate payment processing with a delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Process payment with MercadoPago
+      const mercadoPagoResponse = await createPayment(
+        amount,
+        `Pagamento Máquina #${machine.id}`,
+        machine.laundry_id,
+        paymentMethod
+      );
       
-      // For demonstration purposes: 90% success rate
-      const success = Math.random() > 0.1;
-      
-      if (success) {
+      if (mercadoPagoResponse.status === 'approved') {
         // Update payment status to approved
         const { error: updateError } = await supabase
           .from('payments')
-          .update({ status: 'approved' })
+          .update({ 
+            status: 'approved',
+            transaction_id: mercadoPagoResponse.transactionId
+          })
           .eq('id', payment.id);
           
         if (updateError) {
