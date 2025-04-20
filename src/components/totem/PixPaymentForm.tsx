@@ -25,7 +25,11 @@ export function PixPaymentForm({ qrCode, onGenerateQRCode }: PixPaymentFormProps
         {qrCode ? (
           <div className="flex flex-col items-center space-y-4">
             <div className="border-2 border-lavapay-100 p-4 rounded-md inline-block">
-              <img src={`data:image/png;base64,${qrCode}`} alt="QR Code PIX" className="h-48 w-48" />
+              <img 
+                src={`data:image/png;base64,${qrCode}`} 
+                alt="QR Code PIX" 
+                className="h-48 w-48" 
+              />
             </div>
             <p className="text-sm text-gray-500">
               Escaneie o código acima com o aplicativo do seu banco ou carteira digital

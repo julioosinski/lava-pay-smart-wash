@@ -20,6 +20,7 @@ interface PaymentMethodSelectorProps {
   selectedMachine: Machine;
   onBackClick: () => void;
   onPaymentSubmit: (method: 'credit' | 'debit' | 'pix') => void;
+  onPaymentMethodChange?: (method: "credit" | "debit" | "pix") => void;
   cardDetails: {
     cardNumber: string;
     cardholderName: string;
@@ -37,6 +38,7 @@ export function PaymentMethodSelector({
   selectedMachine,
   onBackClick,
   onPaymentSubmit,
+  onPaymentMethodChange,
   cardDetails,
   onCardDetailsChange,
   isCardFormValid,
@@ -54,7 +56,14 @@ export function PaymentMethodSelector({
 
       <PaymentSummary machine={selectedMachine} />
       
-      <Tabs defaultValue="credit">
+      <Tabs 
+        defaultValue="credit" 
+        onValueChange={(value) => {
+          if (onPaymentMethodChange && (value === 'credit' || value === 'debit' || value === 'pix')) {
+            onPaymentMethodChange(value as "credit" | "debit" | "pix");
+          }
+        }}
+      >
         <TabsList className="grid grid-cols-3 mb-4">
           <TabsTrigger value="credit" className="flex items-center gap-2">
             <CreditCard className="h-4 w-4" /> Crédito
