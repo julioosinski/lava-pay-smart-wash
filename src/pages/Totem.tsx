@@ -18,7 +18,6 @@ export default function Totem() {
   const [selectedLaundry, setSelectedLaundry] = useState<LaundryLocation | null>(null);
   const [selectedMachine, setSelectedMachine] = useState<Machine | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<"credit" | "debit" | "pix">("credit");
-  const [isProcessing, setIsProcessing] = useState(false);
   const [pixQRCode, setPixQRCode] = useState<string | null>(null);
   const [cardDetails, setCardDetails] = useState({
     cardNumber: "",
@@ -28,23 +27,28 @@ export default function Totem() {
     securityCode: ""
   });
 
-  // Fetch laundries and machines
-  const { data: laundries = [] } = useLaundries();
-  const { data: machines = [] } = useMachines(selectedLaundry?.id);
+  // Fetch laundries
+  const { data: laundries = [], isLoading: laundriesLoading } = useLaundries();
+  
+  // Fetch machines only when a laundry is selected
+  const { data: machines = [], isLoading: machinesLoading } = useMachines(selectedLaundry?.id);
 
   const { processPayment, isProcessing: paymentIsProcessing } = usePaymentProcessing({
     onSuccess: () => setStep("success"),
     onError: () => setStep("error")
   });
 
-  useMachineMonitoring();
+  // Start monitoring machine status
+  useMachineMonitoring(selectedLaundry?.id);
 
   const handleLaundrySelect = (laundry: LaundryLocation) => {
+    console.log("Laundry selected:", laundry);
     setSelectedLaundry(laundry);
     setStep("select-machine");
   };
 
   const handleMachineSelect = (machine: Machine) => {
+    console.log("Machine selected:", machine);
     setSelectedMachine(machine);
     setStep("payment");
   };
@@ -64,7 +68,6 @@ export default function Totem() {
 
   const handleBackToPayment = () => {
     setStep("payment");
-    setIsProcessing(false);
     setPixQRCode(null);
   };
 
@@ -78,7 +81,6 @@ export default function Totem() {
   const handleCardPayment = async () => {
     if (!selectedMachine) return;
 
-    setIsProcessing(true);
     setStep("processing");
 
     try {
@@ -95,16 +97,24 @@ export default function Totem() {
 
   const handlePixPayment = async () => {
     if (!selectedMachine) return;
-
-    setIsProcessing(true);
     
     try {
-      await processPayment(selectedMachine, 'pix', selectedMachine.price);
+      // Gerar QR Code do PIX aqui
+      setPixQRCode("pix-qrcode-placeholder");
+      
+      // Em um caso real, você processaria o pagamento quando confirmado
+      // Para este exemplo, simulamos o processamento após um delay
+      setTimeout(async () => {
+        try {
+          await processPayment(selectedMachine, 'pix', selectedMachine.price);
+        } catch (error) {
+          console.error("Erro no pagamento PIX:", error);
+          setStep("error");
+        }
+      }, 3000);
     } catch (error) {
-      console.error("Erro no pagamento PIX:", error);
+      console.error("Erro ao gerar QR Code PIX:", error);
       setStep("error");
-    } finally {
-      setIsProcessing(false);
     }
   };
 
@@ -118,10 +128,11 @@ export default function Totem() {
     );
   };
 
-  // Filter available machines for the selected laundry
-  const availableMachines = machines.filter(machine => 
-    machine.status === "available" && machine.laundry_id === selectedLaundry?.id
-  );
+  console.log("Current step:", step);
+  console.log("Laundries:", laundries);
+  console.log("Selected laundry:", selectedLaundry);
+  console.log("Machines:", machines);
+  console.log("Selected machine:", selectedMachine);
 
   return (
     <Layout>
@@ -129,12 +140,15 @@ export default function Totem() {
         <LaundrySelection 
           laundries={laundries} 
           onLaundrySelect={handleLaundrySelect}
+          loading={laundriesLoading}
         />
       )}
       {step === "select-machine" && selectedLaundry && (
         <MachineSelection 
-          machines={availableMachines} 
+          machines={machines} 
           onMachineSelect={handleMachineSelect}
+          onBackClick={handleBackToLaundries}
+          loading={machinesLoading}
         />
       )}
       {step === "payment" && selectedMachine && (
