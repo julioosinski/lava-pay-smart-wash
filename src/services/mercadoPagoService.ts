@@ -52,7 +52,7 @@ export async function createPayment(
     };
 
     // Use the correct method to create payment with v2 API
-    const response = await client.payment.create(paymentData);
+    const response = await client.payments.create(paymentData);
 
     return {
       status: response.status,
