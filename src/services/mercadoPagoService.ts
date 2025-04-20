@@ -41,10 +41,8 @@ export async function createPayment(
       throw new Error('Configuração de pagamento não encontrada');
     }
 
-    const mercadopago = new MercadoPago({
-      accessToken: config.accessToken,
-      options: { timeout: 5000 }
-    });
+    // Initialize MercadoPago client correctly according to v2 API
+    const client = new MercadoPago({ accessToken: config.accessToken });
 
     const paymentData = {
       transaction_amount: amount,
@@ -53,8 +51,8 @@ export async function createPayment(
       installments: 1
     };
 
-    // Use the payments.create method instead of directly accessing payment property
-    const response = await mercadopago.payments.create(paymentData);
+    // Use the correct method to create payment with v2 API
+    const response = await client.payment.create(paymentData);
 
     return {
       status: response.status,
