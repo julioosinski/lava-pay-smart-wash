@@ -53,7 +53,8 @@ export async function createPayment(
       installments: 1
     };
 
-    const response = await mercadopago.payment.create(paymentData);
+    // Use the payments.create method instead of directly accessing payment property
+    const response = await mercadopago.payments.create(paymentData);
 
     return {
       status: response.status,
