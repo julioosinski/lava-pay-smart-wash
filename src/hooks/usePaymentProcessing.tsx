@@ -29,13 +29,17 @@ export function usePaymentProcessing({ onSuccess, onError }: UsePaymentProcessin
         throw new Error('Esta máquina não está mais disponível');
       }
 
+      // Get current user info
+      const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id || 'anonymous';
+
       // Create payment record in Supabase
       const paymentData = {
         machine_id: machine.id,
         amount: amount,
         method: paymentMethod,
         status: 'pending',
-        user_id: (await supabase.auth.getUser()).data.user?.id || 'anonymous'
+        user_id: userId
       };
       
       console.log("Creating payment record:", paymentData);
