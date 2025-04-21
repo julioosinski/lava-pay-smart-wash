@@ -183,9 +183,11 @@ export type Database = {
           id: string
           integration_id: string | null
           laundry_id: string
+          merchant_name: string | null
           provider: string
           public_key: string | null
           sandbox_mode: boolean
+          stone_code: string | null
           updated_at: string
         }
         Insert: {
@@ -194,9 +196,11 @@ export type Database = {
           id?: string
           integration_id?: string | null
           laundry_id: string
+          merchant_name?: string | null
           provider?: string
           public_key?: string | null
           sandbox_mode?: boolean
+          stone_code?: string | null
           updated_at?: string
         }
         Update: {
@@ -205,9 +209,11 @@ export type Database = {
           id?: string
           integration_id?: string | null
           laundry_id?: string
+          merchant_name?: string | null
           provider?: string
           public_key?: string | null
           sandbox_mode?: boolean
+          stone_code?: string | null
           updated_at?: string
         }
         Relationships: [

@@ -42,3 +42,4 @@ For full Stone TEF integration with physical card readers, you'll need to:
 3. Create appropriate native modules for React Native
 
 The current implementation provides a web-compatible mock that simulates Stone payments for testing and development purposes.
+

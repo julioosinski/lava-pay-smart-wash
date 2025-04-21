@@ -148,7 +148,7 @@ export async function processStonePayment(options: PaymentOptions): Promise<Paym
         .eq('id', payment.id);
     }
 
-    return result;
+    return result as PaymentResult;
   } catch (error) {
     console.error('Error processing Stone payment:', error);
     throw error;
