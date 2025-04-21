@@ -84,13 +84,16 @@ export function usePaymentProcessing({ onSuccess, onError }: UsePaymentProcessin
         }
         
         // Elgin só suporta crédito e débito, então tratamos PIX como crédito
-        // Convertemos o tipo explicitamente para satisfazer o TypeScript
-        const elginPaymentMethod = paymentMethod === 'pix' ? 'credit' as const : paymentMethod === 'credit' ? 'credit' as const : 'debit' as const;
+        const elginPaymentMethod = paymentMethod === 'pix' ? 'credit' : 
+                                 paymentMethod === 'credit' ? 'credit' : 'debit';
+        
+        // Usamos uma asserção de tipo para garantir que o TypeScript aceite este valor
+        type ElginPaymentType = 'credit' | 'debit';
         
         const elginResponse = await processElginPayment({
           amount,
           description: `Pagamento Máquina #${machine.id}`,
-          paymentMethod: elginPaymentMethod,
+          paymentMethod: elginPaymentMethod as ElginPaymentType,
           machineId: machine.id,
           userId,
           laundryId: machine.laundry_id,
@@ -106,13 +109,16 @@ export function usePaymentProcessing({ onSuccess, onError }: UsePaymentProcessin
         }
       } else if (useStone) {
         // Stone só suporta crédito e débito, então tratamos PIX como crédito
-        // Convertemos o tipo explicitamente para satisfazer o TypeScript
-        const stonePaymentMethod = paymentMethod === 'pix' ? 'credit' as const : paymentMethod === 'credit' ? 'credit' as const : 'debit' as const;
+        const stonePaymentMethod = paymentMethod === 'pix' ? 'credit' : 
+                                 paymentMethod === 'credit' ? 'credit' : 'debit';
+        
+        // Usamos uma asserção de tipo para garantir que o TypeScript aceite este valor
+        type StonePaymentType = 'credit' | 'debit';
         
         const stoneResponse = await processStonePayment({
           amount,
           description: `Pagamento Máquina #${machine.id}`,
-          paymentMethod: stonePaymentMethod,
+          paymentMethod: stonePaymentMethod as StonePaymentType,
           machineId: machine.id,
           userId,
           laundryId: machine.laundry_id,
