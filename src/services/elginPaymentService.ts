@@ -51,10 +51,16 @@ async function getElginConfig(laundryId: string): Promise<PaymentConfig | null> 
       return null;
     }
 
+    // Make sure all required fields exist before returning
+    if (!settings.client_id || !settings.client_secret || !settings.merchant_name) {
+      console.error('Configurações de pagamento Elgin incompletas');
+      return null;
+    }
+
     return {
-      clientId: settings.client_id || '',
-      clientSecret: settings.client_secret || '',
-      merchantName: settings.merchant_name || '',
+      clientId: settings.client_id,
+      clientSecret: settings.client_secret,
+      merchantName: settings.merchant_name,
       sandboxMode: settings.sandbox_mode || true
     };
   } catch (error) {
