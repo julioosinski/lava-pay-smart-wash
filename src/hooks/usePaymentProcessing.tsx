@@ -59,34 +59,21 @@ export function usePaymentProcessing({ onSuccess, onError }: UsePaymentProcessin
 
       let success = false;
 
+      // Helper function to convert payment method
+      const convertPaymentMethod = (method: PaymentMethod): 'credit' | 'debit' => {
+        if (method === 'pix') {
+          console.log(`PIX não suportado diretamente. Usando crédito como fallback.`);
+          return 'credit';
+        }
+        return method;
+      };
+
       if (useElgin) {
-        // Para o Elgin, o método de pagamento precisa ser 'credit' ou 'debit'
-        if (paymentMethod === 'pix') {
-          console.log('PIX não é suportado diretamente pela Elgin, usando crédito como fallback');
-          success = await processElginTefPayment(machine, 'credit', amount, userId);
-        } else {
-          // Aqui fazemos uma conversão segura do tipo para garantir que é 'credit' ou 'debit'
-          success = await processElginTefPayment(
-            machine, 
-            paymentMethod as 'credit' | 'debit', // Use type assertion since we know it's not 'pix' here
-            amount, 
-            userId
-          );
-        }
+        const elginMethod = convertPaymentMethod(paymentMethod);
+        success = await processElginTefPayment(machine, elginMethod, amount, userId);
       } else if (useStone) {
-        // Para o Stone, mesmo caso - o método de pagamento precisa ser 'credit' ou 'debit'
-        if (paymentMethod === 'pix') {
-          console.log('PIX não é suportado diretamente pela Stone, usando crédito como fallback');
-          success = await processStoneCardPayment(machine, 'credit', amount, userId);
-        } else {
-          // Aqui também fazemos uma conversão segura do tipo
-          success = await processStoneCardPayment(
-            machine,
-            paymentMethod as 'credit' | 'debit', // Use type assertion since we know it's not 'pix' here
-            amount,
-            userId
-          );
-        }
+        const stoneMethod = convertPaymentMethod(paymentMethod);
+        success = await processStoneCardPayment(machine, stoneMethod, amount, userId);
       } else {
         success = await processMercadoPagoPayment(machine, paymentMethod, amount, userId);
       }
@@ -109,3 +96,4 @@ export function usePaymentProcessing({ onSuccess, onError }: UsePaymentProcessin
     initializeElgin
   };
 }
+
