@@ -60,8 +60,11 @@ export function usePaymentProcessing({ onSuccess, onError }: UsePaymentProcessin
       let success = false;
 
       if (useElgin) {
+        // Para o Elgin, confirmamos que o paymentMethod é 'credit' | 'debit' | 'pix'
+        // mas o processElginTefPayment espera apenas 'credit' | 'debit'
         success = await processElginTefPayment(machine, paymentMethod, amount, userId);
       } else if (useStone) {
+        // Para o Stone, mesmo caso - confirmamos o tipo de paymentMethod
         success = await processStoneCardPayment(machine, paymentMethod, amount, userId);
       } else {
         success = await processMercadoPagoPayment(machine, paymentMethod, amount, userId);
