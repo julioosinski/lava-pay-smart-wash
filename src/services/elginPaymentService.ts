@@ -33,24 +33,29 @@ interface PaymentResult {
  * Obtém a configuração de pagamento da Elgin para a lavanderia
  */
 async function getElginConfig(laundryId: string): Promise<PaymentConfig | null> {
-  const { data: settings, error } = await supabase
-    .from('payment_settings')
-    .select('client_id, client_secret, merchant_name, sandbox_mode')
-    .eq('laundry_id', laundryId)
-    .eq('provider', 'elgin_tef')
-    .single();
+  try {
+    const { data: settings, error } = await supabase
+      .from('payment_settings')
+      .select('client_id, client_secret, merchant_name, sandbox_mode')
+      .eq('laundry_id', laundryId)
+      .eq('provider', 'elgin_tef')
+      .maybeSingle();
 
-  if (error || !settings) {
-    console.error('Erro ao buscar configurações de pagamento Elgin:', error);
+    if (error || !settings) {
+      console.error('Erro ao buscar configurações de pagamento Elgin:', error);
+      return null;
+    }
+
+    return {
+      clientId: settings.client_id || '',
+      clientSecret: settings.client_secret || '',
+      merchantName: settings.merchant_name || '',
+      sandboxMode: settings.sandbox_mode || true
+    };
+  } catch (error) {
+    console.error('Erro ao buscar configurações Elgin:', error);
     return null;
   }
-
-  return {
-    clientId: settings.client_id || '',
-    clientSecret: settings.client_secret || '',
-    merchantName: settings.merchant_name || '',
-    sandboxMode: settings.sandbox_mode || true
-  };
 }
 
 /**
