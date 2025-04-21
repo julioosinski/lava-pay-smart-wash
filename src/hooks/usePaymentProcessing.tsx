@@ -96,4 +96,3 @@ export function usePaymentProcessing({ onSuccess, onError }: UsePaymentProcessin
     initializeElgin
   };
 }
-

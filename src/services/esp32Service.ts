@@ -24,8 +24,7 @@ export async function sendCommandToMachine(machine: Machine, command: ESP32Comma
     // });
     
     // Simulação do envio bem-sucedido do comando
-    // Como a tabela machine_commands ainda não existe no banco, vamos apenas
-    // registrar o evento no console por enquanto
+    // Registrando o comando no console para debug
     console.log('Comando enviado:', {
       machine_id: machine.id,
       command,
