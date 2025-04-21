@@ -1,22 +1,8 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Platform } from "@/utils/platform";
 import { NativeModules } from "@/utils/nativeModules";
 
-const { StonePayment } = NativeModules.StonePayment || {
-  processPayment: async () => {
-    console.log("Mock Stone payment processing");
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    if (Math.random() > 0.1) {
-      return {
-        transactionId: `stone_${Date.now()}`,
-        status: 'approved',
-      };
-    } else {
-      throw new Error('Pagamento rejeitado pela operadora');
-    }
-  }
-};
+const { StonePayment } = NativeModules;
 
 interface PaymentConfig {
   stoneCode: string;
@@ -43,7 +29,6 @@ async function getStoneConfig(laundryId: string): Promise<PaymentConfig | null> 
       return null;
     }
 
-    // Make sure all required fields exist before returning
     if (!settings.stone_code || !settings.merchant_name) {
       console.error('Configurações de pagamento Stone incompletas');
       return null;
@@ -71,20 +56,17 @@ export interface StonePaymentOptions {
 
 export async function processStonePayment(options: StonePaymentOptions) {
   try {
-    // Verifica se estamos em uma plataforma compatível
     if (Platform.OS !== 'android') {
       throw new Error('Pagamentos via Stone só estão disponíveis no Android');
     }
 
     console.log(`Processando pagamento via Stone para máquina ${options.machineId}`);
     
-    // Obtém as configurações da Stone para a lavanderia
     const config = await getStoneConfig(options.laundryId);
     if (!config) {
       throw new Error('Configuração de pagamento Stone não encontrada');
     }
     
-    // Registra o pagamento como pendente no banco de dados
     const { data: payment, error: paymentError } = await supabase
       .from('payments')
       .insert({
@@ -105,7 +87,6 @@ export async function processStonePayment(options: StonePaymentOptions) {
     
     console.log("Registro de pagamento criado:", payment);
 
-    // Processa o pagamento via Stone
     const result = await StonePayment.processPayment({
       amount: options.amount,
       description: options.description,
@@ -117,7 +98,6 @@ export async function processStonePayment(options: StonePaymentOptions) {
 
     console.log("Resultado do pagamento Stone:", result);
 
-    // Atualiza o pagamento com o resultado da transação
     if (result.status === 'approved') {
       await supabase
         .from('payments')
@@ -127,7 +107,6 @@ export async function processStonePayment(options: StonePaymentOptions) {
         })
         .eq('id', payment.id);
 
-      // Atualiza o status da máquina para em uso
       await supabase
         .from('machines')
         .update({ 

@@ -98,11 +98,14 @@ export function usePaymentProcessing({ onSuccess, onError }: UsePaymentProcessin
           throw new Error('Pagamento rejeitado pela operadora');
         }
       } else if (useStone) {
-        // Processa pagamento via Stone
+        // Fix: We need to handle PIX differently for Stone since it only supports credit and debit
+        // Processa pagamento via Stone - Stone não suporta PIX, então vamos usar crédito como padrão
+        const stonePaymentMethod = paymentMethod === 'pix' ? 'credit' : paymentMethod;
+        
         const stoneResponse = await processStonePayment({
           amount,
           description: `Pagamento Máquina #${machine.id}`,
-          paymentMethod: paymentMethod === 'pix' ? 'credit' : paymentMethod,
+          paymentMethod: stonePaymentMethod,
           machineId: machine.id,
           userId,
           laundryId: machine.laundry_id,
