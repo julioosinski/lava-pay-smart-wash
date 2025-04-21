@@ -1,21 +1,12 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Machine } from "@/types";
+import { Machine, MachineCommand } from "@/types";
 
 interface ESP32Command {
   command: 'start' | 'stop' | 'status';
   machineId: string;
   duration?: number;
-}
-
-interface MachineCommand {
-  machine_id: string;
-  command: string;
-  params?: Record<string, any>;
-  sent_at: string;
-  status: 'sent' | 'received' | 'error';
-  error_message?: string;
 }
 
 // Função para enviar comandos para o ESP32 da máquina
@@ -35,14 +26,17 @@ export async function sendCommandToMachine(machine: Machine, command: ESP32Comma
     const commandParams = duration ? { duration } : {};
     
     try {
-      const { error } = await supabase
-        .from('machine_commands')
+      // Use 'as any' to bypass TypeScript type checking for the machine_commands table
+      // since it's not in the generated types yet
+      const { error } = await (supabase
+        .from('machine_commands' as any)
         .insert({
           machine_id: machine.id,
           command,
           params: commandParams,
-          status: 'sent'
-        });
+          status: 'sent',
+          sent_at: new Date().toISOString()
+        } as any));
         
       if (error) console.error('Erro ao registrar comando:', error);
     } catch (e) {
