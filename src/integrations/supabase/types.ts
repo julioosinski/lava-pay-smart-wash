@@ -175,6 +175,7 @@ export type Database = {
           created_at: string
           current_payment_id: string | null
           current_session_start: string | null
+          elgin_terminal_id: string | null
           esp32_id: string | null
           esp32_password: string | null
           expected_end_time: string | null
@@ -182,8 +183,11 @@ export type Database = {
           laundry_id: string
           machine_number: number | null
           machine_serial: string
+          mercadopago_terminal_id: string | null
           price: number
           status: string | null
+          stone_code: string | null
+          stone_terminal_id: string | null
           store_id: string
           time_minutes: number
           type: string
@@ -193,6 +197,7 @@ export type Database = {
           created_at?: string
           current_payment_id?: string | null
           current_session_start?: string | null
+          elgin_terminal_id?: string | null
           esp32_id?: string | null
           esp32_password?: string | null
           expected_end_time?: string | null
@@ -200,8 +205,11 @@ export type Database = {
           laundry_id: string
           machine_number?: number | null
           machine_serial: string
+          mercadopago_terminal_id?: string | null
           price: number
           status?: string | null
+          stone_code?: string | null
+          stone_terminal_id?: string | null
           store_id: string
           time_minutes: number
           type: string
@@ -211,6 +219,7 @@ export type Database = {
           created_at?: string
           current_payment_id?: string | null
           current_session_start?: string | null
+          elgin_terminal_id?: string | null
           esp32_id?: string | null
           esp32_password?: string | null
           expected_end_time?: string | null
@@ -218,8 +227,11 @@ export type Database = {
           laundry_id?: string
           machine_number?: number | null
           machine_serial?: string
+          mercadopago_terminal_id?: string | null
           price?: number
           status?: string | null
+          stone_code?: string | null
+          stone_terminal_id?: string | null
           store_id?: string
           time_minutes?: number
           type?: string

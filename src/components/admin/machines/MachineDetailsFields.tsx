@@ -66,6 +66,66 @@ export function MachineDetailsFields({ form }: MachineDetailsFieldsProps) {
           </FormItem>
         )}
       />
+
+      <div className="space-y-4 border-t pt-4 mt-4">
+        <h3 className="font-medium text-sm">Credenciais das Operadoras</h3>
+        
+        <FormField
+          control={form.control}
+          name="stone_code"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Código Stone</FormLabel>
+              <FormControl>
+                <Input {...field} placeholder="Opcional" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="stone_terminal_id"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>ID do Terminal Stone</FormLabel>
+              <FormControl>
+                <Input {...field} placeholder="Opcional" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="elgin_terminal_id"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>ID do Terminal Elgin</FormLabel>
+              <FormControl>
+                <Input {...field} placeholder="Opcional" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="mercadopago_terminal_id"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>ID do Terminal MercadoPago</FormLabel>
+              <FormControl>
+                <Input {...field} placeholder="Opcional" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
     </>
   );
 }
