@@ -184,6 +184,9 @@ export type Database = {
           machine_number: number | null
           machine_serial: string
           mercadopago_terminal_id: string | null
+          mqtt_broker: string | null
+          mqtt_password: string | null
+          mqtt_username: string | null
           price: number
           status: string | null
           stone_code: string | null
@@ -192,6 +195,8 @@ export type Database = {
           time_minutes: number
           type: string
           updated_at: string
+          wifi_password: string | null
+          wifi_ssid: string | null
         }
         Insert: {
           created_at?: string
@@ -206,6 +211,9 @@ export type Database = {
           machine_number?: number | null
           machine_serial: string
           mercadopago_terminal_id?: string | null
+          mqtt_broker?: string | null
+          mqtt_password?: string | null
+          mqtt_username?: string | null
           price: number
           status?: string | null
           stone_code?: string | null
@@ -214,6 +222,8 @@ export type Database = {
           time_minutes: number
           type: string
           updated_at?: string
+          wifi_password?: string | null
+          wifi_ssid?: string | null
         }
         Update: {
           created_at?: string
@@ -228,6 +238,9 @@ export type Database = {
           machine_number?: number | null
           machine_serial?: string
           mercadopago_terminal_id?: string | null
+          mqtt_broker?: string | null
+          mqtt_password?: string | null
+          mqtt_username?: string | null
           price?: number
           status?: string | null
           stone_code?: string | null
@@ -236,6 +249,8 @@ export type Database = {
           time_minutes?: number
           type?: string
           updated_at?: string
+          wifi_password?: string | null
+          wifi_ssid?: string | null
         }
         Relationships: [
           {
