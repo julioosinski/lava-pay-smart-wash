@@ -1,5 +1,5 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Platform } from "react-native";
 import { toast } from "sonner";
 import { Layout } from "@/components/Layout";
 import { LaundryLocation, Machine } from "@/types";
@@ -31,7 +31,7 @@ export default function Totem() {
   const { data: laundries = [], isLoading: laundriesLoading } = useLaundries();
   const { data: machines = [], isLoading: machinesLoading } = useMachines(selectedLaundry?.id);
 
-  const { processPayment, isProcessing: paymentIsProcessing } = usePaymentProcessing({
+  const { processPayment, isProcessing: paymentIsProcessing, initializeStone } = usePaymentProcessing({
     onSuccess: () => {
       console.log("Payment successful, transitioning to success step");
       setStep("success");
@@ -43,6 +43,20 @@ export default function Totem() {
   });
 
   useMachineMonitoring(selectedLaundry?.id);
+
+  useEffect(() => {
+    if (selectedLaundry && Platform.OS === 'android') {
+      initializeStone(selectedLaundry.id)
+        .then(success => {
+          if (success) {
+            console.log('SDK da Stone inicializado com sucesso');
+          }
+        })
+        .catch(error => {
+          console.error('Erro ao inicializar SDK da Stone:', error);
+        });
+    }
+  }, [selectedLaundry]);
 
   const handleLaundrySelect = (laundry: LaundryLocation) => {
     console.log("Laundry selected:", laundry);
