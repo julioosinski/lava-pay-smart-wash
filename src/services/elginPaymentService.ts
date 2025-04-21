@@ -1,4 +1,3 @@
-
 import { Platform } from "@/utils/platform";
 import { NativeModules } from "@/utils/nativeModules";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,7 +35,7 @@ async function getElginConfig(laundryId: string): Promise<PaymentConfig | null> 
   try {
     const { data: settings, error } = await supabase
       .from('payment_settings')
-      .select('client_id, client_secret, merchant_name, sandbox_mode')
+      .select('*')
       .eq('laundry_id', laundryId)
       .eq('provider', 'elgin_tef')
       .maybeSingle();
