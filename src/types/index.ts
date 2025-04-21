@@ -29,6 +29,10 @@ export interface Machine {
   machine_number: number;
   store_id: string;
   machine_serial: string;
+  stone_code?: string;
+  stone_terminal_id?: string;
+  elgin_terminal_id?: string;
+  mercadopago_terminal_id?: string;
   current_session_start?: string;
   expected_end_time?: string;
   current_payment_id?: string;
