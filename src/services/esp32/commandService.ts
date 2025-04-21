@@ -13,7 +13,6 @@ export async function sendCommandToMachine(machine: Machine, command: ESP32Comma
   try {
     console.log(`Enviando comando ${command} para máquina ${machine.id} (ESP32)`);
     
-    // Em um ambiente real, aqui faria uma chamada para uma API que se comunica com o ESP32
     const commandParams = duration ? { duration } : {};
     
     try {

@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { checkESP32Connection, getMachineDetailedStatus } from '@/services/esp32Service';
+import { checkESP32Connection, getMachineDetailedStatus } from '@/services/esp32';
 
 interface MachineStatus {
   isConnected: boolean;

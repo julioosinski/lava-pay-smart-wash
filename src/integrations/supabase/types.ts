@@ -84,6 +84,50 @@ export type Database = {
         }
         Relationships: []
       }
+      esp32_settings: {
+        Row: {
+          created_at: string
+          id: string
+          laundry_id: string
+          mqtt_broker: string | null
+          mqtt_password: string | null
+          mqtt_username: string | null
+          updated_at: string
+          wifi_password: string | null
+          wifi_ssid: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          laundry_id: string
+          mqtt_broker?: string | null
+          mqtt_password?: string | null
+          mqtt_username?: string | null
+          updated_at?: string
+          wifi_password?: string | null
+          wifi_ssid?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          laundry_id?: string
+          mqtt_broker?: string | null
+          mqtt_password?: string | null
+          mqtt_username?: string | null
+          updated_at?: string
+          wifi_password?: string | null
+          wifi_ssid?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "esp32_settings_laundry_id_fkey"
+            columns: ["laundry_id"]
+            isOneToOne: true
+            referencedRelation: "laundries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       laundries: {
         Row: {
           address: string
@@ -131,6 +175,8 @@ export type Database = {
           created_at: string
           current_payment_id: string | null
           current_session_start: string | null
+          esp32_id: string | null
+          esp32_password: string | null
           expected_end_time: string | null
           id: string
           laundry_id: string
@@ -147,6 +193,8 @@ export type Database = {
           created_at?: string
           current_payment_id?: string | null
           current_session_start?: string | null
+          esp32_id?: string | null
+          esp32_password?: string | null
           expected_end_time?: string | null
           id?: string
           laundry_id: string
@@ -163,6 +211,8 @@ export type Database = {
           created_at?: string
           current_payment_id?: string | null
           current_session_start?: string | null
+          esp32_id?: string | null
+          esp32_password?: string | null
           expected_end_time?: string | null
           id?: string
           laundry_id?: string

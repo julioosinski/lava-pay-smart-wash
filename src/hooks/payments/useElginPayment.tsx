@@ -1,11 +1,10 @@
-
 import { useState } from 'react';
 import { toast } from "sonner";
 import { Machine } from "@/types";
 import { processElginPayment, initializeElginSDK } from "@/services/elginPaymentService";
 import { PaymentMethod } from "../usePaymentProcessing";
 import { Platform } from "@/utils/platform";
-import { sendCommandToMachine } from '@/services/esp32Service';
+import { sendCommandToMachine } from '@/services/esp32';
 
 // Definindo um tipo específico para os métodos de pagamento suportados pela Elgin
 type ElginPaymentType = 'credit' | 'debit';

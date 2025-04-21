@@ -3,7 +3,7 @@ import { Machine } from "@/types";
 import { processStonePayment } from "@/services/stonePaymentService";
 import { PaymentMethod } from "../usePaymentProcessing";
 import { toast } from "sonner";
-import { sendCommandToMachine } from '@/services/esp32Service';
+import { sendCommandToMachine } from '@/services/esp32';
 
 // Definindo um tipo específico para os métodos de pagamento suportados pela Stone
 type StonePaymentType = 'credit' | 'debit';

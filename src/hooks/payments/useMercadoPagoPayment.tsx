@@ -1,11 +1,10 @@
-
 import { useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Machine } from "@/types";
 import { createPayment } from "@/services/mercadoPagoService";
 import { PaymentMethod } from "../usePaymentProcessing";
-import { sendCommandToMachine } from '@/services/esp32Service';
+import { sendCommandToMachine } from '@/services/esp32';
 
 export function useMercadoPagoPayment() {
   const [isProcessing, setIsProcessing] = useState(false);
