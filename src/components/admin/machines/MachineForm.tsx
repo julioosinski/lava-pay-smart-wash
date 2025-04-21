@@ -102,12 +102,12 @@ export function MachineForm({ laundryId, machine, variant = "create", triggerEle
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="w-[95%] max-w-lg max-h-[90vh] overflow-y-auto p-4 md:p-6">
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="text-lg md:text-xl">
             {variant === "edit" ? "Editar Máquina" : "Adicionar Nova Máquina"}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-sm md:text-base">
             {variant === "edit" 
               ? "Atualize os dados da máquina."
               : "Preencha os dados para adicionar uma nova máquina à lavanderia."
@@ -117,8 +117,10 @@ export function MachineForm({ laundryId, machine, variant = "create", triggerEle
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <MachineTypeField form={form} />
-            <MachineNumberField form={form} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <MachineTypeField form={form} />
+              <MachineNumberField form={form} />
+            </div>
             <MachineDetailsFields form={form} />
 
             <Button 

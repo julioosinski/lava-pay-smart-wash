@@ -10,74 +10,16 @@ interface MachineDetailsFieldsProps {
 
 export function MachineDetailsFields({ form }: MachineDetailsFieldsProps) {
   return (
-    <>
-      <FormField
-        control={form.control}
-        name="store_id"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>ID da Loja</FormLabel>
-            <FormControl>
-              <Input {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="machine_serial"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Número Serial da Máquina</FormLabel>
-            <FormControl>
-              <Input {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="price"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Preço</FormLabel>
-            <FormControl>
-              <Input type="number" step="0.01" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="time_minutes"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Tempo (minutos)</FormLabel>
-            <FormControl>
-              <Input type="number" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <div className="space-y-4 border-t pt-4 mt-4">
-        <h3 className="font-medium text-sm">Credenciais das Operadoras</h3>
-        
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <FormField
           control={form.control}
-          name="stone_code"
+          name="store_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Código Stone</FormLabel>
+              <FormLabel>ID da Loja</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Opcional" />
+                <Input {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -86,46 +28,112 @@ export function MachineDetailsFields({ form }: MachineDetailsFieldsProps) {
 
         <FormField
           control={form.control}
-          name="stone_terminal_id"
+          name="machine_serial"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>ID do Terminal Stone</FormLabel>
+              <FormLabel>Número Serial da Máquina</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Opcional" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="elgin_terminal_id"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>ID do Terminal Elgin</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="Opcional" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="mercadopago_terminal_id"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>ID do Terminal MercadoPago</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="Opcional" />
+                <Input {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
       </div>
-    </>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <FormField
+          control={form.control}
+          name="price"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Preço</FormLabel>
+              <FormControl>
+                <Input type="number" step="0.01" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="time_minutes"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Tempo (minutos)</FormLabel>
+              <FormControl>
+                <Input type="number" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+
+      <div className="space-y-4 border-t pt-4 mt-4">
+        <h3 className="font-medium text-sm mb-4">Credenciais das Operadoras</h3>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="stone_code"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Código Stone</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="Opcional" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="stone_terminal_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>ID do Terminal Stone</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="Opcional" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="elgin_terminal_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>ID do Terminal Elgin</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="Opcional" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="mercadopago_terminal_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>ID do Terminal MercadoPago</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="Opcional" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+      </div>
+    </div>
   );
 }

@@ -30,24 +30,24 @@ export function EditLaundryDialog({ open, onOpenChange, laundry }: EditLaundryDi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-3xl w-[95%] max-h-[90vh] overflow-y-auto p-4 md:p-6">
         <DialogHeader>
-          <DialogTitle>Editar Lavanderia: {laundry.name}</DialogTitle>
+          <DialogTitle className="text-lg md:text-xl">Editar Lavanderia: {laundry.name}</DialogTitle>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-4">
-            <TabsTrigger value="details" className="flex items-center gap-2">
+          <TabsList className="mb-4 w-full flex flex-wrap gap-2">
+            <TabsTrigger value="details" className="flex-1 flex items-center gap-2 min-w-[120px]">
               <Building2 className="h-4 w-4" />
-              Detalhes
+              <span className="hidden sm:inline">Detalhes</span>
             </TabsTrigger>
-            <TabsTrigger value="machines" className="flex items-center gap-2">
+            <TabsTrigger value="machines" className="flex-1 flex items-center gap-2 min-w-[120px]">
               <WashingMachine className="h-4 w-4" />
-              Máquinas
+              <span className="hidden sm:inline">Máquinas</span>
             </TabsTrigger>
-            <TabsTrigger value="payment-settings" className="flex items-center gap-2">
+            <TabsTrigger value="payment-settings" className="flex-1 flex items-center gap-2 min-w-[120px]">
               <CreditCard className="h-4 w-4" />
-              Pagamentos
+              <span className="hidden sm:inline">Pagamentos</span>
             </TabsTrigger>
           </TabsList>
 
