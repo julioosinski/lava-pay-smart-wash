@@ -1,28 +1,20 @@
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-
-const elginSchema = z.object({
-  client_id: z.string().min(1, "Client ID é obrigatório"),
-  client_secret: z.string().min(1, "Client Secret é obrigatório"),
-  merchant_name: z.string().min(1, "Nome do estabelecimento é obrigatório"),
-  sandbox_mode: z.boolean()
-});
-
-type ElginForm = z.infer<typeof elginSchema>;
+import { usePaymentValidation, ElginForm as IElginForm } from "@/hooks/admin/usePaymentValidation";
+import { ElginSettings } from "@/types/payment-settings";
 
 interface ElginFormProps {
-  initialData?: Partial<ElginForm>;
-  onSubmit: (data: ElginForm) => Promise<void>;
+  initialData?: Partial<ElginSettings>;
+  onSubmit: (data: IElginForm) => Promise<void>;
 }
 
 export function ElginForm({ initialData, onSubmit }: ElginFormProps) {
-  const form = useForm<ElginForm>({
+  const { elginSchema } = usePaymentValidation();
+  const form = useForm<IElginForm>({
     resolver: zodResolver(elginSchema),
     defaultValues: {
       client_id: initialData?.client_id || "",

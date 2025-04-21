@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -6,6 +5,7 @@ import { Banknote, CreditCard } from "lucide-react";
 import { MercadoPagoForm } from "./forms/MercadoPagoForm";
 import { ElginForm } from "./forms/ElginForm";
 import { usePaymentSettings } from "@/hooks/admin/usePaymentSettings";
+import { PaymentProvider } from "@/types/payment-settings";
 
 interface PaymentSettingsTabProps {
   laundryId: string;
@@ -13,7 +13,7 @@ interface PaymentSettingsTabProps {
 
 export function PaymentSettingsTab({ laundryId }: PaymentSettingsTabProps) {
   const { settings, isLoading, updateSettings } = usePaymentSettings(laundryId);
-  const [activeProvider, setActiveProvider] = useState<string>(settings?.provider || "mercado_pago");
+  const [activeProvider, setActiveProvider] = useState<PaymentProvider>(settings?.provider || "mercado_pago");
 
   const handleMercadoPagoSubmit = async (data: any) => {
     try {

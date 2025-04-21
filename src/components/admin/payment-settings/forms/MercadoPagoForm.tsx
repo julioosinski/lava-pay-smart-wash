@@ -1,28 +1,20 @@
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-
-const mercadoPagoSchema = z.object({
-  access_token: z.string().min(1, "Token de acesso é obrigatório"),
-  public_key: z.string().min(1, "Chave pública é obrigatória"),
-  integration_id: z.string().min(1, "ID de integração é obrigatório"),
-  sandbox_mode: z.boolean()
-});
-
-type MercadoPagoForm = z.infer<typeof mercadoPagoSchema>;
+import { usePaymentValidation, MercadoPagoForm as IMercadoPagoForm } from "@/hooks/admin/usePaymentValidation";
+import { MercadoPagoSettings } from "@/types/payment-settings";
 
 interface MercadoPagoFormProps {
-  initialData?: Partial<MercadoPagoForm>;
-  onSubmit: (data: MercadoPagoForm) => Promise<void>;
+  initialData?: Partial<MercadoPagoSettings>;
+  onSubmit: (data: IMercadoPagoForm) => Promise<void>;
 }
 
 export function MercadoPagoForm({ initialData, onSubmit }: MercadoPagoFormProps) {
-  const form = useForm<MercadoPagoForm>({
+  const { mercadoPagoSchema } = usePaymentValidation();
+  const form = useForm<IMercadoPagoForm>({
     resolver: zodResolver(mercadoPagoSchema),
     defaultValues: {
       access_token: initialData?.access_token || "",
