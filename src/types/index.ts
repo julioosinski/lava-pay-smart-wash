@@ -66,3 +66,15 @@ export interface BusinessOwner {
   phone?: string;
   role: string;
 }
+
+export interface MachineCommand {
+  id: string;
+  machine_id: string;
+  command: string;
+  params?: Record<string, any>;
+  sent_at: string;
+  received_at?: string;
+  status: 'pending' | 'received' | 'error';
+  error_message?: string;
+  created_at: string;
+}

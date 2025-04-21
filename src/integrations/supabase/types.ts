@@ -129,6 +129,9 @@ export type Database = {
       machines: {
         Row: {
           created_at: string
+          current_payment_id: string | null
+          current_session_start: string | null
+          expected_end_time: string | null
           id: string
           laundry_id: string
           machine_number: number | null
@@ -142,6 +145,9 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          current_payment_id?: string | null
+          current_session_start?: string | null
+          expected_end_time?: string | null
           id?: string
           laundry_id: string
           machine_number?: number | null
@@ -155,6 +161,9 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          current_payment_id?: string | null
+          current_session_start?: string | null
+          expected_end_time?: string | null
           id?: string
           laundry_id?: string
           machine_number?: number | null
@@ -167,6 +176,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "machines_current_payment_id_fkey"
+            columns: ["current_payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "machines_laundry_id_fkey"
             columns: ["laundry_id"]

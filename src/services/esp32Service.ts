@@ -31,42 +31,53 @@ export async function sendCommandToMachine(machine: Machine, command: ESP32Comma
     //   body: JSON.stringify({ command, duration })
     // });
     
-    // Simulação do envio bem-sucedido do comando
-    // Registrando o comando no console para debug
-    console.log('Comando enviado:', {
-      machine_id: machine.id,
-      command,
-      duration,
-      timestamp: new Date().toISOString(),
-      status: 'sent'
-    });
+    // Registra o comando no histórico
+    const commandParams = duration ? { duration } : {};
+    
+    try {
+      const { error } = await supabase
+        .from('machine_commands')
+        .insert({
+          machine_id: machine.id,
+          command,
+          params: commandParams,
+          status: 'sent'
+        });
+        
+      if (error) console.error('Erro ao registrar comando:', error);
+    } catch (e) {
+      // Se a tabela não existir ainda, apenas seguimos em frente
+      console.warn('Não foi possível registrar o comando no histórico:', e);
+    }
     
     // Atualiza o status da máquina conforme o comando
     if (command === 'start') {
+      const now = new Date();
+      const endTime = new Date(now.getTime() + (machine.time_minutes * 60 * 1000));
+      
       await supabase
         .from('machines')
         .update({ 
           status: 'in-use',
-          current_session_start: new Date().toISOString()
+          current_session_start: now.toISOString(),
+          expected_end_time: endTime.toISOString()
         })
         .eq('id', machine.id);
         
-      console.log(`Máquina ${machine.id} iniciada com sucesso. Duração: ${duration} segundos`);
+      console.log(`Máquina ${machine.id} iniciada com sucesso. Duração: ${machine.time_minutes} minutos`);
     } else if (command === 'stop') {
       await supabase
         .from('machines')
         .update({ 
           status: 'available',
           current_session_start: null,
-          current_payment_id: null
+          current_payment_id: null,
+          expected_end_time: null
         })
         .eq('id', machine.id);
         
       console.log(`Máquina ${machine.id} parada com sucesso`);
     }
-    
-    // Poderia registrar o comando em uma tabela machine_commands para histórico
-    // Na implementação atual, estamos apenas simulando
     
     return true;
   } catch (error) {
@@ -142,19 +153,36 @@ export async function getMachineDetailedStatus(machineId: string): Promise<{
     
     // Em um cenário real, essa informação viria do próprio ESP32
     // Por enquanto, simulamos baseado no status do banco
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('machines')
-      .select('current_session_start, time_minutes')
+      .select('current_session_start, time_minutes, expected_end_time')
       .eq('id', machineId)
       .single();
     
+    if (error) {
+      console.error("Erro ao obter dados da máquina:", error);
+      return {
+        isConnected,
+        isUnlocked,
+        errorCode: 'DATABASE_ERROR'
+      };
+    }
+    
     let remainingTime: number | undefined = undefined;
     
-    if (data?.current_session_start && isUnlocked) {
-      const startTime = new Date(data.current_session_start);
-      const totalDuration = data.time_minutes * 60 * 1000; // em milissegundos
-      const elapsedTime = Date.now() - startTime.getTime();
-      remainingTime = Math.max(0, (totalDuration - elapsedTime) / 1000); // em segundos
+    if (data && data.current_session_start && isUnlocked) {
+      // Se temos expected_end_time, calculamos baseado nele
+      if (data.expected_end_time) {
+        const endTime = new Date(data.expected_end_time);
+        remainingTime = Math.max(0, (endTime.getTime() - Date.now()) / 1000); // em segundos
+      } 
+      // Senão calculamos baseado no start time e duração
+      else if (data.time_minutes) {
+        const startTime = new Date(data.current_session_start);
+        const totalDuration = data.time_minutes * 60 * 1000; // em milissegundos
+        const elapsedTime = Date.now() - startTime.getTime();
+        remainingTime = Math.max(0, (totalDuration - elapsedTime) / 1000); // em segundos
+      }
     }
     
     return {

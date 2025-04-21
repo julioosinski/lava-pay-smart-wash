@@ -27,11 +27,24 @@ export async function updateMachineStatus(machineId: string, status: 'available'
     const updateData: any = { status };
     
     if (status === 'in-use' && paymentId) {
+      // Busca informações da máquina para calcular expected_end_time
+      const { data: machineData } = await supabase
+        .from('machines')
+        .select('time_minutes')
+        .eq('id', machineId)
+        .single();
+      
+      const now = new Date();
+      const timeMinutes = machineData?.time_minutes || 30; // Default de 30 min se não encontrar
+      const endTime = new Date(now.getTime() + (timeMinutes * 60 * 1000));
+      
       updateData.current_payment_id = paymentId;
-      updateData.current_session_start = new Date().toISOString();
+      updateData.current_session_start = now.toISOString();
+      updateData.expected_end_time = endTime.toISOString();
     } else if (status === 'available') {
       updateData.current_payment_id = null;
       updateData.current_session_start = null;
+      updateData.expected_end_time = null;
     }
     
     const { error } = await supabase
