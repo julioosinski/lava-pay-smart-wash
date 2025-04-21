@@ -83,7 +83,7 @@ export function usePaymentProcessing({ onSuccess, onError }: UsePaymentProcessin
         const elginResponse = await processElginPayment({
           amount,
           description: `Pagamento Máquina #${machine.id}`,
-          paymentMethod,
+          paymentMethod: paymentMethod === 'pix' ? 'credit' : paymentMethod,
           machineId: machine.id,
           userId,
           laundryId: machine.laundry_id,
@@ -98,8 +98,7 @@ export function usePaymentProcessing({ onSuccess, onError }: UsePaymentProcessin
           throw new Error('Pagamento rejeitado pela operadora');
         }
       } else if (useStone) {
-        // Fix: We need to handle PIX differently for Stone since it only supports credit and debit
-        // Processa pagamento via Stone - Stone não suporta PIX, então vamos usar crédito como padrão
+        // Stone só suporta crédito e débito, então tratamos PIX como crédito
         const stonePaymentMethod = paymentMethod === 'pix' ? 'credit' : paymentMethod;
         
         const stoneResponse = await processStonePayment({
