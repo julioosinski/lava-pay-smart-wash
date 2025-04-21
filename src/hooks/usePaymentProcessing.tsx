@@ -11,6 +11,9 @@ import { createPayment } from "@/services/mercadoPagoService";
 import { processElginPayment, initializeElginSDK } from "@/services/elginPaymentService";
 import { processStonePayment } from "@/services/stonePaymentService";
 
+// Define a type for payment methods that includes all supported types
+export type PaymentMethod = 'credit' | 'debit' | 'pix';
+
 interface UsePaymentProcessingProps {
   onSuccess?: () => void;
   onError?: (error: Error) => void;
@@ -39,7 +42,7 @@ export function usePaymentProcessing({ onSuccess, onError }: UsePaymentProcessin
 
   const processPayment = async (
     machine: Machine, 
-    paymentMethod: 'credit' | 'debit' | 'pix',
+    paymentMethod: PaymentMethod,
     amount: number
   ) => {
     setIsProcessing(true);
@@ -80,10 +83,14 @@ export function usePaymentProcessing({ onSuccess, onError }: UsePaymentProcessin
           throw new Error('Não foi possível inicializar o SDK da Elgin');
         }
         
+        // Elgin só suporta crédito e débito, então tratamos PIX como crédito
+        // Convertemos o tipo explicitamente para satisfazer o TypeScript
+        const elginPaymentMethod = paymentMethod === 'pix' ? 'credit' as const : paymentMethod === 'credit' ? 'credit' as const : 'debit' as const;
+        
         const elginResponse = await processElginPayment({
           amount,
           description: `Pagamento Máquina #${machine.id}`,
-          paymentMethod: paymentMethod === 'pix' ? 'credit' : paymentMethod,
+          paymentMethod: elginPaymentMethod,
           machineId: machine.id,
           userId,
           laundryId: machine.laundry_id,
@@ -99,7 +106,8 @@ export function usePaymentProcessing({ onSuccess, onError }: UsePaymentProcessin
         }
       } else if (useStone) {
         // Stone só suporta crédito e débito, então tratamos PIX como crédito
-        const stonePaymentMethod = paymentMethod === 'pix' ? 'credit' : paymentMethod;
+        // Convertemos o tipo explicitamente para satisfazer o TypeScript
+        const stonePaymentMethod = paymentMethod === 'pix' ? 'credit' as const : paymentMethod === 'credit' ? 'credit' as const : 'debit' as const;
         
         const stoneResponse = await processStonePayment({
           amount,
