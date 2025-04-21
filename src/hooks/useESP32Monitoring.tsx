@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -9,12 +8,14 @@ interface MachineStatus {
   isUnlocked: boolean;
   remainingTime?: number;
   errorCode?: string;
+  wifiSignal?: number;
 }
 
 export function useESP32Monitoring(machineId?: string) {
   const [isConnected, setIsConnected] = useState<boolean | null>(null);
   const [isChecking, setIsChecking] = useState(false);
   const [machineStatus, setMachineStatus] = useState<MachineStatus | null>(null);
+  const [wifiSignal, setWifiSignal] = useState<number | null>(null);
 
   // Check initial ESP32 connection status
   useEffect(() => {
@@ -111,10 +112,33 @@ export function useESP32Monitoring(machineId?: string) {
     }
   }, [machineId]);
 
+  // Set up real-time monitoring of WiFi signal
+  useEffect(() => {
+    if (!machineId) return;
+    
+    const channel = supabase
+      .channel('esp32-signal')
+      .on(
+        'broadcast',
+        { event: 'wifi_signal' },
+        (payload) => {
+          if (payload.payload.machine_id === machineId) {
+            setWifiSignal(payload.payload.signal);
+          }
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [machineId]);
+
   return {
     isConnected,
     isChecking,
     machineStatus,
+    wifiSignal,
     refreshConnectionStatus,
     refreshMachineStatus
   };

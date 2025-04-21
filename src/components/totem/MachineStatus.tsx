@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useESP32Monitoring } from '@/hooks/useESP32Monitoring';
-import { CheckCircle, WifiOff, AlertCircle, Clock } from 'lucide-react';
+import { CheckCircle, WifiOff, AlertCircle, Clock, Wifi, WifiLow } from 'lucide-react';
 
 interface MachineStatusDisplayProps {
   machineId: string;
@@ -10,10 +9,9 @@ interface MachineStatusDisplayProps {
 }
 
 export function MachineStatusDisplay({ machineId, machineName }: MachineStatusDisplayProps) {
-  const { isConnected, machineStatus, refreshConnectionStatus, refreshMachineStatus } = useESP32Monitoring(machineId);
+  const { isConnected, machineStatus, wifiSignal, refreshConnectionStatus, refreshMachineStatus } = useESP32Monitoring(machineId);
   const [remainingTimeText, setRemainingTimeText] = useState<string>('');
   
-  // Format remaining time
   useEffect(() => {
     if (machineStatus?.remainingTime) {
       const updateTimeText = () => {
@@ -31,6 +29,18 @@ export function MachineStatusDisplay({ machineId, machineName }: MachineStatusDi
     }
   }, [machineStatus?.remainingTime]);
   
+  const renderWifiSignal = () => {
+    if (!isConnected) return <WifiOff className="h-5 w-5 text-red-500" />;
+    
+    if (wifiSignal && wifiSignal >= -50) {
+      return <Wifi className="h-5 w-5 text-green-500" />;
+    } else if (wifiSignal && wifiSignal >= -70) {
+      return <WifiLow className="h-5 w-5 text-yellow-500" />;
+    } else {
+      return <WifiOff className="h-5 w-5 text-red-500" />;
+    }
+  };
+  
   return (
     <Card>
       <CardHeader>
@@ -43,15 +53,18 @@ export function MachineStatusDisplay({ machineId, machineName }: MachineStatusDi
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="flex items-center">
-            {isConnected ? (
-              <CheckCircle className="h-5 w-5 mr-2 text-green-500" />
-            ) : (
-              <WifiOff className="h-5 w-5 mr-2 text-red-500" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              {renderWifiSignal()}
+              <span className="ml-2">
+                {isConnected ? 'Máquina Online' : 'Máquina Offline'}
+              </span>
+            </div>
+            {wifiSignal && (
+              <span className="text-sm text-gray-500">
+                {wifiSignal} dBm
+              </span>
             )}
-            <span>
-              {isConnected ? 'Máquina Online' : 'Máquina Offline'}
-            </span>
           </div>
           
           <div className="flex items-center">
