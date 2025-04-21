@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,7 +14,9 @@ interface PaymentSettingsTabProps {
 
 export function PaymentSettingsTab({ laundryId }: PaymentSettingsTabProps) {
   const { settings, isLoading, updateSettings } = usePaymentSettings(laundryId);
-  const [activeProvider, setActiveProvider] = useState<PaymentProvider>(settings?.provider || "mercado_pago");
+  const [activeProvider, setActiveProvider] = useState<PaymentProvider>(
+    settings?.provider as PaymentProvider || "mercado_pago"
+  );
 
   const handleMercadoPagoSubmit = async (data: any) => {
     try {
@@ -50,7 +53,10 @@ export function PaymentSettingsTab({ laundryId }: PaymentSettingsTabProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue={activeProvider} onValueChange={setActiveProvider}>
+        <Tabs 
+          defaultValue={activeProvider} 
+          onValueChange={(value) => setActiveProvider(value as PaymentProvider)}
+        >
           <TabsList className="mb-6">
             <TabsTrigger value="mercado_pago" className="flex items-center gap-2">
               <Banknote className="h-4 w-4" />
