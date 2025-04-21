@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Machine } from "@/types";
 import { createPayment } from "@/services/mercadoPagoService";
 import { PaymentMethod } from "../usePaymentProcessing";
+import { sendCommandToMachine } from '@/services/esp32Service';
 
 export function useMercadoPagoPayment() {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -59,7 +60,7 @@ export function useMercadoPagoPayment() {
           throw updateError;
         }
 
-        // Atualiza status da máquina para em uso
+        // Atualiza status da máquina para em uso e envia comando para o ESP32
         const { error: machineUpdateError } = await supabase
           .from('machines')
           .update({ 
@@ -71,6 +72,17 @@ export function useMercadoPagoPayment() {
           
         if (machineUpdateError) {
           throw machineUpdateError;
+        }
+        
+        // Envia comando para o ESP32 iniciar a máquina
+        const commandResult = await sendCommandToMachine(
+          machine, 
+          'start', 
+          machine.time_minutes * 60 // Duração em segundos
+        );
+        
+        if (!commandResult) {
+          toast.warning('Pagamento aprovado, mas houve um problema ao iniciar a máquina. Por favor, contate um administrador.');
         }
         
         toast.success('Pagamento aprovado! Sua máquina foi liberada.');

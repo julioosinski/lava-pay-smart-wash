@@ -1,8 +1,9 @@
+
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "./StatusBadge";
 import { Machine } from "@/types";
-import { WashingMachine, Loader, Timer, Hash, Barcode } from "lucide-react";
+import { WashingMachine, Loader, Timer, Hash, Barcode, Wifi, WifiOff } from "lucide-react";
 import { MachineForm } from "./admin/machines/MachineForm";
 import { useSessionTimer } from "@/hooks/useSessionTimer";
 
@@ -22,6 +23,10 @@ export function MachineCard({ machine, onSelect, showActions = true, showEdit = 
   }).format(machine.price);
 
   const displayId = machine.machine_number || machine.id.substring(0, 4);
+  
+  // Check if we have ESP32 connection information
+  const esp32Connected = (machine as any).esp32_connected;
+  const hasEsp32Status = esp32Connected !== undefined;
 
   return (
     <Card className="border border-slate-200 overflow-hidden">
@@ -40,6 +45,15 @@ export function MachineCard({ machine, onSelect, showActions = true, showEdit = 
               />
             )}
             <StatusBadge status={machine.status} />
+            {hasEsp32Status && (
+              <span className="ml-2" title={esp32Connected ? "ESP32 conectado" : "ESP32 desconectado"}>
+                {esp32Connected ? (
+                  <Wifi className="h-4 w-4 text-green-500" />
+                ) : (
+                  <WifiOff className="h-4 w-4 text-red-500" />
+                )}
+              </span>
+            )}
           </div>
         </CardTitle>
       </CardHeader>
@@ -83,10 +97,12 @@ export function MachineCard({ machine, onSelect, showActions = true, showEdit = 
         <CardFooter className="pt-2 pb-4">
           <Button 
             className="w-full bg-lavapay-500 hover:bg-lavapay-600" 
-            disabled={machine.status !== 'available'}
+            disabled={machine.status !== 'available' || esp32Connected === false}
             onClick={onSelect}
           >
-            {machine.status === 'available' ? 'Selecionar' : 
+            {machine.status === 'available' ? (
+              esp32Connected === false ? 'Máquina Offline' : 'Selecionar'
+            ) : 
              machine.status === 'in-use' ? `Em uso ${formattedTime ? `(${formattedTime})` : ''}` : 
              'Indisponível'}
           </Button>

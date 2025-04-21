@@ -62,7 +62,7 @@ export function usePaymentProcessing({ onSuccess, onError }: UsePaymentProcessin
       if (useElgin) {
         // Para o Elgin, o método de pagamento precisa ser 'credit' ou 'debit'
         // O PIX não é suportado diretamente pela Elgin, então tratamos como crédito
-        if (paymentMethod === 'pix' as PaymentMethod) {
+        if (paymentMethod === 'pix') {
           console.log('PIX não é suportado diretamente pela Elgin, usando crédito como fallback');
           success = await processElginTefPayment(machine, 'credit', amount, userId);
         } else {
@@ -73,7 +73,7 @@ export function usePaymentProcessing({ onSuccess, onError }: UsePaymentProcessin
       } else if (useStone) {
         // Para o Stone, mesmo caso - o método de pagamento precisa ser 'credit' ou 'debit'
         // O PIX não é suportado diretamente pela Stone, então tratamos como crédito
-        if (paymentMethod === 'pix' as PaymentMethod) {
+        if (paymentMethod === 'pix') {
           console.log('PIX não é suportado diretamente pela Stone, usando crédito como fallback');
           success = await processStoneCardPayment(machine, 'credit', amount, userId);
         } else {
