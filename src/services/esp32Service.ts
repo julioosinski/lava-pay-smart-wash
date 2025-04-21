@@ -24,22 +24,15 @@ export async function sendCommandToMachine(machine: Machine, command: ESP32Comma
     // });
     
     // Simulação do envio bem-sucedido do comando
-    const commandData = {
+    // Como a tabela machine_commands ainda não existe no banco, vamos apenas
+    // registrar o evento no console por enquanto
+    console.log('Comando enviado:', {
       machine_id: machine.id,
       command,
       duration,
       timestamp: new Date().toISOString(),
       status: 'sent'
-    };
-    
-    const { error } = await supabase
-      .from('machine_commands')
-      .insert(commandData);
-    
-    if (error) {
-      console.error('Erro ao registrar comando:', error);
-      return false;
-    }
+    });
     
     // Atualiza o status da máquina conforme o comando
     if (command === 'start') {
