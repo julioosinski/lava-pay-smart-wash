@@ -37,15 +37,15 @@ export function EditLaundryDialog({ open, onOpenChange, laundry }: EditLaundryDi
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-4 w-full flex flex-wrap gap-2">
-            <TabsTrigger value="details" className="flex-1 flex items-center gap-2 min-w-[120px]">
+            <TabsTrigger value="details" className="flex-1 flex items-center justify-center gap-2 min-w-[100px]">
               <Building2 className="h-4 w-4" />
               <span className="hidden sm:inline">Detalhes</span>
             </TabsTrigger>
-            <TabsTrigger value="machines" className="flex-1 flex items-center gap-2 min-w-[120px]">
+            <TabsTrigger value="machines" className="flex-1 flex items-center justify-center gap-2 min-w-[100px]">
               <WashingMachine className="h-4 w-4" />
               <span className="hidden sm:inline">Máquinas</span>
             </TabsTrigger>
-            <TabsTrigger value="payment-settings" className="flex-1 flex items-center gap-2 min-w-[120px]">
+            <TabsTrigger value="payment-settings" className="flex-1 flex items-center justify-center gap-2 min-w-[100px]">
               <CreditCard className="h-4 w-4" />
               <span className="hidden sm:inline">Pagamentos</span>
             </TabsTrigger>

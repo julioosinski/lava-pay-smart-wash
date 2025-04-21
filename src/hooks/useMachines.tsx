@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -48,10 +49,6 @@ type MachineInput = {
   machine_number: number;
   store_id: string;
   machine_serial: string;
-  stone_code?: string;
-  stone_terminal_id?: string;
-  elgin_terminal_id?: string;
-  mercadopago_terminal_id?: string;
 };
 
 export const useCreateMachine = () => {
@@ -76,11 +73,7 @@ export const useCreateMachine = () => {
           time_minutes: machine.time_minutes,
           machine_number: machine.machine_number,
           store_id: machine.store_id,
-          machine_serial: machine.machine_serial,
-          stone_code: machine.stone_code,
-          stone_terminal_id: machine.stone_terminal_id,
-          elgin_terminal_id: machine.elgin_terminal_id,
-          mercadopago_terminal_id: machine.mercadopago_terminal_id
+          machine_serial: machine.machine_serial
         })
         .select()
         .single();
@@ -147,11 +140,7 @@ export const useUpdateMachine = () => {
           time_minutes: machine.time_minutes,
           machine_number: machine.machine_number,
           store_id: machine.store_id,
-          machine_serial: machine.machine_serial,
-          stone_code: machine.stone_code,
-          stone_terminal_id: machine.stone_terminal_id,
-          elgin_terminal_id: machine.elgin_terminal_id,
-          mercadopago_terminal_id: machine.mercadopago_terminal_id
+          machine_serial: machine.machine_serial
         })
         .eq('id', machine.id)
         .select()
