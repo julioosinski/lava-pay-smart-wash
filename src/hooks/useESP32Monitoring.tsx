@@ -2,11 +2,19 @@
 import { useEffect, useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { checkESP32Connection } from '@/services/esp32Service';
+import { checkESP32Connection, getMachineDetailedStatus } from '@/services/esp32Service';
+
+interface MachineStatus {
+  isConnected: boolean;
+  isUnlocked: boolean;
+  remainingTime?: number;
+  errorCode?: string;
+}
 
 export function useESP32Monitoring(machineId?: string) {
   const [isConnected, setIsConnected] = useState<boolean | null>(null);
   const [isChecking, setIsChecking] = useState(false);
+  const [machineStatus, setMachineStatus] = useState<MachineStatus | null>(null);
 
   // Check initial ESP32 connection status
   useEffect(() => {
@@ -29,13 +37,33 @@ export function useESP32Monitoring(machineId?: string) {
       }
     };
     
+    // Initial connection check
     checkConnection();
     
     // Set up periodic checking every 30 seconds
     const interval = setInterval(checkConnection, 30000);
     
+    // Set up real-time monitoring of machine status changes
+    const channel = supabase
+      .channel('machine-status-changes')
+      .on(
+        'postgres_changes' as unknown as 'system',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'machines',
+          filter: `id=eq.${machineId}`
+        },
+        (payload) => {
+          console.log('Machine status changed:', payload);
+          refreshMachineStatus();
+        }
+      )
+      .subscribe();
+    
     return () => {
       clearInterval(interval);
+      supabase.removeChannel(channel);
     };
   }, [machineId]);
 
@@ -62,9 +90,32 @@ export function useESP32Monitoring(machineId?: string) {
     }
   };
 
+  // Function to get detailed machine status
+  const refreshMachineStatus = async () => {
+    if (!machineId) return;
+    
+    try {
+      const status = await getMachineDetailedStatus(machineId);
+      setMachineStatus(status);
+      setIsConnected(status.isConnected);
+    } catch (error) {
+      console.error('Erro ao obter status detalhado da máquina:', error);
+      setMachineStatus(null);
+    }
+  };
+
+  // Initial fetch of detailed status
+  useEffect(() => {
+    if (machineId) {
+      refreshMachineStatus();
+    }
+  }, [machineId]);
+
   return {
     isConnected,
     isChecking,
-    refreshConnectionStatus
+    machineStatus,
+    refreshConnectionStatus,
+    refreshMachineStatus
   };
 }
