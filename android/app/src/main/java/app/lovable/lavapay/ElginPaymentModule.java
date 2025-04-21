@@ -17,20 +17,16 @@ import com.facebook.react.bridge.Arguments;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import stone.application.StoneStart;
-import stone.providers.TransactionProvider;
-import stone.utils.Stone;
-import stone.database.transaction.TransactionObject;
-
-public class StonePaymentModule extends ReactContextBaseJavaModule implements ActivityEventListener {
-    private static final int STONE_PAYMENT_REQUEST = 1001;
+// Este módulo se conecta com o SDK do TEF da Elgin
+public class ElginPaymentModule extends ReactContextBaseJavaModule implements ActivityEventListener {
+    private static final int ELGIN_PAYMENT_REQUEST = 1002;
     private Promise paymentPromise;
     private final ReactApplicationContext reactContext;
 
     private final ActivityEventListener activityEventListener = new BaseActivityEventListener() {
         @Override
         public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
-            if (requestCode == STONE_PAYMENT_REQUEST) {
+            if (requestCode == ELGIN_PAYMENT_REQUEST) {
                 if (paymentPromise != null) {
                     if (resultCode == Activity.RESULT_OK) {
                         String transactionId = data.getStringExtra("transactionId");
@@ -53,7 +49,7 @@ public class StonePaymentModule extends ReactContextBaseJavaModule implements Ac
         }
     };
 
-    public StonePaymentModule(ReactApplicationContext reactContext) {
+    public ElginPaymentModule(ReactApplicationContext reactContext) {
         super(reactContext);
         this.reactContext = reactContext;
         this.reactContext.addActivityEventListener(activityEventListener);
@@ -61,30 +57,19 @@ public class StonePaymentModule extends ReactContextBaseJavaModule implements Ac
 
     @Override
     public String getName() {
-        return "StonePayment";
+        return "ElginPayment";
     }
 
     @ReactMethod
-    public void initialize(String stoneCode, Promise promise) {
+    public void initialize(String clientId, String clientSecret, Promise promise) {
         try {
-            Stone.setAppName("LavaPaySmartWash");
-            Stone.setEnvironment(Stone.Environment.PRODUCTION);
+            // Em uma implementação real, seria inicializado o SDK da Elgin aqui
+            // Por exemplo: ElginTEF.initialize(clientId, clientSecret);
             
-            StoneStart.init(reactContext);
+            // Simulação de inicialização bem-sucedida
             promise.resolve(true);
         } catch (Exception e) {
-            promise.reject("STONE_INIT_ERROR", e.getMessage());
-        }
-    }
-
-    @ReactMethod
-    public void activateStone(String stoneCode, Promise promise) {
-        try {
-            // Este é um exemplo simplificado. Na implementação real,
-            // você precisaria lidar com a ativação da Stone usando o SDK
-            promise.resolve(true);
-        } catch (Exception e) {
-            promise.reject("STONE_ACTIVATION_ERROR", e.getMessage());
+            promise.reject("ELGIN_INIT_ERROR", e.getMessage());
         }
     }
 
@@ -95,29 +80,31 @@ public class StonePaymentModule extends ReactContextBaseJavaModule implements Ac
             String description = options.getString("description");
             String paymentMethod = options.getString("paymentMethod");
             
-            // Converte para centavos como a Stone espera
-            BigDecimal amountInCents = new BigDecimal(amount * 100);
-            
-            TransactionObject transaction = new TransactionObject();
-            transaction.setAmount(amountInCents);
-            transaction.setInitiatorTransactionKey(UUID.randomUUID().toString());
-            
-            if (paymentMethod.equals("credit")) {
-                transaction.setTypeOfTransaction(TransactionObject.CREDIT);
-                int installments = options.hasKey("installments") ? 
-                    options.getInt("installments") : 1;
-                transaction.setInstallmentCount(installments);
-            } else {
-                transaction.setTypeOfTransaction(TransactionObject.DEBIT);
-            }
+            // Em uma implementação real, aqui seria iniciada a chamada do TEF Elgin
+            // Por exemplo:
+            /*
+            ElginTEF.startPayment()
+                .setAmount(amount)
+                .setDescription(description)
+                .setPaymentType(paymentMethod.equals("credit") ? 
+                    ElginTEF.CREDIT : ElginTEF.DEBIT)
+                .startTransaction(getCurrentActivity());
+            */
             
             // Armazena a promessa para uso no callback de resultado
             paymentPromise = promise;
             
-            // Inicia o processo de pagamento
-            TransactionProvider provider = new TransactionProvider();
-            provider.useDefaultUI(true);
-            provider.execute(transaction, getCurrentActivity());
+            // Simulação para testes - normalmente seria iniciado um Intent para o App da Elgin
+            // Simularemos uma resposta após 2 segundos
+            new android.os.Handler().postDelayed(() -> {
+                WritableMap result = Arguments.createMap();
+                result.putString("transactionId", UUID.randomUUID().toString());
+                result.putString("receiptCode", "ELGIN_" + Math.floor(Math.random() * 100000));
+                result.putString("status", "approved");
+                
+                promise.resolve(result);
+                paymentPromise = null;
+            }, 2000);
             
         } catch (Exception e) {
             promise.reject("PAYMENT_ERROR", e.getMessage());

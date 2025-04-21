@@ -10,11 +10,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class StonePaymentPackage implements ReactPackage {
+public class ElginPaymentPackage implements ReactPackage {
     @Override
     public List<NativeModule> createNativeModules(ReactApplicationContext reactContext) {
         List<NativeModule> modules = new ArrayList<>();
-        modules.add(new StonePaymentModule(reactContext));
+        modules.add(new ElginPaymentModule(reactContext));
         return modules;
     }
 

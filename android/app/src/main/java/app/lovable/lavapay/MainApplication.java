@@ -26,8 +26,8 @@ public class MainApplication extends Application implements ReactApplication {
         protected List<ReactPackage> getPackages() {
           @SuppressWarnings("UnnecessaryLocalVariable")
           List<ReactPackage> packages = new PackageList(this).getPackages();
-          // Adicione o pacote da Stone aqui
-          packages.add(new StonePaymentPackage());
+          // Substituímos o pacote da Stone pelo pacote da Elgin
+          packages.add(new ElginPaymentPackage());
           return packages;
         }
 

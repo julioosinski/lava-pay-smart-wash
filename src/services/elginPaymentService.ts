@@ -3,10 +3,11 @@ import { Platform } from "@/utils/platform";
 import { NativeModules } from "@/utils/nativeModules";
 import { supabase } from "@/integrations/supabase/client";
 
-const { StonePayment } = NativeModules;
+const { ElginPayment } = NativeModules;
 
 interface PaymentConfig {
-  stoneCode: string;
+  clientId: string;
+  clientSecret: string;
   merchantName: string;
   sandboxMode: boolean;
 }
@@ -29,64 +30,66 @@ interface PaymentResult {
 }
 
 /**
- * Obtém a configuração de pagamento da Stone para a lavanderia
+ * Obtém a configuração de pagamento da Elgin para a lavanderia
  */
-async function getStoneConfig(laundryId: string): Promise<PaymentConfig | null> {
+async function getElginConfig(laundryId: string): Promise<PaymentConfig | null> {
   const { data: settings, error } = await supabase
     .from('payment_settings')
-    .select('stone_code, merchant_name, sandbox_mode')
+    .select('client_id, client_secret, merchant_name, sandbox_mode')
     .eq('laundry_id', laundryId)
+    .eq('provider', 'elgin_tef')
     .single();
 
   if (error || !settings) {
-    console.error('Error fetching Stone payment settings:', error);
+    console.error('Erro ao buscar configurações de pagamento Elgin:', error);
     return null;
   }
 
   return {
-    stoneCode: settings.stone_code || '',
+    clientId: settings.client_id || '',
+    clientSecret: settings.client_secret || '',
     merchantName: settings.merchant_name || '',
     sandboxMode: settings.sandbox_mode || true
   };
 }
 
 /**
- * Inicializa o SDK da Stone
+ * Inicializa o SDK da Elgin
  */
-export async function initializeStoneSDK(laundryId: string): Promise<boolean> {
+export async function initializeElginSDK(laundryId: string): Promise<boolean> {
   try {
-    // Apenas inicializa no Android
+    // Verifica se está rodando no Android
     if (Platform.OS !== 'android') {
-      console.log('Stone SDK só está disponível no Android');
+      console.log('O SDK da Elgin só está disponível no Android');
       return false;
     }
 
-    const config = await getStoneConfig(laundryId);
+    const config = await getElginConfig(laundryId);
     if (!config) {
-      throw new Error('Configuração de pagamento Stone não encontrada');
+      throw new Error('Configuração de pagamento Elgin não encontrada');
     }
 
-    await StonePayment.initialize(config.stoneCode);
-    console.log('Stone SDK inicializado com sucesso');
+    await ElginPayment.initialize(config.clientId, config.clientSecret);
+    console.log('SDK da Elgin inicializado com sucesso');
     
     return true;
   } catch (error) {
-    console.error('Error initializing Stone SDK:', error);
+    console.error('Erro ao inicializar SDK da Elgin:', error);
     throw error;
   }
 }
 
 /**
- * Processa pagamento através da maquininha Stone
+ * Processa pagamento através do TEF Elgin
  */
-export async function processStonePayment(options: PaymentOptions): Promise<PaymentResult> {
+export async function processElginPayment(options: PaymentOptions): Promise<PaymentResult> {
   try {
     // Verifica se estamos no Android
     if (Platform.OS !== 'android') {
-      throw new Error('Pagamentos via maquininha Stone só estão disponíveis no Android');
+      throw new Error('Pagamentos via TEF Elgin só estão disponíveis no Android');
     }
 
-    console.log(`Processando pagamento via maquininha Stone para máquina ${options.machineId}`);
+    console.log(`Processando pagamento via TEF Elgin para máquina ${options.machineId}`);
     
     // Registra o pagamento como pendente no banco de dados
     const { data: payment, error: paymentError } = await supabase
@@ -103,21 +106,21 @@ export async function processStonePayment(options: PaymentOptions): Promise<Paym
       .single();
 
     if (paymentError) {
-      console.error("Error creating payment record:", paymentError);
+      console.error("Erro ao criar registro de pagamento:", paymentError);
       throw paymentError;
     }
     
-    console.log("Payment record created:", payment);
+    console.log("Registro de pagamento criado:", payment);
 
-    // Processa o pagamento através da maquininha Stone
-    const result = await StonePayment.processPayment({
+    // Processa o pagamento através do TEF Elgin
+    const result = await ElginPayment.processPayment({
       amount: options.amount,
       description: options.description,
       paymentMethod: options.paymentMethod,
       installments: options.installments || 1
     });
 
-    console.log("Stone payment result:", result);
+    console.log("Resultado do pagamento Elgin:", result);
 
     // Atualiza o pagamento com o resultado da transação
     if (result.status === 'approved') {
@@ -150,7 +153,7 @@ export async function processStonePayment(options: PaymentOptions): Promise<Paym
 
     return result as PaymentResult;
   } catch (error) {
-    console.error('Error processing Stone payment:', error);
+    console.error('Erro ao processar pagamento Elgin:', error);
     throw error;
   }
 }

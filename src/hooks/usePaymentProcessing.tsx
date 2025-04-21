@@ -6,9 +6,9 @@ import { toast } from "sonner";
 import { Machine } from "@/types";
 import { getMachineStatus } from "@/services/machineService";
 
-// Importamos tanto o serviço MercadoPago quanto o serviço Stone
+// Importamos tanto o serviço MercadoPago quanto o serviço Elgin
 import { createPayment } from "@/services/mercadoPagoService";
-import { processStonePayment, initializeStoneSDK } from "@/services/stonePaymentService";
+import { processElginPayment, initializeElginSDK } from "@/services/elginPaymentService";
 
 interface UsePaymentProcessingProps {
   onSuccess?: () => void;
@@ -17,21 +17,21 @@ interface UsePaymentProcessingProps {
 
 export function usePaymentProcessing({ onSuccess, onError }: UsePaymentProcessingProps = {}) {
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isStoneInitialized, setIsStoneInitialized] = useState(false);
+  const [isElginInitialized, setIsElginInitialized] = useState(false);
 
-  // Função para inicializar o SDK da Stone
-  const initializeStone = async (laundryId: string) => {
+  // Função para inicializar o SDK da Elgin
+  const initializeElgin = async (laundryId: string) => {
     try {
       // Apenas inicializa no Android e se ainda não estiver inicializado
-      if (Platform.OS === 'android' && !isStoneInitialized) {
-        const success = await initializeStoneSDK(laundryId);
-        setIsStoneInitialized(success);
+      if (Platform.OS === 'android' && !isElginInitialized) {
+        const success = await initializeElginSDK(laundryId);
+        setIsElginInitialized(success);
         return success;
       }
-      return isStoneInitialized || Platform.OS !== 'android';
+      return isElginInitialized || Platform.OS !== 'android';
     } catch (error) {
-      console.error('Error initializing Stone SDK:', error);
-      toast.error('Erro ao inicializar SDK da Stone');
+      console.error('Erro ao inicializar SDK da Elgin:', error);
+      toast.error('Erro ao inicializar SDK da Elgin');
       return false;
     }
   };
@@ -44,31 +44,31 @@ export function usePaymentProcessing({ onSuccess, onError }: UsePaymentProcessin
     setIsProcessing(true);
     
     try {
-      console.log(`Processing payment for machine ${machine.id} with method ${paymentMethod}`);
+      console.log(`Processando pagamento para máquina ${machine.id} com método ${paymentMethod}`);
       
-      // Verify machine availability before proceeding
+      // Verifica disponibilidade da máquina antes de prosseguir
       const currentStatus = await getMachineStatus(machine.id);
       if (currentStatus?.status !== 'available') {
         throw new Error('Esta máquina não está mais disponível');
       }
 
-      // Get current user info
+      // Obtém informações do usuário atual
       const { data: { user } } = await supabase.auth.getUser();
       const userId = user?.id || 'anonymous';
 
-      // Determina se deve usar o TEF da Stone (maquininha física) ou MercadoPago (online)
-      // No ambiente web ou se for PIX, usa MercadoPago, senão usa Stone no Android
-      const useStone = Platform.OS === 'android' && paymentMethod !== 'pix';
+      // Determina se deve usar o TEF da Elgin (maquininha física) ou MercadoPago (online)
+      // No ambiente web ou se for PIX, usa MercadoPago, senão usa Elgin no Android
+      const useElgin = Platform.OS === 'android' && paymentMethod !== 'pix';
 
-      // Se for usar a Stone, certifique-se de que o SDK está inicializado
-      if (useStone) {
-        const initialized = await initializeStone(machine.laundry_id);
+      // Se for usar a Elgin, certifique-se de que o SDK está inicializado
+      if (useElgin) {
+        const initialized = await initializeElgin(machine.laundry_id);
         if (!initialized) {
-          throw new Error('Não foi possível inicializar o SDK da Stone');
+          throw new Error('Não foi possível inicializar o SDK da Elgin');
         }
         
-        // Processa pagamento via maquininha física da Stone
-        const stoneResponse = await processStonePayment({
+        // Processa pagamento via maquininha física da Elgin
+        const elginResponse = await processElginPayment({
           amount,
           description: `Pagamento Máquina #${machine.id}`,
           paymentMethod,
@@ -77,17 +77,17 @@ export function usePaymentProcessing({ onSuccess, onError }: UsePaymentProcessin
           laundryId: machine.laundry_id,
         });
         
-        if (stoneResponse.status === 'approved') {
-          console.log("Payment approved via Stone");
+        if (elginResponse.status === 'approved') {
+          console.log("Pagamento aprovado via Elgin");
           toast.success('Pagamento aprovado! Sua máquina foi liberada.');
           onSuccess?.();
         } else {
-          console.log("Payment rejected via Stone");
+          console.log("Pagamento rejeitado via Elgin");
           throw new Error('Pagamento rejeitado pela operadora');
         }
       } else {
         // Usa a implementação existente do MercadoPago para pagamentos online
-        // Create payment record in Supabase
+        // Cria registro de pagamento no Supabase
         const paymentData = {
           machine_id: machine.id,
           amount: amount,
@@ -96,7 +96,7 @@ export function usePaymentProcessing({ onSuccess, onError }: UsePaymentProcessin
           user_id: userId
         };
         
-        console.log("Creating payment record:", paymentData);
+        console.log("Criando registro de pagamento:", paymentData);
         
         const { data: payment, error: paymentError } = await supabase
           .from('payments')
@@ -105,13 +105,13 @@ export function usePaymentProcessing({ onSuccess, onError }: UsePaymentProcessin
           .single();
 
         if (paymentError) {
-          console.error("Error creating payment record:", paymentError);
+          console.error("Erro ao criar registro de pagamento:", paymentError);
           throw paymentError;
         }
         
-        console.log("Payment record created:", payment);
+        console.log("Registro de pagamento criado:", payment);
 
-        // Process payment with MercadoPago
+        // Processa pagamento com MercadoPago
         const mercadoPagoResponse = await createPayment(
           amount,
           `Pagamento Máquina #${machine.id}`,
@@ -120,7 +120,7 @@ export function usePaymentProcessing({ onSuccess, onError }: UsePaymentProcessin
         );
         
         if (mercadoPagoResponse.status === 'approved') {
-          // Update payment status to approved
+          // Atualiza status do pagamento para aprovado
           const { error: updateError } = await supabase
             .from('payments')
             .update({ 
@@ -130,13 +130,13 @@ export function usePaymentProcessing({ onSuccess, onError }: UsePaymentProcessin
             .eq('id', payment.id);
             
           if (updateError) {
-            console.error("Error updating payment status:", updateError);
+            console.error("Erro ao atualizar status do pagamento:", updateError);
             throw updateError;
           }
           
-          console.log("Payment approved");
+          console.log("Pagamento aprovado");
 
-          // Update machine status to in-use
+          // Atualiza status da máquina para em uso
           const { error: machineUpdateError } = await supabase
             .from('machines')
             .update({ 
@@ -147,28 +147,28 @@ export function usePaymentProcessing({ onSuccess, onError }: UsePaymentProcessin
             .eq('id', machine.id);
             
           if (machineUpdateError) {
-            console.error("Error updating machine status:", machineUpdateError);
+            console.error("Erro ao atualizar status da máquina:", machineUpdateError);
             throw machineUpdateError;
           }
           
-          console.log("Machine status updated to in-use");
+          console.log("Status da máquina atualizado para em uso");
           
           toast.success('Pagamento aprovado! Sua máquina foi liberada.');
           onSuccess?.();
         } else {
-          // Update payment status to rejected
+          // Atualiza status do pagamento para rejeitado
           await supabase
             .from('payments')
             .update({ status: 'rejected' })
             .eq('id', payment.id);
             
-          console.log("Payment rejected");
+          console.log("Pagamento rejeitado");
           
           throw new Error('Pagamento rejeitado pela operadora');
         }
       }
     } catch (error) {
-      console.error('Error processing payment:', error);
+      console.error('Erro ao processar pagamento:', error);
       toast.error(error.message || 'Erro ao processar pagamento');
       onError?.(error);
     } finally {
@@ -179,6 +179,6 @@ export function usePaymentProcessing({ onSuccess, onError }: UsePaymentProcessin
   return {
     processPayment,
     isProcessing,
-    initializeStone
+    initializeElgin
   };
 }

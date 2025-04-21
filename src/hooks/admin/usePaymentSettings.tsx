@@ -12,6 +12,9 @@ interface PaymentSettings {
   public_key: string | null;
   integration_id: string | null;
   sandbox_mode: boolean;
+  client_id?: string | null;
+  client_secret?: string | null;
+  merchant_name?: string | null;
 }
 
 interface UpdatePaymentSettingsData {
@@ -19,6 +22,10 @@ interface UpdatePaymentSettingsData {
   public_key?: string;
   integration_id?: string;
   sandbox_mode?: boolean;
+  client_id?: string;
+  client_secret?: string;
+  merchant_name?: string;
+  provider?: string;
 }
 
 export function usePaymentSettings(laundryId: string) {
@@ -32,7 +39,6 @@ export function usePaymentSettings(laundryId: string) {
         .from('payment_settings')
         .select('*')
         .eq('laundry_id', laundryId)
-        .eq('provider', 'mercado_pago')
         .maybeSingle();
 
       if (error) {
@@ -49,10 +55,19 @@ export function usePaymentSettings(laundryId: string) {
     try {
       const updateData: UpdatePaymentSettingsData = {};
       
+      // Campos comuns
+      if (newSettings.sandbox_mode !== undefined) updateData.sandbox_mode = newSettings.sandbox_mode;
+      if (newSettings.merchant_name !== undefined) updateData.merchant_name = newSettings.merchant_name;
+      if (newSettings.provider !== undefined) updateData.provider = newSettings.provider;
+      
+      // Campos específicos do MercadoPago
       if (newSettings.access_token !== undefined) updateData.access_token = newSettings.access_token;
       if (newSettings.public_key !== undefined) updateData.public_key = newSettings.public_key;
       if (newSettings.integration_id !== undefined) updateData.integration_id = newSettings.integration_id;
-      if (newSettings.sandbox_mode !== undefined) updateData.sandbox_mode = newSettings.sandbox_mode;
+      
+      // Campos específicos da Elgin
+      if (newSettings.client_id !== undefined) updateData.client_id = newSettings.client_id;
+      if (newSettings.client_secret !== undefined) updateData.client_secret = newSettings.client_secret;
       
       if (settings?.id) {
         // Atualizar configurações existentes
@@ -64,12 +79,16 @@ export function usePaymentSettings(laundryId: string) {
         if (error) throw error;
       } else {
         // Criar novas configurações
+        // Define o provider padrão como 'elgin_tef' se não for especificado
+        if (!updateData.provider) {
+          updateData.provider = 'elgin_tef';
+        }
+
         const { error } = await supabase
           .from('payment_settings')
           .insert([{
             ...updateData,
-            laundry_id: laundryId,
-            provider: 'mercado_pago'
+            laundry_id: laundryId
           }]);
 
         if (error) throw error;
