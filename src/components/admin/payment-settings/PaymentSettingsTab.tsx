@@ -2,9 +2,10 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Banknote, CreditCard } from "lucide-react";
+import { Banknote, CreditCard, Landmark } from "lucide-react";
 import { MercadoPagoForm } from "./forms/MercadoPagoForm";
 import { ElginForm } from "./forms/ElginForm";
+import { StoneForm } from "./forms/StoneForm";
 import { usePaymentSettings } from "@/hooks/admin/usePaymentSettings";
 import { PaymentProvider } from "@/types/payment-settings";
 
@@ -15,7 +16,7 @@ interface PaymentSettingsTabProps {
 export function PaymentSettingsTab({ laundryId }: PaymentSettingsTabProps) {
   const { settings, isLoading, updateSettings } = usePaymentSettings(laundryId);
   const [activeProvider, setActiveProvider] = useState<PaymentProvider>(
-    settings?.provider as PaymentProvider || "mercado_pago"
+    (settings?.provider as PaymentProvider) || "mercado_pago"
   );
 
   const handleMercadoPagoSubmit = async (data: any) => {
@@ -37,6 +38,17 @@ export function PaymentSettingsTab({ laundryId }: PaymentSettingsTabProps) {
       });
     } catch (error) {
       console.error("Erro ao atualizar configurações Elgin:", error);
+    }
+  };
+
+  const handleStoneSubmit = async (data: any) => {
+    try {
+      await updateSettings({
+        provider: "stone",
+        ...data
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar configurações Stone:", error);
     }
   };
 
@@ -66,6 +78,10 @@ export function PaymentSettingsTab({ laundryId }: PaymentSettingsTabProps) {
               <CreditCard className="h-4 w-4" />
               Elgin TEF
             </TabsTrigger>
+            <TabsTrigger value="stone" className="flex items-center gap-2">
+              <Landmark className="h-4 w-4" />
+              Stone
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="mercado_pago">
@@ -79,6 +95,13 @@ export function PaymentSettingsTab({ laundryId }: PaymentSettingsTabProps) {
             <ElginForm
               initialData={settings}
               onSubmit={handleElginSubmit}
+            />
+          </TabsContent>
+
+          <TabsContent value="stone">
+            <StoneForm
+              initialData={settings}
+              onSubmit={handleStoneSubmit}
             />
           </TabsContent>
         </Tabs>

@@ -6,9 +6,10 @@ import { toast } from "sonner";
 import { Machine } from "@/types";
 import { getMachineStatus } from "@/services/machineService";
 
-// Importamos tanto o serviço MercadoPago quanto o serviço Elgin
+// Importamos todos os serviços de pagamento
 import { createPayment } from "@/services/mercadoPagoService";
 import { processElginPayment, initializeElginSDK } from "@/services/elginPaymentService";
+import { processStonePayment } from "@/services/stonePaymentService";
 
 interface UsePaymentProcessingProps {
   onSuccess?: () => void;
@@ -56,18 +57,29 @@ export function usePaymentProcessing({ onSuccess, onError }: UsePaymentProcessin
       const { data: { user } } = await supabase.auth.getUser();
       const userId = user?.id || 'anonymous';
 
-      // Determina se deve usar o TEF da Elgin (maquininha física) ou MercadoPago (online)
-      // No ambiente web ou se for PIX, usa MercadoPago, senão usa Elgin no Android
-      const useElgin = Platform.OS === 'android' && paymentMethod !== 'pix';
+      // Determina qual provedor de pagamento usar
+      // Primeiro verifica as configurações para saber qual provedor está ativo para esta lavanderia
+      const { data: paymentSettings } = await supabase
+        .from('payment_settings')
+        .select('provider')
+        .eq('laundry_id', machine.laundry_id)
+        .maybeSingle();
+      
+      const provider = paymentSettings?.provider || 'mercado_pago';
+      
+      // No ambiente web ou se for PIX, usa MercadoPago, senão escolhe baseado no provedor configurado
+      const useMercadoPago = Platform.OS !== 'android' || paymentMethod === 'pix';
+      const useElgin = !useMercadoPago && provider === 'elgin_tef';
+      const useStone = !useMercadoPago && provider === 'stone';
 
-      // Se for usar a Elgin, certifique-se de que o SDK está inicializado
+      // Processa o pagamento com o provedor apropriado
       if (useElgin) {
+        // Inicializa e processa pagamento via Elgin
         const initialized = await initializeElgin(machine.laundry_id);
         if (!initialized) {
           throw new Error('Não foi possível inicializar o SDK da Elgin');
         }
         
-        // Processa pagamento via maquininha física da Elgin
         const elginResponse = await processElginPayment({
           amount,
           description: `Pagamento Máquina #${machine.id}`,
@@ -83,6 +95,25 @@ export function usePaymentProcessing({ onSuccess, onError }: UsePaymentProcessin
           onSuccess?.();
         } else {
           console.log("Pagamento rejeitado via Elgin");
+          throw new Error('Pagamento rejeitado pela operadora');
+        }
+      } else if (useStone) {
+        // Processa pagamento via Stone
+        const stoneResponse = await processStonePayment({
+          amount,
+          description: `Pagamento Máquina #${machine.id}`,
+          paymentMethod: paymentMethod === 'pix' ? 'credit' : paymentMethod,
+          machineId: machine.id,
+          userId,
+          laundryId: machine.laundry_id,
+        });
+        
+        if (stoneResponse.status === 'approved') {
+          console.log("Pagamento aprovado via Stone");
+          toast.success('Pagamento aprovado! Sua máquina foi liberada.');
+          onSuccess?.();
+        } else {
+          console.log("Pagamento rejeitado via Stone");
           throw new Error('Pagamento rejeitado pela operadora');
         }
       } else {

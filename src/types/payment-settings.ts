@@ -15,8 +15,13 @@ export interface ElginSettings extends BasePaymentSettings {
   merchant_name: string;
 }
 
-export type PaymentProvider = 'mercado_pago' | 'elgin_tef';
+export interface StoneSettings extends BasePaymentSettings {
+  stone_code: string;
+  merchant_name: string;
+}
 
-export type PaymentSettings = (MercadoPagoSettings | ElginSettings) & {
+export type PaymentProvider = 'mercado_pago' | 'elgin_tef' | 'stone';
+
+export type PaymentSettings = (MercadoPagoSettings | ElginSettings | StoneSettings) & {
   provider: PaymentProvider;
 };

@@ -30,6 +30,27 @@ const mockElginPayment = {
   }
 };
 
+const mockStonePayment = {
+  processPayment: async (options: any) => {
+    console.log('Mock Stone processPayment called with:', options);
+    // Simula pagamento bem-sucedido após 2 segundos
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // 90% de chance de pagamento bem-sucedido
+    const success = Math.random() > 0.1;
+    
+    if (success) {
+      return {
+        transactionId: `stone_${Date.now()}`,
+        status: 'approved',
+      };
+    } else {
+      throw new Error('Pagamento rejeitado pela operadora');
+    }
+  }
+};
+
 export const NativeModules = {
-  ElginPayment: mockElginPayment
+  ElginPayment: mockElginPayment,
+  StonePayment: mockStonePayment
 };

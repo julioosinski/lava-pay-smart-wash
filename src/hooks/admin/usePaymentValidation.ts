@@ -1,6 +1,6 @@
 
 import * as z from "zod";
-import { MercadoPagoSettings, ElginSettings } from "@/types/payment-settings";
+import { MercadoPagoSettings, ElginSettings, StoneSettings } from "@/types/payment-settings";
 
 const baseSchema = {
   sandbox_mode: z.boolean()
@@ -20,12 +20,20 @@ export const elginSchema = z.object({
   ...baseSchema
 });
 
+export const stoneSchema = z.object({
+  stone_code: z.string().min(1, "Código Stone é obrigatório"),
+  merchant_name: z.string().min(1, "Nome do estabelecimento é obrigatório"),
+  ...baseSchema
+});
+
 export function usePaymentValidation() {
   return {
     mercadoPagoSchema,
-    elginSchema
+    elginSchema,
+    stoneSchema
   };
 }
 
 export type MercadoPagoForm = z.infer<typeof mercadoPagoSchema>;
 export type ElginForm = z.infer<typeof elginSchema>;
+export type StoneForm = z.infer<typeof stoneSchema>;
