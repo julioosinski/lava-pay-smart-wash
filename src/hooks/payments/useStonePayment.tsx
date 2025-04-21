@@ -4,23 +4,20 @@ import { processStonePayment } from "@/services/stonePaymentService";
 import { PaymentMethod } from "../usePaymentProcessing";
 import { toast } from "sonner";
 
+// Definindo um tipo específico para os métodos de pagamento suportados pela Stone
+type StonePaymentType = 'credit' | 'debit';
+
 export function useStonePayment() {
   const processStoneCardPayment = async (
     machine: Machine,
-    paymentMethod: PaymentMethod,
+    paymentMethod: StonePaymentType,
     amount: number,
     userId: string
   ) => {
-    // Stone só suporta crédito e débito, então tratamos PIX como crédito
-    const stonePaymentMethod = paymentMethod === 'pix' ? 'credit' : 
-                             paymentMethod === 'credit' ? 'credit' : 'debit';
-    
-    type StonePaymentType = 'credit' | 'debit';
-    
     const stoneResponse = await processStonePayment({
       amount,
       description: `Pagamento Máquina #${machine.id}`,
-      paymentMethod: stonePaymentMethod as StonePaymentType,
+      paymentMethod,
       machineId: machine.id,
       userId,
       laundryId: machine.laundry_id,

@@ -6,6 +6,9 @@ import { processElginPayment, initializeElginSDK } from "@/services/elginPayment
 import { PaymentMethod } from "../usePaymentProcessing";
 import { Platform } from "@/utils/platform";
 
+// Definindo um tipo específico para os métodos de pagamento suportados pela Elgin
+type ElginPaymentType = 'credit' | 'debit';
+
 export function useElginPayment() {
   const [isElginInitialized, setIsElginInitialized] = useState(false);
 
@@ -26,7 +29,7 @@ export function useElginPayment() {
 
   const processElginTefPayment = async (
     machine: Machine,
-    paymentMethod: PaymentMethod,
+    paymentMethod: ElginPaymentType,
     amount: number,
     userId: string
   ) => {
@@ -34,17 +37,11 @@ export function useElginPayment() {
     if (!initialized) {
       throw new Error('Não foi possível inicializar o SDK da Elgin');
     }
-
-    // Elgin só suporta crédito e débito, então tratamos PIX como crédito
-    const elginPaymentMethod = paymentMethod === 'pix' ? 'credit' : 
-                             paymentMethod === 'credit' ? 'credit' : 'debit';
-    
-    type ElginPaymentType = 'credit' | 'debit';
     
     const elginResponse = await processElginPayment({
       amount,
       description: `Pagamento Máquina #${machine.id}`,
-      paymentMethod: elginPaymentMethod as ElginPaymentType,
+      paymentMethod,
       machineId: machine.id,
       userId,
       laundryId: machine.laundry_id,
