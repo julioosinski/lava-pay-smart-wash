@@ -1,12 +1,12 @@
 
 import { useState } from 'react';
-import { Platform } from 'react-native';
+import { Platform } from "@/utils/platform";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Machine } from "@/types";
 import { getMachineStatus } from "@/services/machineService";
 
-// Importamos tanto o serviço MercadoPago quanto o novo serviço Stone
+// Importamos tanto o serviço MercadoPago quanto o serviço Stone
 import { createPayment } from "@/services/mercadoPagoService";
 import { processStonePayment, initializeStoneSDK } from "@/services/stonePaymentService";
 

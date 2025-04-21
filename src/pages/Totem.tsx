@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Platform } from "react-native";
+import { Platform } from "@/utils/platform";
 import { toast } from "sonner";
 import { Layout } from "@/components/Layout";
 import { LaundryLocation, Machine } from "@/types";

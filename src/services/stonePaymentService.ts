@@ -1,5 +1,6 @@
 
-import { NativeModules, Platform } from 'react-native';
+import { Platform } from "@/utils/platform";
+import { NativeModules } from "@/utils/nativeModules";
 import { supabase } from "@/integrations/supabase/client";
 
 const { StonePayment } = NativeModules;
@@ -45,7 +46,7 @@ async function getStoneConfig(laundryId: string): Promise<PaymentConfig | null> 
   return {
     stoneCode: settings.stone_code || '',
     merchantName: settings.merchant_name || '',
-    sandboxMode: settings.sandbox_mode
+    sandboxMode: settings.sandbox_mode || true
   };
 }
 
@@ -153,4 +154,3 @@ export async function processStonePayment(options: PaymentOptions): Promise<Paym
     throw error;
   }
 }
-
