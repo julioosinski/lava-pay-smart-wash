@@ -41,8 +41,13 @@ async function getElginConfig(laundryId: string): Promise<PaymentConfig | null> 
       .eq('provider', 'elgin_tef')
       .maybeSingle();
 
-    if (error || !settings) {
+    if (error) {
       console.error('Erro ao buscar configurações de pagamento Elgin:', error);
+      return null;
+    }
+
+    if (!settings) {
+      console.error('Configurações de pagamento Elgin não encontradas');
       return null;
     }
 
