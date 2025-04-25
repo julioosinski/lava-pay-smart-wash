@@ -60,6 +60,17 @@ const mockPaygoTefModule = {
     const success = Math.random() > 0.1;
     
     if (success) {
+      // Se for pagamento PIX, incluir QR Code de exemplo
+      if (options.paymentType === 'pix') {
+        return {
+          transactionId: `paygo_${Date.now()}`,
+          status: 'approved' as const,
+          message: 'QR Code PIX gerado com sucesso',
+          pixQrCode: 'pixcode123456789',
+          pixQrCodeBase64: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='
+        };
+      }
+      
       return {
         transactionId: `paygo_${Date.now()}`,
         status: 'approved' as const,

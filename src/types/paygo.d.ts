@@ -6,7 +6,7 @@ interface PaygoTefModule {
     merchantId: string;
     terminalId: string;
     amount: number;
-    paymentType: 'credit' | 'debit';
+    paymentType: 'credit' | 'debit' | 'pix';
     installments: number;
     printReceipt: boolean;
     description: string;
@@ -14,6 +14,8 @@ interface PaygoTefModule {
     status: 'approved' | 'rejected' | 'error';
     transactionId?: string;
     message?: string;
+    pixQrCode?: string; // QR Code em formato string
+    pixQrCodeBase64?: string; // QR Code em formato base64
   }>;
 }
 

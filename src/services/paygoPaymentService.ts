@@ -5,7 +5,7 @@ import { Platform } from "@/utils/platform";
 interface PaygoPaymentParams {
   amount: number;
   description: string;
-  paymentMethod: 'credit' | 'debit';
+  paymentMethod: 'credit' | 'debit' | 'pix';
   machineId: string;
   userId: string;
   laundryId: string;
@@ -45,7 +45,7 @@ export const processPaygoPayment = async (params: PaygoPaymentParams) => {
       terminalId: settings.paygo_terminal_id,
       amount: amountInCents,
       paymentType: params.paymentMethod,
-      installments: 1, // Default to 1 installment
+      installments: 1,
       printReceipt: true,
       description: params.description,
     });
@@ -54,6 +54,8 @@ export const processPaygoPayment = async (params: PaygoPaymentParams) => {
       status: response.status === 'approved' ? 'approved' : 'rejected',
       transactionId: response.transactionId,
       message: response.message,
+      pixQrCode: response.pixQrCode,
+      pixQrCodeBase64: response.pixQrCodeBase64
     };
   } catch (error) {
     console.error('Error processing PayGo payment:', error);
