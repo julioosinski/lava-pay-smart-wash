@@ -15,6 +15,9 @@ interface PaymentSettings {
   client_id?: string | null;
   client_secret?: string | null;
   merchant_name?: string | null;
+  terminal_serial?: string | null;
+  terminal_model?: string | null;
+  stone_code?: string | null;
 }
 
 interface UpdatePaymentSettingsData {
@@ -26,6 +29,9 @@ interface UpdatePaymentSettingsData {
   client_secret?: string;
   merchant_name?: string;
   provider?: string;
+  terminal_serial?: string;
+  terminal_model?: string;
+  stone_code?: string;
 }
 
 export function usePaymentSettings(laundryId: string) {
@@ -59,6 +65,8 @@ export function usePaymentSettings(laundryId: string) {
       if (newSettings.sandbox_mode !== undefined) updateData.sandbox_mode = newSettings.sandbox_mode;
       if (newSettings.merchant_name !== undefined) updateData.merchant_name = newSettings.merchant_name;
       if (newSettings.provider !== undefined) updateData.provider = newSettings.provider;
+      if (newSettings.terminal_serial !== undefined) updateData.terminal_serial = newSettings.terminal_serial;
+      if (newSettings.terminal_model !== undefined) updateData.terminal_model = newSettings.terminal_model;
       
       // Campos específicos do MercadoPago
       if (newSettings.access_token !== undefined) updateData.access_token = newSettings.access_token;
@@ -68,6 +76,9 @@ export function usePaymentSettings(laundryId: string) {
       // Campos específicos da Elgin
       if (newSettings.client_id !== undefined) updateData.client_id = newSettings.client_id;
       if (newSettings.client_secret !== undefined) updateData.client_secret = newSettings.client_secret;
+      
+      // Campos específicos da Stone
+      if (newSettings.stone_code !== undefined) updateData.stone_code = newSettings.stone_code;
       
       if (settings?.id) {
         // Atualizar configurações existentes

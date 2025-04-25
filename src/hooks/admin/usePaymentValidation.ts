@@ -3,7 +3,10 @@ import * as z from "zod";
 import { MercadoPagoSettings, ElginSettings, StoneSettings } from "@/types/payment-settings";
 
 const baseSchema = {
-  sandbox_mode: z.boolean()
+  sandbox_mode: z.boolean(),
+  terminal_serial: z.string().optional(),
+  terminal_model: z.string().optional(),
+  merchant_name: z.string().min(1, "Nome do estabelecimento é obrigatório"),
 };
 
 export const mercadoPagoSchema = z.object({
@@ -16,13 +19,11 @@ export const mercadoPagoSchema = z.object({
 export const elginSchema = z.object({
   client_id: z.string().min(1, "Client ID é obrigatório"),
   client_secret: z.string().min(1, "Client Secret é obrigatório"),
-  merchant_name: z.string().min(1, "Nome do estabelecimento é obrigatório"),
   ...baseSchema
 });
 
 export const stoneSchema = z.object({
   stone_code: z.string().min(1, "Código Stone é obrigatório"),
-  merchant_name: z.string().min(1, "Nome do estabelecimento é obrigatório"),
   ...baseSchema
 });
 
