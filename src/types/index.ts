@@ -38,6 +38,13 @@ export interface Machine {
   current_payment_id?: string;
   created_at?: string;
   updated_at?: string;
+  // Configurações MQTT
+  mqtt_broker?: string;
+  mqtt_username?: string;
+  mqtt_password?: string;
+  // Configurações WiFi para o ESP32
+  wifi_ssid?: string;
+  wifi_password?: string;
 }
 
 export interface Payment {
