@@ -2,7 +2,7 @@
 import { Machine } from "@/types";
 import { usePaymentProcessing } from "@/hooks/usePaymentProcessing";
 import { Platform } from "@/utils/platform";
-import { useEffect } from "react";
+import { useEffect, createContext, useContext } from "react";
 import { TotemStep } from "@/hooks/useTotemState";
 
 interface TotemPaymentHandlerProps {
@@ -10,6 +10,20 @@ interface TotemPaymentHandlerProps {
   selectedLaundryId: string | undefined;
   setStep: (step: TotemStep) => void;
   children: React.ReactNode;
+}
+
+// Create a context to provide payment functions to children
+export const PaymentContext = createContext<{
+  processPayment: (machine: Machine, paymentMethod: 'credit' | 'debit' | 'pix', amount: number) => Promise<boolean>;
+  isProcessing: boolean;
+} | undefined>(undefined);
+
+export function usePaymentContext() {
+  const context = useContext(PaymentContext);
+  if (context === undefined) {
+    throw new Error("usePaymentContext must be used within a TotemPaymentHandler");
+  }
+  return context;
 }
 
 export function TotemPaymentHandler({ 
@@ -41,5 +55,9 @@ export function TotemPaymentHandler({
     }
   }, [selectedLaundryId]);
 
-  return children;
+  return (
+    <PaymentContext.Provider value={{ processPayment, isProcessing }}>
+      {children}
+    </PaymentContext.Provider>
+  );
 }
