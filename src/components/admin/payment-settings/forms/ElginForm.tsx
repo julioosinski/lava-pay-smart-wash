@@ -1,3 +1,4 @@
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -20,6 +21,8 @@ export function ElginForm({ initialData, onSubmit }: ElginFormProps) {
       client_id: initialData?.client_id || "",
       client_secret: initialData?.client_secret || "",
       merchant_name: initialData?.merchant_name || "",
+      terminal_serial: initialData?.terminal_serial || "",
+      terminal_model: initialData?.terminal_model || "",
       sandbox_mode: initialData?.sandbox_mode ?? true
     }
   });
@@ -66,6 +69,37 @@ export function ElginForm({ initialData, onSubmit }: ElginFormProps) {
               <FormLabel>Nome do Estabelecimento</FormLabel>
               <FormControl>
                 <Input {...field} placeholder="Digite o nome do estabelecimento que aparecerá nos recibos" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="terminal_serial"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Número de Série do Terminal</FormLabel>
+              <FormControl>
+                <Input {...field} placeholder="Digite o número de série do terminal" />
+              </FormControl>
+              <FormDescription>
+                Encontrado na parte inferior da maquininha
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="terminal_model"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Modelo do Terminal</FormLabel>
+              <FormControl>
+                <Input {...field} placeholder="Ex: SmartPOS, M10, etc" />
               </FormControl>
               <FormMessage />
             </FormItem>

@@ -283,6 +283,8 @@ export type Database = {
           public_key: string | null
           sandbox_mode: boolean
           stone_code: string | null
+          terminal_model: string | null
+          terminal_serial: string | null
           updated_at: string
         }
         Insert: {
@@ -298,6 +300,8 @@ export type Database = {
           public_key?: string | null
           sandbox_mode?: boolean
           stone_code?: string | null
+          terminal_model?: string | null
+          terminal_serial?: string | null
           updated_at?: string
         }
         Update: {
@@ -313,6 +317,8 @@ export type Database = {
           public_key?: string | null
           sandbox_mode?: boolean
           stone_code?: string | null
+          terminal_model?: string | null
+          terminal_serial?: string | null
           updated_at?: string
         }
         Relationships: [

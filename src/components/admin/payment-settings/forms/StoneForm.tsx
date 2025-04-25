@@ -20,6 +20,8 @@ export function StoneForm({ initialData, onSubmit }: StoneFormProps) {
     defaultValues: {
       stone_code: initialData?.stone_code || "",
       merchant_name: initialData?.merchant_name || "",
+      terminal_serial: initialData?.terminal_serial || "",
+      terminal_model: initialData?.terminal_model || "",
       sandbox_mode: initialData?.sandbox_mode ?? true
     }
   });
@@ -52,6 +54,37 @@ export function StoneForm({ initialData, onSubmit }: StoneFormProps) {
               <FormLabel>Nome do Estabelecimento</FormLabel>
               <FormControl>
                 <Input {...field} placeholder="Digite o nome do estabelecimento que aparecerá nos recibos" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="terminal_serial"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Número de Série do Terminal</FormLabel>
+              <FormControl>
+                <Input {...field} placeholder="Digite o número de série do terminal" />
+              </FormControl>
+              <FormDescription>
+                Encontrado na parte inferior da maquininha
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="terminal_model"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Modelo do Terminal</FormLabel>
+              <FormControl>
+                <Input {...field} placeholder="Ex: Stone Mini, Stone Plus, etc" />
               </FormControl>
               <FormMessage />
             </FormItem>
