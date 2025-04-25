@@ -2,33 +2,20 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Machine } from "@/types";
+import { sendMQTTCommand } from "./mqttService";
 
-interface ESP32Command {
-  command: 'start' | 'stop' | 'status';
-  machineId: string;
-  duration?: number;
-}
-
-export async function sendCommandToMachine(machine: Machine, command: ESP32Command['command'], duration?: number): Promise<boolean> {
+export async function sendCommandToMachine(machine: Machine, command: 'start' | 'stop' | 'status', duration?: number): Promise<boolean> {
   try {
     console.log(`Enviando comando ${command} para máquina ${machine.id} (ESP32)`);
     
-    const commandParams = duration ? { duration } : {};
-    
-    try {
-      const { error } = await (supabase
-        .from('machine_commands' as any)
-        .insert({
-          machine_id: machine.id,
-          command,
-          params: commandParams,
-          status: 'sent',
-          sent_at: new Date().toISOString()
-        } as any));
-        
-      if (error) console.error('Erro ao registrar comando:', error);
-    } catch (e) {
-      console.warn('Não foi possível registrar o comando no histórico:', e);
+    // Envia comando via MQTT
+    const success = await sendMQTTCommand(machine, {
+      command,
+      duration
+    });
+
+    if (!success) {
+      throw new Error('Falha ao enviar comando MQTT');
     }
     
     // Atualiza o status da máquina conforme o comando
