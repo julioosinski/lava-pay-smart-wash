@@ -15,15 +15,22 @@ interface MQTTCommand {
 
 export async function sendMQTTCommand(machine: Machine, command: MQTTCommand): Promise<boolean> {
   try {
+    // Define o tópico MQTT específico para a máquina
     const topic = `machine/${machine.id}/command`;
     
-    // Em um ambiente real, isso enviaria o comando via MQTT
-    // Por enquanto, simularemos enviando para o Supabase
+    // Em um ambiente real, aqui você usaria uma biblioteca MQTT para publicar a mensagem
+    // Por exemplo, usando o MQTT.js:
+    // const client = await mqtt.connectAsync(`mqtt://${machine.mqtt_broker}`, {
+    //   username: machine.mqtt_username,
+    //   password: machine.mqtt_password
+    // });
+    // await client.publish(topic, JSON.stringify(command));
+    // await client.end();
     
-    // Log command to console for debugging
-    console.log(`MQTT command sent to ${topic}:`, command);
+    // Por enquanto, apenas logamos o comando que seria enviado
+    console.log(`MQTT command would be sent to ${machine.mqtt_broker} on topic ${topic}:`, command);
     
-    // Update machine status if applicable (instead of inserting to machine_commands)
+    // Atualiza o status da máquina se necessário
     if (command.command === 'start' || command.command === 'stop') {
       const { error } = await supabase
         .from('machines')
@@ -45,23 +52,19 @@ export async function sendMQTTCommand(machine: Machine, command: MQTTCommand): P
 
 export async function updateESP32Config(machine: Machine): Promise<boolean> {
   try {
-    // Busca as configurações ESP32 da lavanderia
-    const { data: settings, error } = await supabase
-      .from('esp32_settings')
-      .select('*')
-      .eq('laundry_id', machine.laundry_id)
-      .single();
-
-    if (error) throw error;
-    if (!settings) throw new Error('Configurações ESP32 não encontradas');
+    // Verifica se as configurações MQTT estão presentes
+    if (!machine.mqtt_broker || !machine.mqtt_username || !machine.mqtt_password) {
+      toast.error('Configurações MQTT não encontradas');
+      return false;
+    }
 
     const configCommand: MQTTCommand = {
       command: 'config',
-      wifi_ssid: settings.wifi_ssid || undefined,
-      wifi_password: settings.wifi_password || undefined,
-      mqtt_broker: settings.mqtt_broker || undefined,
-      mqtt_username: settings.mqtt_username || undefined,
-      mqtt_password: settings.mqtt_password || undefined
+      wifi_ssid: machine.wifi_ssid || undefined,
+      wifi_password: machine.wifi_password || undefined,
+      mqtt_broker: machine.mqtt_broker,
+      mqtt_username: machine.mqtt_username,
+      mqtt_password: machine.mqtt_password
     };
 
     return sendMQTTCommand(machine, configCommand);

@@ -8,6 +8,12 @@ export async function sendCommandToMachine(machine: Machine, command: 'start' | 
   try {
     console.log(`Enviando comando ${command} para máquina ${machine.id} (ESP32)`);
     
+    // Verifica se as configurações MQTT estão presentes
+    if (!machine.mqtt_broker || !machine.mqtt_username || !machine.mqtt_password) {
+      toast.error('Configurações MQTT não encontradas para esta máquina');
+      return false;
+    }
+    
     // Envia comando via MQTT
     const success = await sendMQTTCommand(machine, {
       command,
