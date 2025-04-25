@@ -279,6 +279,10 @@ export type Database = {
           integration_id: string | null
           laundry_id: string
           merchant_name: string | null
+          paygo_client_id: string | null
+          paygo_client_secret: string | null
+          paygo_merchant_id: string | null
+          paygo_terminal_id: string | null
           provider: string
           public_key: string | null
           sandbox_mode: boolean
@@ -296,6 +300,10 @@ export type Database = {
           integration_id?: string | null
           laundry_id: string
           merchant_name?: string | null
+          paygo_client_id?: string | null
+          paygo_client_secret?: string | null
+          paygo_merchant_id?: string | null
+          paygo_terminal_id?: string | null
           provider?: string
           public_key?: string | null
           sandbox_mode?: boolean
@@ -313,6 +321,10 @@ export type Database = {
           integration_id?: string | null
           laundry_id?: string
           merchant_name?: string | null
+          paygo_client_id?: string | null
+          paygo_client_secret?: string | null
+          paygo_merchant_id?: string | null
+          paygo_terminal_id?: string | null
           provider?: string
           public_key?: string | null
           sandbox_mode?: boolean

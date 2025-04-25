@@ -1,4 +1,3 @@
-
 export interface BasePaymentSettings {
   sandbox_mode: boolean;
   terminal_serial?: string;
@@ -21,8 +20,15 @@ export interface StoneSettings extends BasePaymentSettings {
   stone_code: string;
 }
 
-export type PaymentProvider = 'mercado_pago' | 'elgin_tef' | 'stone';
+export interface PaygoSettings extends BasePaymentSettings {
+  paygo_client_id: string;
+  paygo_client_secret: string;
+  paygo_terminal_id: string;
+  paygo_merchant_id: string;
+}
 
-export type PaymentSettings = (MercadoPagoSettings | ElginSettings | StoneSettings) & {
+export type PaymentProvider = 'mercado_pago' | 'elgin_tef' | 'stone' | 'paygo_tef';
+
+export type PaymentSettings = (MercadoPagoSettings | ElginSettings | StoneSettings | PaygoSettings) & {
   provider: PaymentProvider;
 };
