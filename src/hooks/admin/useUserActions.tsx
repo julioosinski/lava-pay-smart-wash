@@ -20,7 +20,7 @@ export function useUserActions(refetchFn: () => Promise<unknown>) {
     setShowUserForm(true);
   };
   
-  const handleDelete = (user: BusinessOwner) => {
+  const handleDelete = (user: BusinessOwner | null) => {
     if (isProcessingAction) return;
     console.log("Preparando para excluir usuário:", user);
     setUserToDelete(user);

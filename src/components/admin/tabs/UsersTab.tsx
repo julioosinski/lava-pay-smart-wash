@@ -67,8 +67,9 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
 
       <DeleteUserDialog
         user={userToDelete}
-        onClose={() => userToDelete && handleDelete(userToDelete)}
+        onClose={() => userToDelete && handleDelete(null)}
         onConfirm={handleDeleteConfirm}
+        isProcessing={isProcessingAction}
       />
     </div>
   );
