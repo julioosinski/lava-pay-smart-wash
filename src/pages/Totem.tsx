@@ -155,6 +155,7 @@ export default function Totem() {
           onSelect={handleMachineSelect}
           onBack={handleBackToLaundries}
           loading={machinesLoading}
+          selectedLaundryId={selectedLaundry.id}
         />
       )}
       {step === "payment" && selectedMachine && (
