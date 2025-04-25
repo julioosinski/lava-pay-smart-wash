@@ -67,6 +67,10 @@ export const useCreateMachine = () => {
         throw new Error('Missing required fields');
       }
       
+      // Generate default values for store_id and machine_serial since they're required by the database
+      const store_id = `STORE-${machine.machine_number}`;
+      const machine_serial = `SERIAL-${machine.machine_number}`;
+      
       const { data, error } = await supabase
         .from('machines')
         .insert({
@@ -79,7 +83,10 @@ export const useCreateMachine = () => {
           mqtt_username: machine.mqtt_username,
           mqtt_password: machine.mqtt_password,
           wifi_ssid: machine.wifi_ssid,
-          wifi_password: machine.wifi_password
+          wifi_password: machine.wifi_password,
+          // Add required fields with default values
+          store_id: store_id,
+          machine_serial: machine_serial
         })
         .select()
         .single();
@@ -150,6 +157,7 @@ export const useUpdateMachine = () => {
           mqtt_password: machine.mqtt_password,
           wifi_ssid: machine.wifi_ssid,
           wifi_password: machine.wifi_password
+          // We don't need to update store_id and machine_serial as they already exist in the database
         })
         .eq('id', machine.id)
         .select()
