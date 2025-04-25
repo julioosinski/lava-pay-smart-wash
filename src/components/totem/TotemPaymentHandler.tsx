@@ -32,7 +32,7 @@ export function TotemPaymentHandler({
   setStep,
   children 
 }: TotemPaymentHandlerProps) {
-  const { processPayment, isProcessing, initializeElgin } = usePaymentProcessing({
+  const { processPayment: originalProcessPayment, isProcessing, initializeElgin } = usePaymentProcessing({
     onSuccess: () => {
       setStep("success");
     },
@@ -40,6 +40,21 @@ export function TotemPaymentHandler({
       setStep("error");
     }
   });
+
+  // Wrapper function that returns a boolean indicating success
+  const processPaymentWrapper = async (
+    machine: Machine, 
+    paymentMethod: 'credit' | 'debit' | 'pix', 
+    amount: number
+  ): Promise<boolean> => {
+    try {
+      await originalProcessPayment(machine, paymentMethod, amount);
+      return true; // If no error was thrown, consider it successful
+    } catch (error) {
+      console.error("Payment processing error:", error);
+      return false; // Return false to indicate failure
+    }
+  };
 
   useEffect(() => {
     if (selectedLaundryId && Platform.OS === 'android') {
@@ -56,7 +71,7 @@ export function TotemPaymentHandler({
   }, [selectedLaundryId]);
 
   return (
-    <PaymentContext.Provider value={{ processPayment, isProcessing }}>
+    <PaymentContext.Provider value={{ processPayment: processPaymentWrapper, isProcessing }}>
       {children}
     </PaymentContext.Provider>
   );
