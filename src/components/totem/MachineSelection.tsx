@@ -9,15 +9,20 @@ interface MachineSelectionProps {
   onMachineSelect: (machine: Machine) => void;
   onBackClick: () => void;
   loading?: boolean;
+  selectedLaundryId?: string;
 }
 
 export function MachineSelection({ 
   machines, 
   onMachineSelect, 
   onBackClick,
-  loading = false 
+  loading = false,
+  selectedLaundryId 
 }: MachineSelectionProps) {
-  const availableMachines = machines.filter(machine => machine.status === "available");
+  // Filtra máquinas primeiro por lavanderia e depois por disponibilidade
+  const filteredMachines = machines
+    .filter(machine => machine.laundry_id === selectedLaundryId)
+    .filter(machine => machine.status === "available");
   
   return (
     <div className="container mx-auto px-4 py-8">
@@ -32,7 +37,7 @@ export function MachineSelection({
         <div className="flex justify-center items-center min-h-[300px]">
           <p className="text-gray-500">Carregando máquinas...</p>
         </div>
-      ) : availableMachines.length === 0 ? (
+      ) : filteredMachines.length === 0 ? (
         <div className="text-center py-10">
           <p className="text-lg text-gray-600 mb-4">Nenhuma máquina disponível</p>
           <p className="text-sm text-gray-500">Tente novamente mais tarde ou escolha outra lavanderia</p>
@@ -42,7 +47,7 @@ export function MachineSelection({
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {availableMachines.map((machine) => (
+          {filteredMachines.map((machine) => (
             <MachineCard 
               key={machine.id} 
               machine={machine} 

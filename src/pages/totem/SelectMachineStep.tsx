@@ -7,15 +7,23 @@ interface SelectMachineStepProps {
   onSelect: (machine: Machine) => void;
   onBack: () => void;
   loading: boolean;
-  selectedLaundryId?: string | null;
+  selectedLaundryId: string;
 }
-export function SelectMachineStep({ machines, onSelect, onBack, loading }: SelectMachineStepProps) {
+
+export function SelectMachineStep({ 
+  machines, 
+  onSelect, 
+  onBack, 
+  loading,
+  selectedLaundryId 
+}: SelectMachineStepProps) {
   return (
     <MachineSelection 
       machines={machines}
       onMachineSelect={onSelect}
       onBackClick={onBack}
       loading={loading}
+      selectedLaundryId={selectedLaundryId}
     />
   );
 }
