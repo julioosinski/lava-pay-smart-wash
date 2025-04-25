@@ -3,11 +3,12 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { PaymentProvider } from "@/types/payment-settings";
 
 interface PaymentSettings {
   id: string;
   laundry_id: string;
-  provider: string;
+  provider: PaymentProvider;
   access_token: string | null;
   public_key: string | null;
   integration_id: string | null;
@@ -18,6 +19,10 @@ interface PaymentSettings {
   terminal_serial?: string | null;
   terminal_model?: string | null;
   stone_code?: string | null;
+  paygo_client_id?: string | null;
+  paygo_client_secret?: string | null;
+  paygo_terminal_id?: string | null;
+  paygo_merchant_id?: string | null;
 }
 
 interface UpdatePaymentSettingsData {
@@ -28,10 +33,14 @@ interface UpdatePaymentSettingsData {
   client_id?: string;
   client_secret?: string;
   merchant_name?: string;
-  provider?: string;
+  provider?: PaymentProvider;
   terminal_serial?: string;
   terminal_model?: string;
   stone_code?: string;
+  paygo_client_id?: string;
+  paygo_client_secret?: string;
+  paygo_terminal_id?: string;
+  paygo_merchant_id?: string;
 }
 
 export function usePaymentSettings(laundryId: string) {
@@ -79,6 +88,12 @@ export function usePaymentSettings(laundryId: string) {
       
       // Campos específicos da Stone
       if (newSettings.stone_code !== undefined) updateData.stone_code = newSettings.stone_code;
+      
+      // Campos específicos do PayGo
+      if (newSettings.paygo_client_id !== undefined) updateData.paygo_client_id = newSettings.paygo_client_id;
+      if (newSettings.paygo_client_secret !== undefined) updateData.paygo_client_secret = newSettings.paygo_client_secret;
+      if (newSettings.paygo_terminal_id !== undefined) updateData.paygo_terminal_id = newSettings.paygo_terminal_id;
+      if (newSettings.paygo_merchant_id !== undefined) updateData.paygo_merchant_id = newSettings.paygo_merchant_id;
       
       if (settings?.id) {
         // Atualizar configurações existentes

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,7 +8,7 @@ import { ElginForm } from "./forms/ElginForm";
 import { StoneForm } from "./forms/StoneForm";
 import { PaygoForm } from "./forms/PaygoForm";
 import { usePaymentSettings } from "@/hooks/admin/usePaymentSettings";
-import { PaymentProvider } from "@/types/payment-settings";
+import { PaymentProvider, PaymentSettings } from "@/types/payment-settings";
 
 interface PaymentSettingsTabProps {
   laundryId: string;
@@ -101,28 +102,28 @@ export function PaymentSettingsTab({ laundryId }: PaymentSettingsTabProps) {
 
           <TabsContent value="mercado_pago">
             <MercadoPagoForm
-              initialData={settings}
+              initialData={settings as PaymentSettings}
               onSubmit={handleMercadoPagoSubmit}
             />
           </TabsContent>
 
           <TabsContent value="elgin_tef">
             <ElginForm
-              initialData={settings}
+              initialData={settings as PaymentSettings}
               onSubmit={handleElginSubmit}
             />
           </TabsContent>
 
           <TabsContent value="stone">
             <StoneForm
-              initialData={settings}
+              initialData={settings as PaymentSettings}
               onSubmit={handleStoneSubmit}
             />
           </TabsContent>
 
           <TabsContent value="paygo_tef">
             <PaygoForm
-              initialData={settings}
+              initialData={settings as PaymentSettings}
               onSubmit={handlePaygoSubmit}
             />
           </TabsContent>
