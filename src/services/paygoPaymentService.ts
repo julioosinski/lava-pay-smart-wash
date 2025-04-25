@@ -32,6 +32,11 @@ export const processPaygoPayment = async (params: PaygoPaymentParams) => {
     // Format amount to integer (cents)
     const amountInCents = Math.round(params.amount * 100);
 
+    // Check if PayGo module exists
+    if (!window.PaygoTefModule) {
+      throw new Error('PayGo TEF module not available on this device');
+    }
+
     // Call native PayGo TEF module
     const response = await window.PaygoTefModule.startPayment({
       clientId: settings.paygo_client_id,

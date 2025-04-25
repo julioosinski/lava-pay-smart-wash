@@ -8,6 +8,7 @@ import { getMachineStatus } from "@/services/machineService";
 import { useMercadoPagoPayment } from "./payments/useMercadoPagoPayment";
 import { useElginPayment } from "./payments/useElginPayment";
 import { useStonePayment } from "./payments/useStonePayment";
+import { usePaygoPayment } from "./payments/usePaygoPayment";
 
 export type PaymentMethod = 'credit' | 'debit' | 'pix';
 
@@ -22,6 +23,7 @@ export function usePaymentProcessing({ onSuccess, onError }: UsePaymentProcessin
   const { processMercadoPagoPayment } = useMercadoPagoPayment();
   const { processElginTefPayment, initializeElgin, isElginInitialized } = useElginPayment();
   const { processStoneCardPayment } = useStonePayment();
+  const { processPaygoTefPayment } = usePaygoPayment();
 
   const processPayment = async (
     machine: Machine, 
@@ -56,6 +58,7 @@ export function usePaymentProcessing({ onSuccess, onError }: UsePaymentProcessin
       const useMercadoPago = Platform.OS !== 'android' || paymentMethod === 'pix';
       const useElgin = !useMercadoPago && provider === 'elgin_tef';
       const useStone = !useMercadoPago && provider === 'stone';
+      const usePaygo = !useMercadoPago && provider === 'paygo_tef';
 
       let success = false;
 
@@ -74,6 +77,9 @@ export function usePaymentProcessing({ onSuccess, onError }: UsePaymentProcessin
       } else if (useStone) {
         const stoneMethod = convertPaymentMethod(paymentMethod);
         success = await processStoneCardPayment(machine, stoneMethod, amount, userId);
+      } else if (usePaygo) {
+        const paygoMethod = convertPaymentMethod(paymentMethod);
+        success = await processPaygoTefPayment(machine, paygoMethod, amount, userId);
       } else {
         success = await processMercadoPagoPayment(machine, paymentMethod, amount, userId);
       }

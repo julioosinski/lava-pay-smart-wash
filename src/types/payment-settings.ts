@@ -1,3 +1,4 @@
+
 export interface BasePaymentSettings {
   sandbox_mode: boolean;
   terminal_serial?: string;

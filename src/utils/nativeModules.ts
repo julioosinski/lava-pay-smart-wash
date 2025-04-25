@@ -50,7 +50,36 @@ const mockStonePayment = {
   }
 };
 
+const mockPaygoTefModule = {
+  startPayment: async (options: any) => {
+    console.log('Mock PayGo TEF startPayment called with:', options);
+    // Simula pagamento bem-sucedido após 2 segundos
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // 90% de chance de pagamento bem-sucedido
+    const success = Math.random() > 0.1;
+    
+    if (success) {
+      return {
+        transactionId: `paygo_${Date.now()}`,
+        status: 'approved',
+        message: 'Pagamento aprovado'
+      };
+    } else {
+      return {
+        status: 'rejected',
+        message: 'Pagamento rejeitado pela operadora'
+      };
+    }
+  }
+};
+
 export const NativeModules = {
   ElginPayment: mockElginPayment,
   StonePayment: mockStonePayment
 };
+
+// Add PayGo TEF module to window object for web testing
+if (typeof window !== 'undefined') {
+  window.PaygoTefModule = mockPaygoTefModule;
+}
