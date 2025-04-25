@@ -29,36 +29,6 @@ export function MachineDetailsFields({ form, machineId }: MachineDetailsFieldsPr
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="store_id"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>ID da Loja</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="machine_serial"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Número Serial da Máquina</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
             name="price"
             render={({ field }) => (
               <FormItem>
