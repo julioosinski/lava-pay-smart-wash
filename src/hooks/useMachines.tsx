@@ -47,8 +47,11 @@ type MachineInput = {
   laundry_id: string;
   time_minutes: number;
   machine_number: number;
-  store_id: string;
-  machine_serial: string;
+  mqtt_broker?: string;
+  mqtt_username?: string;
+  mqtt_password?: string;
+  wifi_ssid?: string;
+  wifi_password?: string;
 };
 
 export const useCreateMachine = () => {
@@ -60,7 +63,7 @@ export const useCreateMachine = () => {
       
       // Validate required fields
       if (!machine.type || !machine.price || !machine.laundry_id || !machine.time_minutes || 
-          machine.machine_number === undefined || !machine.store_id || !machine.machine_serial) {
+          machine.machine_number === undefined) {
         throw new Error('Missing required fields');
       }
       
@@ -72,8 +75,11 @@ export const useCreateMachine = () => {
           laundry_id: machine.laundry_id,
           time_minutes: machine.time_minutes,
           machine_number: machine.machine_number,
-          store_id: machine.store_id,
-          machine_serial: machine.machine_serial
+          mqtt_broker: machine.mqtt_broker,
+          mqtt_username: machine.mqtt_username,
+          mqtt_password: machine.mqtt_password,
+          wifi_ssid: machine.wifi_ssid,
+          wifi_password: machine.wifi_password
         })
         .select()
         .single();
@@ -139,8 +145,11 @@ export const useUpdateMachine = () => {
           price: machine.price,
           time_minutes: machine.time_minutes,
           machine_number: machine.machine_number,
-          store_id: machine.store_id,
-          machine_serial: machine.machine_serial
+          mqtt_broker: machine.mqtt_broker,
+          mqtt_username: machine.mqtt_username,
+          mqtt_password: machine.mqtt_password,
+          wifi_ssid: machine.wifi_ssid,
+          wifi_password: machine.wifi_password
         })
         .eq('id', machine.id)
         .select()

@@ -38,14 +38,20 @@ export function MachineForm({ laundryId, machine, variant = "create", triggerEle
       price: machine.price,
       time_minutes: machine.time_minutes,
       machine_number: machine.machine_number,
-      store_id: machine.store_id,
-      machine_serial: machine.machine_serial
+      mqtt_broker: machine.mqtt_broker,
+      mqtt_username: machine.mqtt_username,
+      mqtt_password: machine.mqtt_password,
+      wifi_ssid: machine.wifi_ssid,
+      wifi_password: machine.wifi_password
     } : {
       price: 0,
       time_minutes: 0,
       machine_number: nextMachineNumber,
-      store_id: `STORE-${nextMachineNumber}`,
-      machine_serial: `SERIAL-${nextMachineNumber}`
+      mqtt_broker: "",
+      mqtt_username: "",
+      mqtt_password: "",
+      wifi_ssid: "",
+      wifi_password: ""
     }
   });
 
@@ -59,8 +65,11 @@ export function MachineForm({ laundryId, machine, variant = "create", triggerEle
           price: data.price,
           time_minutes: data.time_minutes,
           machine_number: data.machine_number,
-          store_id: data.store_id,
-          machine_serial: data.machine_serial
+          mqtt_broker: data.mqtt_broker,
+          mqtt_username: data.mqtt_username,
+          mqtt_password: data.mqtt_password,
+          wifi_ssid: data.wifi_ssid,
+          wifi_password: data.wifi_password
         });
       } else {
         await createMachine.mutateAsync({
@@ -69,8 +78,11 @@ export function MachineForm({ laundryId, machine, variant = "create", triggerEle
           laundry_id: laundryId,
           time_minutes: data.time_minutes,
           machine_number: data.machine_number,
-          store_id: data.store_id,
-          machine_serial: data.machine_serial
+          mqtt_broker: data.mqtt_broker,
+          mqtt_username: data.mqtt_username,
+          mqtt_password: data.mqtt_password,
+          wifi_ssid: data.wifi_ssid,
+          wifi_password: data.wifi_password
         });
       }
       setOpen(false);
