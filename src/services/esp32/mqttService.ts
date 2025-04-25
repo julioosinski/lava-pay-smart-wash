@@ -19,18 +19,22 @@ export async function sendMQTTCommand(machine: Machine, command: MQTTCommand): P
     
     // Em um ambiente real, isso enviaria o comando via MQTT
     // Por enquanto, simularemos enviando para o Supabase
-    const { error } = await supabase
-      .from('machine_commands')
-      .insert({
-        machine_id: machine.id,
-        command: command.command,
-        params: command,
-        status: 'sent',
-        sent_at: new Date().toISOString()
-      });
-
-    if (error) throw error;
+    
+    // Log command to console for debugging
     console.log(`MQTT command sent to ${topic}:`, command);
+    
+    // Update machine status if applicable (instead of inserting to machine_commands)
+    if (command.command === 'start' || command.command === 'stop') {
+      const { error } = await supabase
+        .from('machines')
+        .update({ 
+          status: command.command === 'start' ? 'in-use' : 'available'
+        })
+        .eq('id', machine.id);
+      
+      if (error) throw error;
+    }
+    
     return true;
   } catch (error) {
     console.error('Error sending MQTT command:', error);
