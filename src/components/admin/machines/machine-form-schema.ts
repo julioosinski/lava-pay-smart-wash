@@ -11,12 +11,14 @@ export const machineSchema = z.object({
   store_id: z.string().min(1, { message: "ID da loja é obrigatório" }),
   machine_serial: z.string().min(1, { message: "Número serial da máquina é obrigatório" }),
   
-  // ESP32 Configuration - all fields are optional
-  wifi_ssid: z.string().optional(),
-  wifi_password: z.string().optional(),
+  // MQTT Configuration
   mqtt_broker: z.string().optional(),
   mqtt_username: z.string().optional(),
   mqtt_password: z.string().optional(),
+  
+  // ESP32 Configuration - all fields are optional
+  wifi_ssid: z.string().optional(),
+  wifi_password: z.string().optional(),
 });
 
 export type MachineFormValues = z.infer<typeof machineSchema>;

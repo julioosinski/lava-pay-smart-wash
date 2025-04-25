@@ -1,9 +1,9 @@
-
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
 import { MachineFormValues } from "./machine-form-schema";
 import { ESP32ConfigFields } from "./ESP32ConfigFields";
+import { MQTTConfigFields } from "./MQTTConfigFields";
 
 interface MachineDetailsFieldsProps {
   form: UseFormReturn<MachineFormValues>;
@@ -74,6 +74,7 @@ export function MachineDetailsFields({ form }: MachineDetailsFieldsProps) {
         </div>
       </div>
 
+      <MQTTConfigFields form={form} />
       <ESP32ConfigFields form={form} />
     </div>
   );
