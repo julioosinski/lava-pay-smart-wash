@@ -23,8 +23,8 @@ export const useSignOut = ({ setUser, setSession, setLoading, navigate }: SignOu
       localStorage.setItem('force_logout', 'true');
       localStorage.removeItem('sb-ftvvhclqjwtthquokzii-auth-token');
       
-      // Always redirect to home page after logout
-      console.log("Navigating to home page immediately");
+      // Always redirect to home page after logout, regardless of current page
+      console.log("Navigating to home page after logout");
       navigate('/', { replace: true });
       
       // Then attempt to sign out from Supabase
