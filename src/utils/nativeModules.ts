@@ -62,12 +62,12 @@ const mockPaygoTefModule = {
     if (success) {
       return {
         transactionId: `paygo_${Date.now()}`,
-        status: 'approved',
+        status: 'approved' as const,
         message: 'Pagamento aprovado'
       };
     } else {
       return {
-        status: 'rejected',
+        status: 'rejected' as const,
         message: 'Pagamento rejeitado pela operadora'
       };
     }

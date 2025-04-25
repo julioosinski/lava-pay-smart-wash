@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent } from "@/components/ui/card";
-import { PaymentSettings } from "@/types/payment-settings";
+import { PaymentSettings, PaygoSettings } from "@/types/payment-settings";
 
 const paygoSchema = z.object({
   paygo_client_id: z.string().min(1, "Client ID é obrigatório"),
@@ -29,10 +29,10 @@ export function PaygoForm({ initialData, onSubmit }: PaygoFormProps) {
   const form = useForm<PaygoFormValues>({
     resolver: zodResolver(paygoSchema),
     defaultValues: {
-      paygo_client_id: initialData?.paygo_client_id || '',
-      paygo_client_secret: initialData?.paygo_client_secret || '',
-      paygo_terminal_id: initialData?.paygo_terminal_id || '',
-      paygo_merchant_id: initialData?.paygo_merchant_id || '',
+      paygo_client_id: initialData?.provider === 'paygo_tef' ? (initialData as PaygoSettings).paygo_client_id : '',
+      paygo_client_secret: initialData?.provider === 'paygo_tef' ? (initialData as PaygoSettings).paygo_client_secret : '',
+      paygo_terminal_id: initialData?.provider === 'paygo_tef' ? (initialData as PaygoSettings).paygo_terminal_id : '',
+      paygo_merchant_id: initialData?.provider === 'paygo_tef' ? (initialData as PaygoSettings).paygo_merchant_id : '',
       merchant_name: initialData?.merchant_name || '',
       sandbox_mode: initialData?.sandbox_mode ?? true,
     },

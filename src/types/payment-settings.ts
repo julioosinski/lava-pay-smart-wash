@@ -30,6 +30,8 @@ export interface PaygoSettings extends BasePaymentSettings {
 
 export type PaymentProvider = 'mercado_pago' | 'elgin_tef' | 'stone' | 'paygo_tef';
 
-export type PaymentSettings = (MercadoPagoSettings | ElginSettings | StoneSettings | PaygoSettings) & {
-  provider: PaymentProvider;
-};
+export type PaymentSettings = 
+  | (MercadoPagoSettings & { provider: 'mercado_pago' })
+  | (ElginSettings & { provider: 'elgin_tef' })
+  | (StoneSettings & { provider: 'stone' })
+  | (PaygoSettings & { provider: 'paygo_tef' });
