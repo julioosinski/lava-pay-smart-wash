@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Platform } from "@/utils/platform";
 import { toast } from "sonner";
@@ -7,6 +8,7 @@ import { usePaymentProcessing } from "@/hooks/usePaymentProcessing";
 import { useMachineMonitoring } from "@/hooks/useMachineMonitoring";
 import { useLaundries } from "@/hooks/useLaundries";
 import { useMachines } from "@/hooks/useMachines";
+import { useAuth } from "@/contexts/auth";
 
 import { SelectLaundryStep } from "./totem/SelectLaundryStep";
 import { SelectMachineStep } from "./totem/SelectMachineStep";
@@ -16,6 +18,7 @@ import { SuccessStep } from "./totem/SuccessStep";
 import { ErrorStep } from "./totem/ErrorStep";
 
 export default function Totem() {
+  const { user } = useAuth();
   const [step, setStep] = useState<
     "select-laundry" | "select-machine" | "payment" | "processing" | "success" | "error"
   >("select-laundry");
@@ -31,7 +34,15 @@ export default function Totem() {
     securityCode: ""
   });
 
-  const { data: laundries = [], isLoading: laundriesLoading } = useLaundries();
+  // Fetch only laundries owned by the logged-in user
+  const { data: laundries = [], isLoading: laundriesLoading } = useLaundries({ 
+    ownerId: user?.id,
+    options: {
+      enabled: !!user?.id
+    }
+  });
+
+  // Fetch machines for the selected laundry
   const { data: machines = [], isLoading: machinesLoading } = useMachines(selectedLaundry?.id);
 
   const { processPayment, isProcessing: paymentIsProcessing, initializeElgin } = usePaymentProcessing({

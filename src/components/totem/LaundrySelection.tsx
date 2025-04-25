@@ -26,7 +26,7 @@ export function LaundrySelection({ laundries, onLaundrySelect, loading = false }
       ) : laundries.length === 0 ? (
         <div className="text-center py-10">
           <p className="text-lg text-gray-600 mb-4">Nenhuma lavanderia encontrada</p>
-          <p className="text-sm text-gray-500">Por favor, tente novamente mais tarde ou contate o administrador</p>
+          <p className="text-sm text-gray-500">Você não tem acesso a nenhuma lavanderia no momento. Por favor, contate o administrador.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
