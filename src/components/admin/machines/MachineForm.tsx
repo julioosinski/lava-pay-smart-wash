@@ -121,7 +121,10 @@ export function MachineForm({ laundryId, machine, variant = "create", triggerEle
               <MachineTypeField form={form} />
               <MachineNumberField form={form} />
             </div>
-            <MachineDetailsFields form={form} />
+            <MachineDetailsFields 
+              form={form} 
+              machineId={machine?.id}
+            />
 
             <Button 
               type="submit" 
