@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { BusinessOwner } from "@/types";
 import { useQueryClient } from "@tanstack/react-query";
@@ -91,6 +90,7 @@ export function useUserActions(refetchFn: () => Promise<unknown>) {
     handleFormClose,
     handleFormSuccess,
     setShowUserForm,
-    setSelectedUser
+    setSelectedUser,
+    setUserToDelete
   };
 }
