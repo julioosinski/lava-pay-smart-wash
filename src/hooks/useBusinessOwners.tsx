@@ -40,7 +40,7 @@ export function useBusinessOwners() {
         throw error;
       }
     },
-    staleTime: 0, // Reduzir para garantir que os dados serão recarregados
+    staleTime: 0, // Garantir que os dados serão sempre recarregados
     refetchOnMount: true,
     refetchOnWindowFocus: true
   });

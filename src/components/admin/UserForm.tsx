@@ -96,7 +96,7 @@ export function UserForm({ onClose, onSuccess, user, mode = "create" }: UserForm
         // para garantir que os dados tenham tempo de serem atualizados no servidor
         setTimeout(() => {
           onSuccess();
-        }, 500);
+        }, 100); // Reduzir o timeout para ser mais rápido
       } else {
         throw new Error(result.error || `Não foi possível ${mode === "create" ? "criar" : "atualizar"} o proprietário`);
       }

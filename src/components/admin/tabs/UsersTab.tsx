@@ -27,7 +27,7 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
     handleFormSuccess,
     setShowUserForm,
     setSelectedUser,
-    setUserToDelete  // Add this line to destructure setUserToDelete
+    setUserToDelete
   } = useUserActions(refetch);
   
   const filteredUsers = businessOwners.filter(user =>

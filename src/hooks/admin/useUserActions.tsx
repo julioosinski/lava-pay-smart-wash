@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { BusinessOwner } from "@/types";
 import { useQueryClient } from "@tanstack/react-query";
@@ -33,16 +34,16 @@ export function useUserActions(refetchFn: () => Promise<unknown>) {
         const result = await deleteBusinessOwner(userToDelete.id);
         
         if (result.success) {
-          toast.success("Proprietário excluído com sucesso");
+          // Limpamos o usuário a ser excluído antes de qualquer outra operação
+          setUserToDelete(null);
           
-          // Invalidar o cache e forçar a recarga dos dados
+          // Invalidar o cache
           await queryClient.invalidateQueries({ queryKey: ['business-owners'] });
           
           // Forçar a atualização da lista diretamente
           await refetchFn();
           
-          // Limpamos o usuário a ser excluído
-          setUserToDelete(null);
+          toast.success("Proprietário excluído com sucesso");
         } else {
           toast.error(result.error || "Não foi possível excluir o proprietário");
         }
@@ -66,6 +67,8 @@ export function useUserActions(refetchFn: () => Promise<unknown>) {
     
     try {
       setIsProcessingAction(true);
+      
+      // Fechar o formulário e resetar o usuário selecionado
       setShowUserForm(false);
       setSelectedUser(null);
       
@@ -74,6 +77,8 @@ export function useUserActions(refetchFn: () => Promise<unknown>) {
       
       // Forçar a atualização da lista diretamente
       await refetchFn();
+      
+      toast.success("Proprietário salvo com sucesso");
     } finally {
       setIsProcessingAction(false);
     }
