@@ -35,11 +35,15 @@ export function useUserActions(refetchFn: () => Promise<unknown>) {
         
         if (result.success) {
           toast.success("Proprietário excluído com sucesso");
+          
+          // Invalidar o cache e forçar a recarga dos dados
           await queryClient.invalidateQueries({ queryKey: ['business-owners'] });
           
-          setTimeout(async () => {
-            await refetchFn();
-          }, 500);
+          // Forçar a atualização da lista diretamente
+          await refetchFn();
+          
+          // Limpamos o usuário a ser excluído
+          setUserToDelete(null);
         } else {
           toast.error(result.error || "Não foi possível excluir o proprietário");
         }
@@ -47,7 +51,6 @@ export function useUserActions(refetchFn: () => Promise<unknown>) {
         toast.error("Erro ao excluir proprietário");
         console.error("Error deleting business owner:", error);
       } finally {
-        setUserToDelete(null);
         setIsProcessingAction(false);
       }
     }
@@ -67,11 +70,11 @@ export function useUserActions(refetchFn: () => Promise<unknown>) {
       setShowUserForm(false);
       setSelectedUser(null);
       
+      // Invalidar o cache e forçar a recarga dos dados
       await queryClient.invalidateQueries({ queryKey: ['business-owners'] });
       
-      setTimeout(async () => {
-        await refetchFn();
-      }, 500);
+      // Forçar a atualização da lista diretamente
+      await refetchFn();
     } finally {
       setIsProcessingAction(false);
     }

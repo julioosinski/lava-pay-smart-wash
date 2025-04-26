@@ -40,8 +40,8 @@ export function useBusinessOwners() {
         throw error;
       }
     },
-    staleTime: 1000, // 1 segundo de staleness para permitir múltiplas atualizações próximas
-    refetchOnMount: true, // Recarregar quando o componente montar
-    refetchOnWindowFocus: true // Recarregar quando a janela receber foco
+    staleTime: 0, // Reduzir para garantir que os dados serão recarregados
+    refetchOnMount: true,
+    refetchOnWindowFocus: true
   });
 }
