@@ -14,7 +14,8 @@ export function useBusinessOwners() {
         const { data: owners, error } = await supabase
           .from('profiles')
           .select('id, first_name, last_name, contact_email, contact_phone, role')
-          .eq('role', 'business');
+          .eq('role', 'business')
+          .order('first_name');  // Ordenar por nome
           
         if (error) {
           console.error("Erro ao buscar proprietários:", error);
@@ -40,9 +41,10 @@ export function useBusinessOwners() {
         throw error;
       }
     },
-    staleTime: 0, // Garantir que os dados serão sempre recarregados
+    staleTime: 0, // Sem cache
+    gcTime: 0,  // Sem retenção de dados em cache
     refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchInterval: false, // Desativar o refetch automático por intervalo
+    refetchInterval: false, 
   });
 }

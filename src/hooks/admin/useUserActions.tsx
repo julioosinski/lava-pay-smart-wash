@@ -5,7 +5,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { deleteBusinessOwner } from "@/services/businessOwner";
 import { toast } from "sonner";
 
-// Update the refetch parameter type to match what tanstack/react-query returns
 export function useUserActions(refetchFn: () => Promise<unknown>) {
   const [selectedUser, setSelectedUser] = useState<BusinessOwner | null>(null);
   const [userToDelete, setUserToDelete] = useState<BusinessOwner | null>(null);
@@ -36,20 +35,19 @@ export function useUserActions(refetchFn: () => Promise<unknown>) {
         if (result.success) {
           toast.success("Proprietário excluído com sucesso");
           
-          // Limpamos o usuário a ser excluído antes de qualquer outra operação
+          // Limpar o usuário antes de qualquer outra operação
           setUserToDelete(null);
           
-          // Invalidar o cache completamente
-          await queryClient.invalidateQueries({ queryKey: ['business-owners'], refetchType: 'all' });
+          // Forçar uma invalidação completa do cache
+          queryClient.removeQueries({ queryKey: ['business-owners'] });
           
-          // Forçar a atualização da lista diretamente
+          // Forçar refetch dos dados
           await refetchFn();
           
-          // Adicionar um pequeno atraso para garantir que a UI seja atualizada
+          // Invalidar novamente para garantir dados frescos
           setTimeout(() => {
-            // Verificar novamente se os dados estão atualizados
-            queryClient.refetchQueries({ queryKey: ['business-owners'], type: 'all' });
-          }, 500);
+            queryClient.invalidateQueries({ queryKey: ['business-owners'] });
+          }, 300);
         } else {
           toast.error(result.error || "Não foi possível excluir o proprietário");
         }
@@ -80,17 +78,16 @@ export function useUserActions(refetchFn: () => Promise<unknown>) {
       
       toast.success("Proprietário salvo com sucesso");
       
-      // Invalidar o cache completamente
-      await queryClient.invalidateQueries({ queryKey: ['business-owners'], refetchType: 'all' });
+      // Forçar uma invalidação completa do cache
+      queryClient.removeQueries({ queryKey: ['business-owners'] });
       
-      // Forçar a atualização da lista diretamente
+      // Forçar refetch dos dados
       await refetchFn();
       
-      // Adicionar um pequeno atraso para garantir que a UI seja atualizada
+      // Invalidar novamente para garantir dados frescos
       setTimeout(() => {
-        // Verificar novamente se os dados estão atualizados
-        queryClient.refetchQueries({ queryKey: ['business-owners'], type: 'all' });
-      }, 500);
+        queryClient.invalidateQueries({ queryKey: ['business-owners'] });
+      }, 300);
     } finally {
       setIsProcessingAction(false);
     }

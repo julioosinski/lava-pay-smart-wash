@@ -18,9 +18,16 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   
-  // Forçar refresh ao montar o componente
+  // Força uma atualização completa ao montar o componente
   useEffect(() => {
-    queryClient.invalidateQueries({ queryKey: ['business-owners'] });
+    const fetchData = async () => {
+      // Remove completamente os dados do cache
+      queryClient.removeQueries({ queryKey: ['business-owners'] });
+      // Força um refetch
+      await queryClient.fetchQuery({ queryKey: ['business-owners'] });
+    };
+    
+    fetchData();
   }, [queryClient]);
   
   const { 
