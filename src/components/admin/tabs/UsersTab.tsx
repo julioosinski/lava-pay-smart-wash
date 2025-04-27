@@ -7,7 +7,8 @@ import { UserForm } from "../UserForm";
 import { DeleteUserDialog } from "../DeleteUserDialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface UsersTabProps {
   searchQuery: string;
@@ -17,14 +18,25 @@ interface UsersTabProps {
 export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   
   // Força uma atualização completa ao montar o componente
   useEffect(() => {
     const fetchData = async () => {
-      // Remove completamente os dados do cache
-      queryClient.removeQueries({ queryKey: ['business-owners'] });
-      // Força um refetch
-      await queryClient.fetchQuery({ queryKey: ['business-owners'] });
+      try {
+        // Remove completamente os dados do cache
+        queryClient.removeQueries({ queryKey: ['business-owners'] });
+        
+        // Força um refetch
+        await queryClient.fetchQuery({ queryKey: ['business-owners'] });
+        
+        console.log("Dados de proprietários atualizados com sucesso");
+      } catch (error) {
+        console.error("Erro ao atualizar dados de proprietários:", error);
+        toast.error("Erro ao carregar proprietários. Tente novamente.");
+      } finally {
+        setIsInitialLoad(false);
+      }
     };
     
     fetchData();
@@ -32,9 +44,18 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
   
   const { 
     data: businessOwners = [], 
-    isLoading, 
-    refetch 
+    isLoading: isLoadingOwners, 
+    refetch, 
+    error: ownersError
   } = useBusinessOwners();
+  
+  // Mostrar erro de carregamento
+  useEffect(() => {
+    if (ownersError && !isInitialLoad) {
+      console.error("Erro ao carregar proprietários:", ownersError);
+      toast.error("Erro ao carregar proprietários. Tente novamente.");
+    }
+  }, [ownersError, isInitialLoad]);
   
   const { 
     selectedUser,
@@ -82,7 +103,7 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
       <div className="overflow-x-auto">
         <UsersTable 
           users={filteredUsers}
-          isLoading={isLoading}
+          isLoading={isLoadingOwners || isInitialLoad}
           onEdit={handleEdit}
           onDelete={handleDelete}
           isProcessing={isProcessingAction}

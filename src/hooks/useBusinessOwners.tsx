@@ -23,6 +23,7 @@ export function useBusinessOwners() {
         }
         
         console.log("Proprietários encontrados:", owners?.length || 0);
+        console.log("Dados brutos:", owners);
         
         // Transformação de dados para o formato esperado pelos componentes
         const formattedOwners = (owners || []).map(owner => ({
@@ -34,6 +35,7 @@ export function useBusinessOwners() {
         }));
         
         console.log("Proprietários formatados:", formattedOwners.length);
+        console.log("Dados formatados:", formattedOwners);
         
         return formattedOwners;
       } catch (error) {
@@ -43,8 +45,8 @@ export function useBusinessOwners() {
     },
     staleTime: 0, // Sem cache
     gcTime: 0,  // Sem retenção de dados em cache
-    refetchOnMount: true,
+    refetchOnMount: 'always', // Sempre refetch ao montar o componente
     refetchOnWindowFocus: true,
-    refetchInterval: false, 
+    refetchInterval: false,
   });
 }

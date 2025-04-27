@@ -41,13 +41,16 @@ export function useUserActions(refetchFn: () => Promise<unknown>) {
           // Forçar uma invalidação completa do cache
           queryClient.removeQueries({ queryKey: ['business-owners'] });
           
-          // Forçar refetch dos dados
-          await refetchFn();
-          
-          // Invalidar novamente para garantir dados frescos
-          setTimeout(() => {
-            queryClient.invalidateQueries({ queryKey: ['business-owners'] });
-          }, 300);
+          // Forçar refetch dos dados com um pequeno delay para garantir a consistência
+          setTimeout(async () => {
+            try {
+              await refetchFn();
+              // Invalidar novamente para garantir dados frescos
+              queryClient.invalidateQueries({ queryKey: ['business-owners'] });
+            } catch (error) {
+              console.error("Erro ao atualizar dados após exclusão:", error);
+            }
+          }, 500);
         } else {
           toast.error(result.error || "Não foi possível excluir o proprietário");
         }
@@ -81,13 +84,16 @@ export function useUserActions(refetchFn: () => Promise<unknown>) {
       // Forçar uma invalidação completa do cache
       queryClient.removeQueries({ queryKey: ['business-owners'] });
       
-      // Forçar refetch dos dados
-      await refetchFn();
-      
-      // Invalidar novamente para garantir dados frescos
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['business-owners'] });
-      }, 300);
+      // Forçar refetch dos dados com um pequeno delay para garantir a consistência
+      setTimeout(async () => {
+        try {
+          await refetchFn();
+          // Invalidar novamente para garantir dados frescos
+          queryClient.invalidateQueries({ queryKey: ['business-owners'] });
+        } catch (error) {
+          console.error("Erro ao atualizar dados após salvar:", error);
+        }
+      }, 500);
     } finally {
       setIsProcessingAction(false);
     }
