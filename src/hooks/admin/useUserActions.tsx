@@ -34,16 +34,22 @@ export function useUserActions(refetchFn: () => Promise<unknown>) {
         const result = await deleteBusinessOwner(userToDelete.id);
         
         if (result.success) {
+          toast.success("Proprietário excluído com sucesso");
+          
           // Limpamos o usuário a ser excluído antes de qualquer outra operação
           setUserToDelete(null);
           
-          // Invalidar o cache
-          await queryClient.invalidateQueries({ queryKey: ['business-owners'] });
+          // Invalidar o cache completamente
+          await queryClient.invalidateQueries({ queryKey: ['business-owners'], refetchType: 'all' });
           
           // Forçar a atualização da lista diretamente
           await refetchFn();
           
-          toast.success("Proprietário excluído com sucesso");
+          // Adicionar um pequeno atraso para garantir que a UI seja atualizada
+          setTimeout(() => {
+            // Verificar novamente se os dados estão atualizados
+            queryClient.refetchQueries({ queryKey: ['business-owners'], type: 'all' });
+          }, 500);
         } else {
           toast.error(result.error || "Não foi possível excluir o proprietário");
         }
@@ -72,13 +78,19 @@ export function useUserActions(refetchFn: () => Promise<unknown>) {
       setShowUserForm(false);
       setSelectedUser(null);
       
-      // Invalidar o cache e forçar a recarga dos dados
-      await queryClient.invalidateQueries({ queryKey: ['business-owners'] });
+      toast.success("Proprietário salvo com sucesso");
+      
+      // Invalidar o cache completamente
+      await queryClient.invalidateQueries({ queryKey: ['business-owners'], refetchType: 'all' });
       
       // Forçar a atualização da lista diretamente
       await refetchFn();
       
-      toast.success("Proprietário salvo com sucesso");
+      // Adicionar um pequeno atraso para garantir que a UI seja atualizada
+      setTimeout(() => {
+        // Verificar novamente se os dados estão atualizados
+        queryClient.refetchQueries({ queryKey: ['business-owners'], type: 'all' });
+      }, 500);
     } finally {
       setIsProcessingAction(false);
     }

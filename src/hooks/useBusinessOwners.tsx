@@ -42,6 +42,7 @@ export function useBusinessOwners() {
     },
     staleTime: 0, // Garantir que os dados serão sempre recarregados
     refetchOnMount: true,
-    refetchOnWindowFocus: true
+    refetchOnWindowFocus: true,
+    refetchInterval: false, // Desativar o refetch automático por intervalo
   });
 }

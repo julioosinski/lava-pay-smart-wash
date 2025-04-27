@@ -6,6 +6,8 @@ import { UsersTable } from "../users/UsersTable";
 import { UserForm } from "../UserForm";
 import { DeleteUserDialog } from "../DeleteUserDialog";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 interface UsersTabProps {
   searchQuery: string;
@@ -14,7 +16,18 @@ interface UsersTabProps {
 
 export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
   const isMobile = useIsMobile();
-  const { data: businessOwners = [], isLoading, refetch } = useBusinessOwners();
+  const queryClient = useQueryClient();
+  
+  // Forçar refresh ao montar o componente
+  useEffect(() => {
+    queryClient.invalidateQueries({ queryKey: ['business-owners'] });
+  }, [queryClient]);
+  
+  const { 
+    data: businessOwners = [], 
+    isLoading, 
+    refetch 
+  } = useBusinessOwners();
   
   const { 
     selectedUser,
