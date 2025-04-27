@@ -20,17 +20,26 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
   const queryClient = useQueryClient();
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   
+  // Buscar dados dos proprietários
+  const { 
+    data: businessOwners = [], 
+    isLoading: isLoadingOwners, 
+    refetch, 
+    error: ownersError,
+    isError
+  } = useBusinessOwners();
+  
   // Força uma atualização completa ao montar o componente
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Remove completamente os dados do cache
-        queryClient.removeQueries({ queryKey: ['business-owners'] });
+        console.log("Forçando atualização dos dados de proprietários...");
         
-        // Força um refetch
-        await queryClient.fetchQuery({ queryKey: ['business-owners'] });
+        // Invalida o cache e força um refetch
+        await queryClient.invalidateQueries({ queryKey: ['business-owners'] });
+        await refetch();
         
-        console.log("Dados de proprietários atualizados com sucesso");
+        console.log("Dados de proprietários atualizados com sucesso.");
       } catch (error) {
         console.error("Erro ao atualizar dados de proprietários:", error);
         toast.error("Erro ao carregar proprietários. Tente novamente.");
@@ -40,22 +49,15 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
     };
     
     fetchData();
-  }, [queryClient]);
-  
-  const { 
-    data: businessOwners = [], 
-    isLoading: isLoadingOwners, 
-    refetch, 
-    error: ownersError
-  } = useBusinessOwners();
+  }, [queryClient, refetch]);
   
   // Mostrar erro de carregamento
   useEffect(() => {
-    if (ownersError && !isInitialLoad) {
+    if ((ownersError || isError) && !isInitialLoad) {
       console.error("Erro ao carregar proprietários:", ownersError);
       toast.error("Erro ao carregar proprietários. Tente novamente.");
     }
-  }, [ownersError, isInitialLoad]);
+  }, [ownersError, isInitialLoad, isError]);
   
   const { 
     selectedUser,
@@ -71,6 +73,8 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
     setSelectedUser,
     setUserToDelete
   } = useUserActions(refetch);
+  
+  console.log("UsersTab - proprietários carregados:", businessOwners?.length || 0);
   
   const filteredUsers = businessOwners.filter(user =>
     user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||

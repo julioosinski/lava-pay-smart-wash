@@ -25,6 +25,27 @@ export function useUserActions(refetchFn: () => Promise<unknown>) {
     setUserToDelete(user);
   };
   
+  const refreshData = async () => {
+    try {
+      console.log("Forçando atualização de dados após operação...");
+      
+      // Invalidar completamente o cache
+      await queryClient.invalidateQueries({ queryKey: ['business-owners'] });
+      
+      // Esperar um momento para garantir que a operação anterior foi concluída
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // Forçar um refetch dos dados
+      await refetchFn();
+      
+      // Invalidar novamente para garantir dados frescos
+      await queryClient.invalidateQueries({ queryKey: ['business-owners'] });
+    } catch (error) {
+      console.error("Erro ao atualizar dados após operação:", error);
+      toast.error("Erro ao atualizar dados. Tente atualizar a página.");
+    }
+  };
+  
   const handleDeleteConfirm = async () => {
     if (userToDelete && !isProcessingAction) {
       try {
@@ -38,19 +59,8 @@ export function useUserActions(refetchFn: () => Promise<unknown>) {
           // Limpar o usuário antes de qualquer outra operação
           setUserToDelete(null);
           
-          // Forçar uma invalidação completa do cache
-          queryClient.removeQueries({ queryKey: ['business-owners'] });
-          
-          // Forçar refetch dos dados com um pequeno delay para garantir a consistência
-          setTimeout(async () => {
-            try {
-              await refetchFn();
-              // Invalidar novamente para garantir dados frescos
-              queryClient.invalidateQueries({ queryKey: ['business-owners'] });
-            } catch (error) {
-              console.error("Erro ao atualizar dados após exclusão:", error);
-            }
-          }, 500);
+          // Atualizar dados
+          await refreshData();
         } else {
           toast.error(result.error || "Não foi possível excluir o proprietário");
         }
@@ -81,19 +91,8 @@ export function useUserActions(refetchFn: () => Promise<unknown>) {
       
       toast.success("Proprietário salvo com sucesso");
       
-      // Forçar uma invalidação completa do cache
-      queryClient.removeQueries({ queryKey: ['business-owners'] });
-      
-      // Forçar refetch dos dados com um pequeno delay para garantir a consistência
-      setTimeout(async () => {
-        try {
-          await refetchFn();
-          // Invalidar novamente para garantir dados frescos
-          queryClient.invalidateQueries({ queryKey: ['business-owners'] });
-        } catch (error) {
-          console.error("Erro ao atualizar dados após salvar:", error);
-        }
-      }, 500);
+      // Atualizar dados
+      await refreshData();
     } finally {
       setIsProcessingAction(false);
     }
