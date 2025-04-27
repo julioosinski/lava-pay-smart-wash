@@ -5,6 +5,7 @@ import { UsersHeader } from "../users/UsersHeader";
 import { UsersTable } from "../users/UsersTable";
 import { UserForm } from "../UserForm";
 import { DeleteUserDialog } from "../DeleteUserDialog";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface UsersTabProps {
   searchQuery: string;
@@ -12,9 +13,9 @@ interface UsersTabProps {
 }
 
 export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
+  const isMobile = useIsMobile();
   const { data: businessOwners = [], isLoading, refetch } = useBusinessOwners();
   
-  // Pass the refetch function directly - it will be compatible with Promise<unknown>
   const { 
     selectedUser,
     userToDelete,
@@ -37,7 +38,7 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
   );
 
   return (
-    <div className="space-y-6">
+    <div className={`space-y-4 md:space-y-6 ${isMobile ? 'px-2' : 'px-4'}`}>
       <UsersHeader 
         searchQuery={searchQuery}
         onSearchChange={onSearchChange}
@@ -58,13 +59,15 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
         />
       )}
 
-      <UsersTable 
-        users={filteredUsers}
-        isLoading={isLoading}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        isProcessing={isProcessingAction}
-      />
+      <div className="overflow-x-auto">
+        <UsersTable 
+          users={filteredUsers}
+          isLoading={isLoading}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          isProcessing={isProcessingAction}
+        />
+      </div>
 
       <DeleteUserDialog
         user={userToDelete}

@@ -6,6 +6,7 @@ import { RefreshCcw } from "lucide-react";
 import { SearchBar } from "../SearchBar";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Payment } from "@/types";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface PaymentsTabProps {
   payments: Payment[];
@@ -14,64 +15,75 @@ interface PaymentsTabProps {
 }
 
 export function PaymentsTab({ payments, searchQuery, onSearchChange }: PaymentsTabProps) {
+  const isMobile = useIsMobile();
+
   const formatDateTime = (date: Date) => {
     return new Intl.DateTimeFormat('pt-BR', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+      ...(isMobile ? {} : { hour: '2-digit', minute: '2-digit' })
     }).format(date);
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 md:space-y-6">
+      <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 ${isMobile ? 'px-2' : ''}`}>
         <SearchBar
           placeholder="Buscar pagamentos..."
           value={searchQuery}
           onChange={onSearchChange}
         />
-        <Button variant="outline">
+        <Button variant="outline" className="w-full md:w-auto">
           <RefreshCcw className="mr-2 h-4 w-4" /> Atualizar
         </Button>
       </div>
 
-      <Card>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Máquina</TableHead>
-              <TableHead>Valor</TableHead>
-              <TableHead>Método</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Data/Hora</TableHead>
-              <TableHead>ID Transação</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {payments.map((payment) => (
-              <TableRow key={payment.id}>
-                <TableCell className="font-medium">{payment.id}</TableCell>
-                <TableCell>{payment.machine_id}</TableCell>
-                <TableCell>
-                  {new Intl.NumberFormat('pt-BR', {
-                    style: 'currency',
-                    currency: 'BRL'
-                  }).format(payment.amount)}
-                </TableCell>
-                <TableCell className="capitalize">{payment.method}</TableCell>
-                <TableCell>
-                  <StatusBadge status={payment.status} />
-                </TableCell>
-                <TableCell>{formatDateTime(payment.created_at)}</TableCell>
-                <TableCell>{payment.transaction_id || "—"}</TableCell>
+      <div className="overflow-x-auto">
+        <Card className={isMobile ? 'rounded-none border-x-0' : ''}>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>ID</TableHead>
+                <TableHead>Máquina</TableHead>
+                <TableHead>Valor</TableHead>
+                <TableHead>Método</TableHead>
+                <TableHead>Status</TableHead>
+                {!isMobile && (
+                  <>
+                    <TableHead>Data/Hora</TableHead>
+                    <TableHead>ID Transação</TableHead>
+                  </>
+                )}
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Card>
+            </TableHeader>
+            <TableBody>
+              {payments.map((payment) => (
+                <TableRow key={payment.id}>
+                  <TableCell className="font-medium">{payment.id.substring(0, 8)}...</TableCell>
+                  <TableCell>{payment.machine_id.substring(0, 8)}...</TableCell>
+                  <TableCell>
+                    {new Intl.NumberFormat('pt-BR', {
+                      style: 'currency',
+                      currency: 'BRL'
+                    }).format(payment.amount)}
+                  </TableCell>
+                  <TableCell className="capitalize">{payment.method}</TableCell>
+                  <TableCell>
+                    <StatusBadge status={payment.status} />
+                  </TableCell>
+                  {!isMobile && (
+                    <>
+                      <TableCell>{formatDateTime(payment.created_at)}</TableCell>
+                      <TableCell>{payment.transaction_id?.substring(0, 8) || "—"}</TableCell>
+                    </>
+                  )}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
+      </div>
     </div>
   );
 }
