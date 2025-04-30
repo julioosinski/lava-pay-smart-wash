@@ -82,6 +82,41 @@ const mockPaygoTefModule = {
         message: 'Pagamento rejeitado pela operadora'
       };
     }
+  },
+  
+  cancelPayment: async (options: any) => {
+    console.log('Mock PayGo TEF cancelPayment called with:', options);
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    const success = Math.random() > 0.1;
+    
+    return {
+      status: success ? 'approved' : 'error',
+      message: success ? undefined : 'Falha ao cancelar pagamento'
+    };
+  },
+  
+  printReceipt: async (options: any) => {
+    console.log('Mock PayGo TEF printReceipt called with:', options);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    return {
+      success: true,
+      message: 'Comprovante impresso com sucesso'
+    };
+  },
+  
+  checkDeviceStatus: async () => {
+    console.log('Mock PayGo TEF checkDeviceStatus called');
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    return {
+      isConnected: true,
+      deviceInfo: {
+        model: 'PayGo Mock POS',
+        serialNumber: `MOCK-${Math.floor(Math.random() * 100000)}`
+      }
+    };
   }
 };
 
