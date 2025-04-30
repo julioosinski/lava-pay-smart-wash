@@ -12,6 +12,7 @@ import com.facebook.react.defaults.DefaultReactNativeHost;
 import com.facebook.soloader.SoLoader;
 
 import java.util.List;
+import java.util.Arrays;
 
 public class MainApplication extends Application implements ReactApplication {
 
@@ -24,10 +25,10 @@ public class MainApplication extends Application implements ReactApplication {
 
         @Override
         protected List<ReactPackage> getPackages() {
-          @SuppressWarnings("UnnecessaryLocalVariable")
           List<ReactPackage> packages = new PackageList(this).getPackages();
-          // Substituímos o pacote da Stone pelo pacote da Elgin
+          // Adiciona os pacotes nativos personalizados
           packages.add(new ElginPaymentPackage());
+          packages.add(new PaygoTefPackage());
           return packages;
         }
 
