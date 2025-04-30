@@ -67,14 +67,20 @@ const mockPaygoTefModule = {
           status: 'approved' as const,
           message: 'QR Code PIX gerado com sucesso',
           pixQrCode: 'pixcode123456789',
-          pixQrCodeBase64: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='
+          pixQrCodeBase64: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+          receiptMerchant: 'COMPROVANTE LOJISTA\nTRANSACAO APROVADA\nVALOR: R$ 10,00',
+          receiptCustomer: 'COMPROVANTE CLIENTE\nTRANSACAO APROVADA\nVALOR: R$ 10,00'
         };
       }
       
       return {
         transactionId: `paygo_${Date.now()}`,
         status: 'approved' as const,
-        message: 'Pagamento aprovado'
+        message: 'Pagamento aprovado',
+        receiptMerchant: 'COMPROVANTE LOJISTA\nTRANSACAO APROVADA\nVALOR: R$ 10,00',
+        receiptCustomer: 'COMPROVANTE CLIENTE\nTRANSACAO APROVADA\nVALOR: R$ 10,00',
+        cardBrand: 'Mastercard',
+        authorizationCode: 'AUTH123456'
       };
     } else {
       return {
@@ -92,7 +98,7 @@ const mockPaygoTefModule = {
     
     return {
       status: success ? 'approved' as const : 'error' as const,
-      message: success ? undefined : 'Falha ao cancelar pagamento'
+      message: success ? 'Estorno realizado com sucesso' : 'Falha ao cancelar pagamento'
     };
   },
   

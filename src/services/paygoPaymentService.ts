@@ -154,6 +154,7 @@ async function savePaymentReceipt(machineId: string, userId: string, receiptData
   transactionId: string 
 }) {
   try {
+    // Use the correct table name from our database schema
     await supabase.from('payment_receipts').insert({
       machine_id: machineId,
       user_id: userId,
