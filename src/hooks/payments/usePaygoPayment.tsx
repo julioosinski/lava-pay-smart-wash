@@ -13,6 +13,7 @@ export function usePaygoPayment() {
   const [deviceStatus, setDeviceStatus] = useState<{
     isConnected: boolean;
     deviceInfo?: { model: string; serialNumber: string };
+    message?: string;
   } | null>(null);
 
   const processPaygoTefPayment = async (
@@ -98,7 +99,7 @@ export function usePaygoPayment() {
       return status;
     } catch (error) {
       console.error('Erro ao verificar status do dispositivo:', error);
-      return { isConnected: false };
+      return { isConnected: false, message: error.message };
     }
   };
 
