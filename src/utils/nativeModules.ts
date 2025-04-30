@@ -91,7 +91,7 @@ const mockPaygoTefModule = {
     const success = Math.random() > 0.1;
     
     return {
-      status: success ? 'approved' : 'error',
+      status: success ? 'approved' as const : 'error' as const,
       message: success ? undefined : 'Falha ao cancelar pagamento'
     };
   },

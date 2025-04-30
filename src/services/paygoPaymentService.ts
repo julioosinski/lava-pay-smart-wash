@@ -159,8 +159,7 @@ async function savePaymentReceipt(machineId: string, userId: string, receiptData
       user_id: userId,
       transaction_id: receiptData.transactionId,
       merchant_receipt: receiptData.merchantReceipt,
-      customer_receipt: receiptData.customerReceipt,
-      created_at: new Date().toISOString()
+      customer_receipt: receiptData.customerReceipt
     });
   } catch (error) {
     console.error('Error saving payment receipt:', error);

@@ -269,6 +269,44 @@ export type Database = {
           },
         ]
       }
+      payment_receipts: {
+        Row: {
+          created_at: string
+          customer_receipt: string | null
+          id: string
+          machine_id: string | null
+          merchant_receipt: string | null
+          transaction_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_receipt?: string | null
+          id?: string
+          machine_id?: string | null
+          merchant_receipt?: string | null
+          transaction_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_receipt?: string | null
+          id?: string
+          machine_id?: string | null
+          merchant_receipt?: string | null
+          transaction_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_receipts_machine_id_fkey"
+            columns: ["machine_id"]
+            isOneToOne: false
+            referencedRelation: "machines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_settings: {
         Row: {
           access_token: string | null
