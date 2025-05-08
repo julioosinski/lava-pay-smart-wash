@@ -12,8 +12,8 @@ Sistema de integração de pagamento para SmartWash usando a biblioteca Interfac
 
 1. Clone o repositório:
 ```bash
-git clone https://github.com/seu-usuario/smart-wash-payment.git
-cd smart-wash-payment
+git clone https://github.com/julioosinski/lava-pay-smart-wash.git
+cd lava-pay-smart-wash
 ```
 
 2. Configure as credenciais:
@@ -86,4 +86,4 @@ O projeto pode ser implantado em qualquer plataforma que suporte aplicações Ja
 
 ## Suporte
 
-Para suporte, entre em contato com o provedor de pagamento ou abra uma issue neste repositório. 
+Para suporte, entre em contato com o provedor de pagamento ou abra uma issue neste repositório.
