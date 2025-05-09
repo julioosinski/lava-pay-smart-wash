@@ -4,13 +4,12 @@ import { useLaundries } from "@/hooks/useLaundries";
 import { useMachines } from "@/hooks/useMachines";
 import { usePayments } from "@/hooks/usePayments";
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAdminStatus } from "./useAdminStatus";
 
 export function useOwnerData() {
   const { user } = useAuth();
-  const { isAdmin } = useAdminStatus(user?.id);
+  const { isAdmin, isLoading: isLoadingAdminStatus } = useAdminStatus(user?.id);
   
   // Fetch owner laundries, with forceShowAll only if user is admin
   const { 
@@ -31,27 +30,13 @@ export function useOwnerData() {
   // Retry fetching laundries if owner_id exists but no laundries were found
   useEffect(() => {
     if (user?.id && !isLoadingLaundries && ownerLaundries.length === 0) {
-      const checkDirectLaundries = async () => {
-        try {
-          const { data, error } = await supabase
-            .from('laundries')
-            .select('*')
-            .eq('owner_id', user.id);
-            
-          if (error) {
-            console.error("Error in direct laundry check:", error);
-            return;
-          }
-          
-          if (data && data.length > 0) {
-            refetchLaundries();
-          }
-        } catch (err) {
-          console.error("Error checking laundries directly:", err);
-        }
-      };
+      console.log("useOwnerData: No laundries found, retrying...");
       
-      checkDirectLaundries();
+      const retryFetch = setTimeout(() => {
+        refetchLaundries();
+      }, 2000);
+      
+      return () => clearTimeout(retryFetch);
     }
   }, [user?.id, isLoadingLaundries, ownerLaundries.length, refetchLaundries]);
 
@@ -105,6 +90,7 @@ export function useOwnerData() {
     ownerLaundries,
     ownerMachines,
     ownerPayments,
-    isLoading: isLoadingLaundries || isLoadingMachines || isLoadingPayments,
+    isLoading: isLoadingLaundries || isLoadingMachines || isLoadingPayments || isLoadingAdminStatus,
+    isAdmin,
   };
 }

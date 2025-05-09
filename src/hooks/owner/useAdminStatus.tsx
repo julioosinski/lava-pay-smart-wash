@@ -22,16 +22,17 @@ export function useAdminStatus(userId?: string) {
           .rpc('is_admin', { user_id: userId });
           
         if (error) {
-          console.error("Error checking user role:", error);
-          toast.error("Erro ao verificar permissões do usuário");
-          return;
+          console.error("Error checking admin status:", error);
+          toast.error("Erro ao verificar permissões de administrador");
+          setIsAdmin(false);
+        } else {
+          setIsAdmin(!!data);
+          console.log("User is admin:", !!data);
         }
-        
-        setIsAdmin(!!data);
-        console.log("User is admin:", !!data);
       } catch (error) {
         console.error("Error checking admin status:", error);
         toast.error("Erro ao verificar status de administrador");
+        setIsAdmin(false);
       } finally {
         setIsLoading(false);
       }

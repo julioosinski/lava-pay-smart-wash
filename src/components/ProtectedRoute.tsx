@@ -15,6 +15,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
   const { user, loading: authLoading } = useAuth();
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const checkRole = async () => {
@@ -33,27 +34,26 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
       try {
         console.log(`ProtectedRoute: Checking role for user ${user.id}, required role: ${requiredRole}`);
         
+        // Verificar se o usuário é admin usando a função RPC
         if (requiredRole === 'admin') {
-          // Use a função RPC para verificar se o usuário é admin
-          const { data: isAdmin, error: adminError } = await supabase
+          const { data: adminStatus, error: adminError } = await supabase
             .rpc('is_admin', { user_id: user.id });
             
           if (adminError) {
             console.error("ProtectedRoute: Error checking admin role:", adminError);
             toast.error("Erro ao verificar permissões de administrador");
-            setLoading(false);
-            return;
-          }
-          
-          if (isAdmin) {
-            console.log("ProtectedRoute: User is confirmed as admin");
-            setRole('admin');
-            setLoading(false);
-            return;
+          } else {
+            setIsAdmin(!!adminStatus);
+            if (!!adminStatus) {
+              setRole('admin');
+              console.log("ProtectedRoute: User is confirmed as admin");
+              setLoading(false);
+              return;
+            }
           }
         }
         
-        // Se não for admin ou o papel requerido não for admin, verificamos o papel geral
+        // Verificar o papel geral do usuário
         const { data, error } = await supabase
           .from('profiles')
           .select('role')
@@ -63,13 +63,12 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
         if (error) {
           console.error("ProtectedRoute: Error fetching role:", error);
           toast.error("Erro ao verificar permissões do usuário");
-          setLoading(false);
-          return;
+        } else {
+          const userRole = data?.role || null;
+          console.log(`ProtectedRoute: User ${user.id} has role from database:`, userRole);
+          setRole(userRole);
         }
-
-        const userRole = data?.role || null;
-        console.log(`ProtectedRoute: User ${user.id} has role from database:`, userRole);
-        setRole(userRole);
+        
         setLoading(false);
       } catch (error) {
         console.error("ProtectedRoute: Error checking role:", error);
@@ -118,24 +117,22 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
   // If there's no authenticated user, redirect to login page with the required role
   if (!user) {
     console.log("ProtectedRoute: No authenticated user, redirecting to auth page");
-    // Make sure we're passing the role correctly to the state
     return <Navigate to="/auth" state={{ role: requiredRole || 'user' }} replace />;
   }
 
-  // If a specific role is required, check if user has that role
-  if (requiredRole && role !== requiredRole) {
-    console.log(`ProtectedRoute: Access denied - User role ${role} doesn't match required role ${requiredRole}`);
-    toast.error(`Acesso negado. Seu papel atual (${role || 'usuário'}) não tem permissão para esta página.`);
-    
-    // Redirect based on the user's actual role
-    if (role === 'business') {
-      console.log("ProtectedRoute: Redirecting business user to /owner");
-      return <Navigate to="/owner" replace />;
-    } else if (role === 'admin') {
-      console.log("ProtectedRoute: Redirecting admin user to /admin");
-      return <Navigate to="/admin" replace />;
-    } else {
-      console.log("ProtectedRoute: Redirecting standard user to /");
+  // If a specific role is required, check if user has that role or is admin
+  if (requiredRole) {
+    if (requiredRole === 'admin' && !isAdmin) {
+      console.log("ProtectedRoute: Access denied - User is not an admin");
+      toast.error("Acesso negado. Você não tem permissões de administrador.");
+      return <Navigate to="/" replace />;
+    } else if (requiredRole === 'business' && role !== 'business' && !isAdmin) {
+      console.log(`ProtectedRoute: Access denied - User role ${role} doesn't match required role business`);
+      toast.error(`Acesso negado. Seu papel atual (${role || 'usuário'}) não tem permissão para esta página.`);
+      return <Navigate to="/" replace />;
+    } else if (requiredRole === 'user' && role !== 'user' && role !== 'business' && !isAdmin) {
+      console.log(`ProtectedRoute: Access denied - User role ${role} doesn't match required role user`);
+      toast.error(`Acesso negado. Seu papel atual (${role || 'desconhecido'}) não tem permissão para esta página.`);
       return <Navigate to="/" replace />;
     }
   }
