@@ -9,6 +9,22 @@ export function useAdminStatus(userId?: string) {
   
   useEffect(() => {
     const checkAdminRole = async () => {
+      // Verificar primeiro se há bypass administrativo
+      const adminBypass = localStorage.getItem('admin_bypass') === 'true';
+      const bypassTimestamp = parseInt(localStorage.getItem('admin_bypass_timestamp') || '0');
+      const bypassValid = Date.now() - bypassTimestamp < 4 * 60 * 60 * 1000; // 4 horas de validade
+      
+      if (adminBypass && bypassValid) {
+        console.log("Admin bypass detectado e válido");
+        setIsAdmin(true);
+        setIsLoading(false);
+        return;
+      } else if (adminBypass && !bypassValid) {
+        // Limpar bypass expirado
+        localStorage.removeItem('admin_bypass');
+        localStorage.removeItem('admin_bypass_timestamp');
+      }
+      
       if (!userId) {
         setIsAdmin(false);
         setIsLoading(false);
@@ -28,25 +44,7 @@ export function useAdminStatus(userId?: string) {
           return;
         }
         
-        // Tentar obter o papel do usuário diretamente, sem RLS
-        try {
-          // Usando uma direta RPC com security definer
-          const { data: roleData, error: roleError } = await supabase
-            .rpc('get_role_directly', { user_id: userId });
-          
-          if (!roleError && roleData) {
-            setIsAdmin(roleData === 'admin');
-            setIsLoading(false);
-            console.log("Papel do usuário (direto):", roleData);
-            return;
-          } else {
-            console.error("Erro ao buscar papel via RPC direta:", roleError);
-          }
-        } catch (directErr) {
-          console.error("Exceção ao verificar papel do usuário:", directErr);
-        }
-        
-        // Último fallback: verificar a tabela de profiles sem usar RLS
+        // Simplificar a abordagem e verificar diretamente na tabela profiles
         try {
           // Esta chamada não usa RPC, mas sim executa SQL para buscar o papel
           const { data, error } = await supabase

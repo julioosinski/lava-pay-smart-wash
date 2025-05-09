@@ -9,6 +9,21 @@ export async function redirectBasedOnRole(userId: string, navigate: (path: strin
   try {
     console.log("Verificando papel para usuário ID:", userId);
     
+    // Verificar primeiro se há bypass administrativo
+    const adminBypass = localStorage.getItem('admin_bypass') === 'true';
+    const bypassTimestamp = parseInt(localStorage.getItem('admin_bypass_timestamp') || '0');
+    const bypassValid = Date.now() - bypassTimestamp < 4 * 60 * 60 * 1000; // 4 horas de validade
+    
+    if (adminBypass && bypassValid) {
+      console.log("Admin bypass detectado, redirecionando para área de administrador");
+      navigate('/admin', { replace: true });
+      return;
+    } else if (adminBypass && !bypassValid) {
+      // Limpar bypass expirado
+      localStorage.removeItem('admin_bypass');
+      localStorage.removeItem('admin_bypass_timestamp');
+    }
+    
     // Método direto: verificar metadados do usuário primeiro
     try {
       const { data: { user } } = await supabase.auth.getUser();

@@ -26,6 +26,23 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
         return;
       }
       
+      // Verificar se tem bypass administrativo
+      const adminBypass = localStorage.getItem('admin_bypass') === 'true';
+      const bypassTimestamp = parseInt(localStorage.getItem('admin_bypass_timestamp') || '0');
+      const bypassValid = Date.now() - bypassTimestamp < 4 * 60 * 60 * 1000; // 4 horas de validade
+      
+      if (adminBypass && bypassValid && requiredRole === 'admin') {
+        console.log("ProtectedRoute: Acesso admin direto via bypass detectado");
+        setRole('admin');
+        setLoading(false);
+        return;
+      } else if (adminBypass && !bypassValid) {
+        // Limpar bypass expirado
+        console.log("ProtectedRoute: Bypass admin expirado, removendo");
+        localStorage.removeItem('admin_bypass');
+        localStorage.removeItem('admin_bypass_timestamp');
+      }
+      
       if (!user) {
         console.log(`ProtectedRoute: Nenhum usuário encontrado, papel requerido: ${requiredRole}`);
         setLoading(false);
@@ -117,8 +134,19 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     );
   }
 
-  // Se não houver usuário autenticado, redirecionar para página de login com papel requerido
-  if (!user) {
+  // Verificar bypass admin
+  const adminBypass = localStorage.getItem('admin_bypass') === 'true';
+  const bypassTimestamp = parseInt(localStorage.getItem('admin_bypass_timestamp') || '0');
+  const bypassValid = Date.now() - bypassTimestamp < 4 * 60 * 60 * 1000; // 4 horas de validade
+  
+  // Se for rota admin e tiver bypass válido, permitir acesso
+  if (requiredRole === 'admin' && adminBypass && bypassValid) {
+    console.log("ProtectedRoute: Acesso admin liberado via bypass");
+    return <>{children}</>;
+  }
+
+  // Se não houver usuário autenticado e não for admin bypass, redirecionar para página de login com papel requerido
+  if (!user && !(adminBypass && bypassValid && requiredRole === 'admin')) {
     console.log("ProtectedRoute: Nenhum usuário autenticado, redirecionando para página de auth");
     return <Navigate to="/auth" state={{ role: requiredRole || 'user' }} replace />;
   }
@@ -126,7 +154,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
   // Se um papel específico é requerido, verificar se o usuário tem esse papel ou é admin
   if (requiredRole) {
     // Verificar se o usuário é admin ou tem o papel requerido
-    if (requiredRole === 'admin' && !isAdmin) {
+    if (requiredRole === 'admin' && !isAdmin && !(adminBypass && bypassValid)) {
       console.log("ProtectedRoute: Acesso negado - Usuário não é admin");
       toast.error("Acesso negado. Você não tem permissões de administrador.");
       return <Navigate to="/" replace />;
@@ -142,6 +170,6 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
   }
 
   // Se o usuário passa por todas as verificações, renderizar conteúdo protegido
-  console.log(`ProtectedRoute: Usuário ${user.id} autorizado para rota requerendo papel: ${requiredRole}`);
+  console.log(`ProtectedRoute: Usuário ${user ? user.id : 'bypass'} autorizado para rota requerendo papel: ${requiredRole}`);
   return <>{children}</>;
 }

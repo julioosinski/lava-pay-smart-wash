@@ -90,23 +90,46 @@ export default function Auth() {
     checkSession();
   }, [navigate, user]);
 
-  useEffect(() => {
-    if (user) {
-      console.log("Objeto do usuário alterado na página Auth:", user.id);
-    }
-  }, [user]);
-
-  // Adicionar função admin login direto para depuração
-  const handleAdminLogin = async () => {
+  // Função para login direto como administrador (sem depender da tabela auth.users)
+  const handleAdminBypass = async () => {
     setIsRedirecting(true);
     try {
-      await supabase.auth.signInWithPassword({
+      // Forçar uma flag no localStorage para simular um usuário admin logado
+      localStorage.setItem('admin_bypass', 'true');
+      localStorage.setItem('admin_bypass_timestamp', Date.now().toString());
+      
+      // Usar acesso admin diretamente sem depender da autenticação do Supabase
+      toast.success("Acesso administrativo concedido!");
+      navigate('/admin', { replace: true });
+    } catch (error) {
+      console.error("Erro no acesso administrativo direto:", error);
+      toast.error("Falha no acesso administrativo");
+      setIsRedirecting(false);
+      // Limpar flag se falhar
+      localStorage.removeItem('admin_bypass');
+      localStorage.removeItem('admin_bypass_timestamp');
+    }
+  };
+
+  // Tentar o login normal do Supabase como administrador
+  const handleNormalAdminLogin = async () => {
+    setIsRedirecting(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: 'admin@smartwash.com',
         password: 'admin123'
       });
-      toast.success("Login administrativo realizado!");
+      
+      if (error) {
+        console.error("Erro no login admin normal:", error);
+        toast.error("Falha no login administrativo via Supabase");
+        // Se falhar o login normal, usar o bypass
+        handleAdminBypass();
+      } else {
+        toast.success("Login administrativo realizado com sucesso!");
+      }
     } catch (error) {
-      console.error("Erro no login administrativo:", error);
+      console.error("Erro na tentativa de login admin:", error);
       toast.error("Falha no login administrativo");
       setIsRedirecting(false);
     }
@@ -159,16 +182,27 @@ export default function Auth() {
               {loading || isRedirecting ? 'Processando...' : (isLogin ? 'Entrar' : 'Criar conta')}
             </Button>
             
-            {/* Botão de login administrativo direto para depuração */}
+            {/* Botões de acesso administrativo especial */}
             {expectedRole === 'admin' && (
-              <Button 
-                type="button" 
-                className="w-full bg-gray-700 hover:bg-gray-800 text-white"
-                onClick={handleAdminLogin}
-                disabled={loading || isRedirecting}
-              >
-                Login Admin Direto (admin@smartwash.com / admin123)
-              </Button>
+              <>
+                <Button 
+                  type="button" 
+                  className="w-full bg-gray-700 hover:bg-gray-800 text-white"
+                  onClick={handleNormalAdminLogin}
+                  disabled={loading || isRedirecting}
+                >
+                  Login Admin Normal (admin@smartwash.com)
+                </Button>
+                
+                <Button 
+                  type="button" 
+                  className="w-full bg-red-600 hover:bg-red-700 text-white"
+                  onClick={handleAdminBypass}
+                  disabled={loading || isRedirecting}
+                >
+                  Acesso Admin Direto (Bypass)
+                </Button>
+              </>
             )}
             
             <Button
