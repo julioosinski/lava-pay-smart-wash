@@ -21,7 +21,7 @@ export function useOwnerData() {
     ownerId: !isAdmin ? user?.id : undefined,
     forceShowAll: isAdmin,
     options: {
-      enabled: !!user?.id,
+      enabled: !!user?.id && !isLoadingAdminStatus,
       retry: 3,
       staleTime: 30000,
     }
@@ -29,7 +29,7 @@ export function useOwnerData() {
 
   // Retry fetching laundries if owner_id exists but no laundries were found
   useEffect(() => {
-    if (user?.id && !isLoadingLaundries && ownerLaundries.length === 0) {
+    if (user?.id && !isLoadingLaundries && ownerLaundries.length === 0 && !isLoadingAdminStatus) {
       console.log("useOwnerData: No laundries found, retrying...");
       
       const retryFetch = setTimeout(() => {
@@ -38,7 +38,7 @@ export function useOwnerData() {
       
       return () => clearTimeout(retryFetch);
     }
-  }, [user?.id, isLoadingLaundries, ownerLaundries.length, refetchLaundries]);
+  }, [user?.id, isLoadingLaundries, ownerLaundries.length, refetchLaundries, isLoadingAdminStatus]);
 
   useEffect(() => {
     if (laundriesError) {

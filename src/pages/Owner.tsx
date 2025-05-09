@@ -1,3 +1,4 @@
+
 import { Layout } from "@/components/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OwnerDashboardHeader } from "@/components/owner/dashboard/OwnerDashboardHeader";
@@ -9,8 +10,7 @@ import { useOwnerDashboard } from "@/hooks/owner";
 import { Loader2, AlertTriangle, RefreshCw } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/auth";
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { LaundryForm } from "@/components/admin/LaundryForm";
 import { useQueryClient } from "@tanstack/react-query";
@@ -18,7 +18,6 @@ import { toast } from "sonner";
 
 export default function Owner() {
   const { user } = useAuth();
-  const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const queryClient = useQueryClient();
   const {
@@ -29,34 +28,9 @@ export default function Owner() {
     setSelectedLocation,
     isLoading,
     stats,
-    revenueByDay
+    revenueByDay,
+    isAdmin
   } = useOwnerDashboard();
-
-  useEffect(() => {
-    const checkAdminRole = async () => {
-      if (!user?.id) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .maybeSingle();
-          
-        if (error) {
-          console.error("Error checking user role:", error);
-          return;
-        }
-        
-        setIsAdmin(data?.role === 'admin');
-        console.log("User is admin:", data?.role === 'admin');
-      } catch (error) {
-        console.error("Error checking admin status:", error);
-      }
-    };
-    
-    checkAdminRole();
-  }, [user?.id]);
 
   const handleRefreshData = async () => {
     if (!user?.id) return;
@@ -78,6 +52,7 @@ export default function Owner() {
 
   console.log("Owner page - user ID:", user?.id);
   console.log("Owner page - laundries count:", ownerLaundries.length);
+  console.log("Owner page - is admin:", isAdmin);
 
   if (isLoading) {
     return (

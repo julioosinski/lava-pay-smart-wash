@@ -10,14 +10,14 @@ export function useAdminStatus(userId?: string) {
   useEffect(() => {
     const checkAdminRole = async () => {
       if (!userId) {
+        setIsAdmin(false);
         setIsLoading(false);
         return;
       }
       
       try {
         setIsLoading(true);
-        // Usando uma função RPC para chamar a função is_admin no banco de dados
-        // Isso evita problemas com a política de segurança recursiva
+        // Chamando a função RPC is_admin para verificar se o usuário é admin
         const { data, error } = await supabase
           .rpc('is_admin', { user_id: userId });
           
