@@ -5,7 +5,6 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useAdminStatus } from '@/hooks/owner/useAdminStatus';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -16,82 +15,43 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
   const { user, loading: authLoading } = useAuth();
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const { isAdmin, isLoading: isLoadingAdminStatus } = useAdminStatus(user?.id);
 
   useEffect(() => {
     const checkRole = async () => {
-      if (authLoading || isLoadingAdminStatus) {
-        // Aguardar verificações de autenticação e status de admin
-        console.log("ProtectedRoute: Aguardando conclusão das verificações de auth e admin");
+      if (authLoading) {
+        // Wait for auth to complete before checking roles
+        console.log("ProtectedRoute: Waiting for auth to complete");
         return;
-      }
-      
-      // Verificar se tem bypass administrativo
-      const adminBypass = localStorage.getItem('admin_bypass') === 'true';
-      const bypassTimestamp = parseInt(localStorage.getItem('admin_bypass_timestamp') || '0');
-      const bypassValid = Date.now() - bypassTimestamp < 4 * 60 * 60 * 1000; // 4 horas de validade
-      
-      if (adminBypass && bypassValid && requiredRole === 'admin') {
-        console.log("ProtectedRoute: Acesso admin direto via bypass detectado");
-        setRole('admin');
-        setLoading(false);
-        return;
-      } else if (adminBypass && !bypassValid) {
-        // Limpar bypass expirado
-        console.log("ProtectedRoute: Bypass admin expirado, removendo");
-        localStorage.removeItem('admin_bypass');
-        localStorage.removeItem('admin_bypass_timestamp');
       }
       
       if (!user) {
-        console.log(`ProtectedRoute: Nenhum usuário encontrado, papel requerido: ${requiredRole}`);
+        console.log(`ProtectedRoute: No user found, role required: ${requiredRole}`);
         setLoading(false);
         return;
       }
 
       try {
-        console.log(`ProtectedRoute: Verificando papel para usuário ${user.id}, papel requerido: ${requiredRole}`);
+        console.log(`ProtectedRoute: Checking role for user ${user.id}, required role: ${requiredRole}`);
         
-        // Se o usuário já foi confirmado como admin pelo useAdminStatus, definir papel
-        if (isAdmin) {
-          console.log("ProtectedRoute: Usuário confirmado como admin pelo useAdminStatus");
-          setRole('admin');
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (error) {
+          console.error("ProtectedRoute: Error fetching role:", error);
+          toast.error("Erro ao verificar permissões do usuário");
           setLoading(false);
           return;
         }
-        
-        // Verificar diretamente no objeto user.user_metadata primeiro
-        if (user.user_metadata?.role) {
-          const metadataRole = user.user_metadata.role;
-          console.log("Papel encontrado em user_metadata:", metadataRole);
-          setRole(metadataRole);
-          setLoading(false);
-          return;
-        }
-        
-        // Verificar diretamente na tabela profiles
-        try {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .maybeSingle();
-            
-          if (!error && data) {
-            setRole(data.role);
-            console.log("Papel obtido diretamente da tabela profiles:", data.role);
-          } else {
-            console.error("Erro ao verificar papel diretamente:", error);
-            setRole('user'); // Papel padrão
-          }
-        } catch (err) {
-          console.error("Erro ao verificar papel diretamente:", err);
-          setRole('user'); // Papel padrão 
-        }
-        
+
+        const userRole = data?.role || null;
+        console.log(`ProtectedRoute: User ${user.id} has role from database:`, userRole);
+        setRole(userRole);
         setLoading(false);
       } catch (error) {
-        console.error("ProtectedRoute: Erro ao verificar papel:", error);
+        console.error("ProtectedRoute: Error checking role:", error);
         toast.error("Erro ao verificar permissões do usuário");
         setLoading(false);
       }
@@ -99,19 +59,19 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
 
     checkRole();
     
-    // Timeout de segurança para evitar loading infinito
+    // Safety timeout to prevent infinite loading
     const timeout = setTimeout(() => {
       if (loading) {
-        console.log("ProtectedRoute: Timeout de segurança acionado");
+        console.log("ProtectedRoute: Safety timeout triggered");
         setLoading(false);
       }
     }, 3000);
     
     return () => clearTimeout(timeout);
-  }, [user, requiredRole, authLoading, isAdmin, isLoadingAdminStatus]);
+  }, [user, requiredRole, authLoading]);
 
-  // Se o contexto de autenticação ainda está carregando, mostrar spinner
-  if (authLoading || isLoadingAdminStatus) {
+  // If the auth context is still loading, show a loading spinner
+  if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -122,7 +82,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     );
   }
 
-  // Se verificando papel, mostrar mensagem de carregamento diferente
+  // If we're checking the role, show a different loading message
   if (loading && user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -134,42 +94,32 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     );
   }
 
-  // Verificar bypass admin
-  const adminBypass = localStorage.getItem('admin_bypass') === 'true';
-  const bypassTimestamp = parseInt(localStorage.getItem('admin_bypass_timestamp') || '0');
-  const bypassValid = Date.now() - bypassTimestamp < 4 * 60 * 60 * 1000; // 4 horas de validade
-  
-  // Se for rota admin e tiver bypass válido, permitir acesso
-  if (requiredRole === 'admin' && adminBypass && bypassValid) {
-    console.log("ProtectedRoute: Acesso admin liberado via bypass");
-    return <>{children}</>;
-  }
-
-  // Se não houver usuário autenticado e não for admin bypass, redirecionar para página de login com papel requerido
-  if (!user && !(adminBypass && bypassValid && requiredRole === 'admin')) {
-    console.log("ProtectedRoute: Nenhum usuário autenticado, redirecionando para página de auth");
+  // If there's no authenticated user, redirect to login page with the required role
+  if (!user) {
+    console.log("ProtectedRoute: No authenticated user, redirecting to auth page");
+    // Make sure we're passing the role correctly to the state
     return <Navigate to="/auth" state={{ role: requiredRole || 'user' }} replace />;
   }
 
-  // Se um papel específico é requerido, verificar se o usuário tem esse papel ou é admin
-  if (requiredRole) {
-    // Verificar se o usuário é admin ou tem o papel requerido
-    if (requiredRole === 'admin' && !isAdmin && !(adminBypass && bypassValid)) {
-      console.log("ProtectedRoute: Acesso negado - Usuário não é admin");
-      toast.error("Acesso negado. Você não tem permissões de administrador.");
-      return <Navigate to="/" replace />;
-    } else if (requiredRole === 'business' && role !== 'business' && !isAdmin) {
-      console.log(`ProtectedRoute: Acesso negado - Papel do usuário ${role} não corresponde ao papel requerido business`);
-      toast.error(`Acesso negado. Seu papel atual (${role || 'usuário'}) não tem permissão para esta página.`);
-      return <Navigate to="/" replace />;
-    } else if (requiredRole === 'user' && role !== 'user' && role !== 'business' && !isAdmin) {
-      console.log(`ProtectedRoute: Acesso negado - Papel do usuário ${role} não corresponde ao papel requerido user`);
-      toast.error(`Acesso negado. Seu papel atual (${role || 'desconhecido'}) não tem permissão para esta página.`);
+  // If a specific role is required, check if user has that role
+  if (requiredRole && role !== requiredRole) {
+    console.log(`ProtectedRoute: Access denied - User role ${role} doesn't match required role ${requiredRole}`);
+    toast.error(`Acesso negado. Seu papel atual (${role || 'usuário'}) não tem permissão para esta página.`);
+    
+    // Redirect based on the user's actual role
+    if (role === 'business') {
+      console.log("ProtectedRoute: Redirecting business user to /owner");
+      return <Navigate to="/owner" replace />;
+    } else if (role === 'admin') {
+      console.log("ProtectedRoute: Redirecting admin user to /admin");
+      return <Navigate to="/admin" replace />;
+    } else {
+      console.log("ProtectedRoute: Redirecting standard user to /");
       return <Navigate to="/" replace />;
     }
   }
 
-  // Se o usuário passa por todas as verificações, renderizar conteúdo protegido
-  console.log(`ProtectedRoute: Usuário ${user ? user.id : 'bypass'} autorizado para rota requerendo papel: ${requiredRole}`);
+  // If user passes all checks, render the protected content
+  console.log(`ProtectedRoute: User ${user.id} authorized for route requiring role: ${requiredRole}`);
   return <>{children}</>;
 }

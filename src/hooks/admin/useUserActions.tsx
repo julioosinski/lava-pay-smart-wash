@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { deleteBusinessOwner } from "@/services/businessOwner";
 import { toast } from "sonner";
 
+// Update the refetch parameter type to match what tanstack/react-query returns
 export function useUserActions(refetchFn: () => Promise<unknown>) {
   const [selectedUser, setSelectedUser] = useState<BusinessOwner | null>(null);
   const [userToDelete, setUserToDelete] = useState<BusinessOwner | null>(null);
@@ -19,31 +20,10 @@ export function useUserActions(refetchFn: () => Promise<unknown>) {
     setShowUserForm(true);
   };
   
-  const handleDelete = (user: BusinessOwner | null) => {
+  const handleDelete = (user: BusinessOwner) => {
     if (isProcessingAction) return;
     console.log("Preparando para excluir usuário:", user);
     setUserToDelete(user);
-  };
-  
-  const refreshData = async () => {
-    try {
-      console.log("Forçando atualização de dados após operação...");
-      
-      // Invalidar completamente o cache
-      await queryClient.invalidateQueries({ queryKey: ['business-owners'] });
-      
-      // Esperar um momento para garantir que a operação anterior foi concluída
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      // Forçar um refetch dos dados
-      await refetchFn();
-      
-      // Invalidar novamente para garantir dados frescos
-      await queryClient.invalidateQueries({ queryKey: ['business-owners'] });
-    } catch (error) {
-      console.error("Erro ao atualizar dados após operação:", error);
-      toast.error("Erro ao atualizar dados. Tente atualizar a página.");
-    }
   };
   
   const handleDeleteConfirm = async () => {
@@ -55,12 +35,11 @@ export function useUserActions(refetchFn: () => Promise<unknown>) {
         
         if (result.success) {
           toast.success("Proprietário excluído com sucesso");
+          await queryClient.invalidateQueries({ queryKey: ['business-owners'] });
           
-          // Limpar o usuário antes de qualquer outra operação
-          setUserToDelete(null);
-          
-          // Atualizar dados
-          await refreshData();
+          setTimeout(async () => {
+            await refetchFn();
+          }, 500);
         } else {
           toast.error(result.error || "Não foi possível excluir o proprietário");
         }
@@ -68,6 +47,7 @@ export function useUserActions(refetchFn: () => Promise<unknown>) {
         toast.error("Erro ao excluir proprietário");
         console.error("Error deleting business owner:", error);
       } finally {
+        setUserToDelete(null);
         setIsProcessingAction(false);
       }
     }
@@ -84,15 +64,14 @@ export function useUserActions(refetchFn: () => Promise<unknown>) {
     
     try {
       setIsProcessingAction(true);
-      
-      // Fechar o formulário e resetar o usuário selecionado
       setShowUserForm(false);
       setSelectedUser(null);
       
-      toast.success("Proprietário salvo com sucesso");
+      await queryClient.invalidateQueries({ queryKey: ['business-owners'] });
       
-      // Atualizar dados
-      await refreshData();
+      setTimeout(async () => {
+        await refetchFn();
+      }, 500);
     } finally {
       setIsProcessingAction(false);
     }
@@ -109,7 +88,6 @@ export function useUserActions(refetchFn: () => Promise<unknown>) {
     handleFormClose,
     handleFormSuccess,
     setShowUserForm,
-    setSelectedUser,
-    setUserToDelete
+    setSelectedUser
   };
 }

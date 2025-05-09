@@ -7,7 +7,7 @@ import { convertToLaundry, LaundryDB } from "@/types/laundry";
 export interface UseFetchLaundriesOptions {
   ownerId?: string;
   forceShowAll?: boolean;
-  options?: any;
+  options?: any; // This is a simplification to avoid TypeScript errors
 }
 
 export function useFetchLaundries(options?: UseFetchLaundriesOptions) {
@@ -20,14 +20,12 @@ export function useFetchLaundries(options?: UseFetchLaundriesOptions) {
           .from('laundries')
           .select('*');
           
-        // Filtrar por owner_id se fornecido e não estiver forçando mostrar tudo
+        // Only filter by owner_id if provided and not forcing to show all
         if (options?.ownerId && !options?.forceShowAll) {
           console.log(`Filtering laundries by owner_id: ${options.ownerId}`);
           query = query.eq('owner_id', options.ownerId);
-        } else if (options?.forceShowAll) {
-          console.log("Fetching all laundries (admin mode)");
         } else {
-          console.log("Fetching laundries without owner filter");
+          console.log("Fetching all laundries (no owner filter or force show all)");
         }
         
         const { data, error } = await query;
@@ -38,7 +36,7 @@ export function useFetchLaundries(options?: UseFetchLaundriesOptions) {
         }
         
         const laundries: LaundryLocation[] = (data || []).map(laundry => convertToLaundry(laundry as LaundryDB));
-        console.log(`Successfully fetched ${laundries.length} laundries:`, laundries);
+        console.log(`Successfully fetched ${laundries.length} laundries for owner ${options?.ownerId}:`, laundries);
         return laundries;
       } catch (error) {
         console.error("Error in useFetchLaundries hook:", error);

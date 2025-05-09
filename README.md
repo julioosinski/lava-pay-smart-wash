@@ -1,89 +1,73 @@
-# SmartWash Payment Integration
+# Welcome to your Lovable project
 
-Sistema de integração de pagamento para SmartWash usando a biblioteca InterfaceAutomacao.
+## Project info
 
-## Requisitos
+**URL**: https://lovable.dev/projects/17c628cd-b965-4245-a2ea-ada5a76d6dab
 
-- Java 11 ou superior
-- Maven 3.6 ou superior
-- InterfaceAutomacao.jar (fornecido pelo provedor de pagamento)
+## How can I edit this code?
 
-## Configuração
+There are several ways of editing your application.
 
-1. Clone o repositório:
-```bash
-git clone https://github.com/julioosinski/lava-pay-smart-wash.git
-cd lava-pay-smart-wash
+**Use Lovable**
+
+Simply visit the [Lovable Project](https://lovable.dev/projects/17c628cd-b965-4245-a2ea-ada5a76d6dab) and start prompting.
+
+Changes made via Lovable will be committed automatically to this repo.
+
+**Use your preferred IDE**
+
+If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+
+The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+
+Follow these steps:
+
+```sh
+# Step 1: Clone the repository using the project's Git URL.
+git clone <YOUR_GIT_URL>
+
+# Step 2: Navigate to the project directory.
+cd <YOUR_PROJECT_NAME>
+
+# Step 3: Install the necessary dependencies.
+npm i
+
+# Step 4: Start the development server with auto-reloading and an instant preview.
+npm run dev
 ```
 
-2. Configure as credenciais:
-   - Acesse `http://localhost:8080`
-   - Preencha o Merchant ID e POS ID fornecidos pelo seu provedor de pagamento
+**Edit a file directly in GitHub**
 
-## Executando o Projeto
+- Navigate to the desired file(s).
+- Click the "Edit" button (pencil icon) at the top right of the file view.
+- Make your changes and commit the changes.
 
-1. Compile o projeto:
-```bash
-mvn clean package
-```
+**Use GitHub Codespaces**
 
-2. Execute a aplicação:
-```bash
-java -jar target/smart-wash-1.0.0.jar
-```
+- Navigate to the main page of your repository.
+- Click on the "Code" button (green button) near the top right.
+- Select the "Codespaces" tab.
+- Click on "New codespace" to launch a new Codespace environment.
+- Edit files directly within the Codespace and commit and push your changes once you're done.
 
-3. Acesse a aplicação:
-   - Interface web: `http://localhost:8080`
-   - API REST: `http://localhost:8080/api/payments`
+## What technologies are used for this project?
 
-## Endpoints da API
+This project is built with:
 
-- `POST /api/payments/process` - Processar pagamento
-- `POST /api/payments/{transactionId}/cancel` - Cancelar transação
-- `POST /api/payments/{transactionId}/refund` - Estornar transação
-- `GET /api/payments/{transactionId}` - Consultar transação
+- Vite
+- TypeScript
+- React
+- shadcn-ui
+- Tailwind CSS
 
-## Deploy
+## How can I deploy this project?
 
-### Heroku
+Simply open [Lovable](https://lovable.dev/projects/17c628cd-b965-4245-a2ea-ada5a76d6dab) and click on Share -> Publish.
 
-1. Crie uma conta no [Heroku](https://heroku.com)
-2. Instale o [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli)
-3. Faça login:
-```bash
-heroku login
-```
+## Can I connect a custom domain to my Lovable project?
 
-4. Crie um novo app:
-```bash
-heroku create seu-app-name
-```
+Yes, you can!
 
-5. Configure as variáveis de ambiente:
-```bash
-heroku config:set PAYMENT_MERCHANT_ID=seu-merchant-id
-heroku config:set PAYMENT_POS_ID=seu-pos-id
-```
+To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
-6. Faça o deploy:
-```bash
-git push heroku main
-```
-
-### Outras Plataformas
-
-O projeto pode ser implantado em qualquer plataforma que suporte aplicações Java/Spring Boot, como:
-- AWS Elastic Beanstalk
-- Google Cloud Run
-- DigitalOcean App Platform
-- Azure App Service
-
-## Segurança
-
-- Todas as credenciais sensíveis devem ser configuradas como variáveis de ambiente
-- Use HTTPS em produção
-- Mantenha a biblioteca InterfaceAutomacao.jar atualizada
-
-## Suporte
-
-Para suporte, entre em contato com o provedor de pagamento ou abra uma issue neste repositório.
+Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)

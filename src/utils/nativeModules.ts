@@ -67,20 +67,14 @@ const mockPaygoTefModule = {
           status: 'approved' as const,
           message: 'QR Code PIX gerado com sucesso',
           pixQrCode: 'pixcode123456789',
-          pixQrCodeBase64: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
-          receiptMerchant: 'COMPROVANTE LOJISTA\nTRANSACAO APROVADA\nVALOR: R$ 10,00',
-          receiptCustomer: 'COMPROVANTE CLIENTE\nTRANSACAO APROVADA\nVALOR: R$ 10,00'
+          pixQrCodeBase64: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='
         };
       }
       
       return {
         transactionId: `paygo_${Date.now()}`,
         status: 'approved' as const,
-        message: 'Pagamento aprovado',
-        receiptMerchant: 'COMPROVANTE LOJISTA\nTRANSACAO APROVADA\nVALOR: R$ 10,00',
-        receiptCustomer: 'COMPROVANTE CLIENTE\nTRANSACAO APROVADA\nVALOR: R$ 10,00',
-        cardBrand: 'Mastercard',
-        authorizationCode: 'AUTH123456'
+        message: 'Pagamento aprovado'
       };
     } else {
       return {
@@ -88,41 +82,6 @@ const mockPaygoTefModule = {
         message: 'Pagamento rejeitado pela operadora'
       };
     }
-  },
-  
-  cancelPayment: async (options: any) => {
-    console.log('Mock PayGo TEF cancelPayment called with:', options);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    const success = Math.random() > 0.1;
-    
-    return {
-      status: success ? 'approved' as const : 'error' as const,
-      message: success ? 'Estorno realizado com sucesso' : 'Falha ao cancelar pagamento'
-    };
-  },
-  
-  printReceipt: async (options: any) => {
-    console.log('Mock PayGo TEF printReceipt called with:', options);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    return {
-      success: true,
-      message: 'Comprovante impresso com sucesso'
-    };
-  },
-  
-  checkDeviceStatus: async () => {
-    console.log('Mock PayGo TEF checkDeviceStatus called');
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    return {
-      isConnected: true,
-      deviceInfo: {
-        model: 'PayGo Mock POS',
-        serialNumber: `MOCK-${Math.floor(Math.random() * 100000)}`
-      }
-    };
   }
 };
 

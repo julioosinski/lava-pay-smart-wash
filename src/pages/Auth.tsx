@@ -31,56 +31,47 @@ export default function Auth() {
     handleSubmit,
   } = useAuthForm(expectedRole);
 
-  // Este efeito redireciona o usuário se já estiver autenticado
+  // This effect redirects the user if they're already authenticated
   useEffect(() => {
-    // Verificar flag de logout forçado primeiro
+    // Check for forced logout flag first
     const forcedLogout = localStorage.getItem('force_logout') === 'true';
     if (forcedLogout) {
-      console.log("Flag de logout forçado detectada na página Auth, não redirecionando");
+      console.log("Forced logout flag detected in Auth page, not redirecting");
       localStorage.removeItem('force_logout');
-      // Limpar token do Supabase para segurança extra
+      // Clear Supabase token as well for extra safety
       localStorage.removeItem('sb-ftvvhclqjwtthquokzii-auth-token');
       return;
     }
 
     const checkSession = async () => {
-      console.log("Verificando sessão na página Auth");
-      // Não é necessário obter a sessão novamente já que estamos usando o user do contexto
+      console.log("Checking session in Auth page");
+      // No need to get the session again as we're using the user from context
       if (user) {
-        console.log("Usuário já autenticado na página Auth, redirecionando");
+        console.log("User already authenticated in Auth page, redirecting");
         setIsRedirecting(true);
         
+        const { data } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        
+        const role = data?.role;
+        console.log("User role detected in Auth page:", role);
+        
         try {
-          // Verificar diretamente nos metadados do usuário
-          const { data: { user: currentUser } } = await supabase.auth.getUser();
-          if (currentUser?.user_metadata?.role === 'admin') {
-            console.log("Papel admin encontrado nos metadados, redirecionando para /admin");
-            navigate('/admin', { replace: true });
-            return;
-          }
-          
-          // Verificar diretamente na tabela profiles
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .maybeSingle();
-          
-          const role = data?.role;
-          console.log("Papel do usuário detectado na página Auth:", role);
-          
           if (role === 'business') {
-            console.log("Papel business detectado na página Auth, redirecionando para /owner");
+            console.log("Business role detected in Auth page, redirecting to /owner");
             navigate('/owner', { replace: true });
           } else if (role === 'admin') {
-            console.log("Papel admin detectado na página Auth, redirecionando para /admin");
+            console.log("Admin role detected in Auth page, redirecting to /admin");
             navigate('/admin', { replace: true });
           } else {
-            console.log("Papel de usuário padrão na página Auth, redirecionando para home");
+            console.log("Standard user role in Auth page, redirecting to home");
             navigate('/', { replace: true });
           }
         } catch (error) {
-          console.error("Erro durante redirecionamento:", error);
+          console.error("Error during redirection:", error);
           setIsRedirecting(false);
           toast.error("Erro ao redirecionar para a página correta");
         }
@@ -90,52 +81,13 @@ export default function Auth() {
     checkSession();
   }, [navigate, user]);
 
-  // Função para login direto como administrador (sem depender da tabela auth.users)
-  const handleAdminBypass = async () => {
-    setIsRedirecting(true);
-    try {
-      // Forçar uma flag no localStorage para simular um usuário admin logado
-      localStorage.setItem('admin_bypass', 'true');
-      localStorage.setItem('admin_bypass_timestamp', Date.now().toString());
-      
-      // Usar acesso admin diretamente sem depender da autenticação do Supabase
-      toast.success("Acesso administrativo concedido!");
-      navigate('/admin', { replace: true });
-    } catch (error) {
-      console.error("Erro no acesso administrativo direto:", error);
-      toast.error("Falha no acesso administrativo");
-      setIsRedirecting(false);
-      // Limpar flag se falhar
-      localStorage.removeItem('admin_bypass');
-      localStorage.removeItem('admin_bypass_timestamp');
+  useEffect(() => {
+    if (user) {
+      console.log("User object changed in Auth page:", user.id);
     }
-  };
+  }, [user]);
 
-  // Tentar o login normal do Supabase como administrador
-  const handleNormalAdminLogin = async () => {
-    setIsRedirecting(true);
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: 'admin@smartwash.com',
-        password: 'admin123'
-      });
-      
-      if (error) {
-        console.error("Erro no login admin normal:", error);
-        toast.error("Falha no login administrativo via Supabase");
-        // Se falhar o login normal, usar o bypass
-        handleAdminBypass();
-      } else {
-        toast.success("Login administrativo realizado com sucesso!");
-      }
-    } catch (error) {
-      console.error("Erro na tentativa de login admin:", error);
-      toast.error("Falha no login administrativo");
-      setIsRedirecting(false);
-    }
-  };
-
-  console.log("Página Auth carregada com papel:", expectedRole);
+  console.log("Auth page loaded with role:", expectedRole);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -181,30 +133,6 @@ export default function Auth() {
             >
               {loading || isRedirecting ? 'Processando...' : (isLogin ? 'Entrar' : 'Criar conta')}
             </Button>
-            
-            {/* Botões de acesso administrativo especial */}
-            {expectedRole === 'admin' && (
-              <>
-                <Button 
-                  type="button" 
-                  className="w-full bg-gray-700 hover:bg-gray-800 text-white"
-                  onClick={handleNormalAdminLogin}
-                  disabled={loading || isRedirecting}
-                >
-                  Login Admin Normal (admin@smartwash.com)
-                </Button>
-                
-                <Button 
-                  type="button" 
-                  className="w-full bg-red-600 hover:bg-red-700 text-white"
-                  onClick={handleAdminBypass}
-                  disabled={loading || isRedirecting}
-                >
-                  Acesso Admin Direto (Bypass)
-                </Button>
-              </>
-            )}
-            
             <Button
               type="button"
               variant="link"

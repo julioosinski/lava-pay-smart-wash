@@ -23,8 +23,9 @@ export const useSignOut = ({ setUser, setSession, setLoading, navigate }: SignOu
       localStorage.setItem('force_logout', 'true');
       localStorage.removeItem('sb-ftvvhclqjwtthquokzii-auth-token');
       
-      // Force navigation to home page with replace to prevent back navigation
-      console.log("Forcing navigation to home page after logout");
+      // Always redirect to home page after logout
+      console.log("Navigating to home page immediately");
+      navigate('/', { replace: true });
       
       // Then attempt to sign out from Supabase
       try {
@@ -37,16 +38,11 @@ export const useSignOut = ({ setUser, setSession, setLoading, navigate }: SignOu
           console.log("No active session found, logout already completed");
         } else {
           console.error("Error during Supabase signOut:", error);
+          // Don't show error to user since we've already redirected
         }
       }
-      
-      // Ensure navigation happens even if there are errors with Supabase signOut
-      navigate('/', { replace: true });
-      
     } catch (error) {
       console.error("Exception during sign out process:", error);
-      // Still attempt to redirect even if there was an error
-      navigate('/', { replace: true });
     } finally {
       setLoading(false);
     }

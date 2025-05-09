@@ -5,10 +5,6 @@ import { UsersHeader } from "../users/UsersHeader";
 import { UsersTable } from "../users/UsersTable";
 import { UserForm } from "../UserForm";
 import { DeleteUserDialog } from "../DeleteUserDialog";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
 
 interface UsersTabProps {
   searchQuery: string;
@@ -16,49 +12,9 @@ interface UsersTabProps {
 }
 
 export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
-  const isMobile = useIsMobile();
-  const queryClient = useQueryClient();
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const { data: businessOwners = [], isLoading, refetch } = useBusinessOwners();
   
-  // Buscar dados dos proprietários
-  const { 
-    data: businessOwners = [], 
-    isLoading: isLoadingOwners, 
-    refetch, 
-    error: ownersError,
-    isError
-  } = useBusinessOwners();
-  
-  // Força uma atualização completa ao montar o componente
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        console.log("Forçando atualização dos dados de proprietários...");
-        
-        // Invalida o cache e força um refetch
-        await queryClient.invalidateQueries({ queryKey: ['business-owners'] });
-        await refetch();
-        
-        console.log("Dados de proprietários atualizados com sucesso.");
-      } catch (error) {
-        console.error("Erro ao atualizar dados de proprietários:", error);
-        toast.error("Erro ao carregar proprietários. Tente novamente.");
-      } finally {
-        setIsInitialLoad(false);
-      }
-    };
-    
-    fetchData();
-  }, [queryClient, refetch]);
-  
-  // Mostrar erro de carregamento
-  useEffect(() => {
-    if ((ownersError || isError) && !isInitialLoad) {
-      console.error("Erro ao carregar proprietários:", ownersError);
-      toast.error("Erro ao carregar proprietários. Tente novamente.");
-    }
-  }, [ownersError, isInitialLoad, isError]);
-  
+  // Pass the refetch function directly - it will be compatible with Promise<unknown>
   const { 
     selectedUser,
     userToDelete,
@@ -70,11 +26,8 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
     handleFormClose,
     handleFormSuccess,
     setShowUserForm,
-    setSelectedUser,
-    setUserToDelete
+    setSelectedUser
   } = useUserActions(refetch);
-  
-  console.log("UsersTab - proprietários carregados:", businessOwners?.length || 0);
   
   const filteredUsers = businessOwners.filter(user =>
     user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -83,7 +36,7 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
   );
 
   return (
-    <div className={`space-y-4 md:space-y-6 ${isMobile ? 'px-2' : 'px-4'}`}>
+    <div className="space-y-6">
       <UsersHeader 
         searchQuery={searchQuery}
         onSearchChange={onSearchChange}
@@ -104,21 +57,18 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
         />
       )}
 
-      <div className="overflow-x-auto">
-        <UsersTable 
-          users={filteredUsers}
-          isLoading={isLoadingOwners || isInitialLoad}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          isProcessing={isProcessingAction}
-        />
-      </div>
+      <UsersTable 
+        users={filteredUsers}
+        isLoading={isLoading}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        isProcessing={isProcessingAction}
+      />
 
       <DeleteUserDialog
         user={userToDelete}
-        onClose={() => setUserToDelete(null)}
+        onClose={() => userToDelete && handleDelete(userToDelete)}
         onConfirm={handleDeleteConfirm}
-        isProcessing={isProcessingAction}
       />
     </div>
   );

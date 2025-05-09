@@ -1,4 +1,3 @@
-
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { checkLaundryOwnership, updateLaundryOwner, updateUserRole, updateUserContact } from '../utils/authUtils';
@@ -12,35 +11,24 @@ interface SignInProps {
 export const useSignIn = ({ setUser, setSession, setLoading }: SignInProps) => {
   const signIn = async (email: string, password: string) => {
     setLoading(true);
-    console.log("Tentando login com email:", email);
+    console.log("Attempting to sign in with email:", email);
     
     try {
-      // Primeiro, tentar login normal
-      const { error, data } = await supabase.auth.signInWithPassword({ 
-        email, 
-        password,
-        options: {
-          // Evitar problemas com tokens e metadata
-          captchaToken: undefined
-        }
-      });
+      // First, try standard login
+      const { error, data } = await supabase.auth.signInWithPassword({ email, password });
       
       if (error) {
-        console.log("Login padrão falhou, verificando se é proprietário de lavanderia", error);
+        console.log("Standard login failed, checking if this is a business owner", error);
         
-        if (error.message === "Database error querying schema") {
-          throw new Error("Erro no banco de dados. Por favor, tente novamente mais tarde.");
-        }
-        
-        // Tentar encontrar lavanderia com as credenciais fornecidas
+        // Try to find laundry with given credentials
         try {
           const laundryData = await checkLaundryOwnership(email, password);
           
           if (laundryData) {
-            console.log("Lavanderia encontrada:", laundryData);
+            console.log("Found laundry:", laundryData);
             
             try {
-              // Tentar criar uma conta se não existir
+              // Try to create an account if it doesn't exist
               const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
                 email,
                 password
@@ -48,13 +36,10 @@ export const useSignIn = ({ setUser, setSession, setLoading }: SignInProps) => {
               
               if (signUpError) {
                 if (signUpError.message.includes("User already registered")) {
-                  console.log("Usuário já existe, tentando login novamente");
+                  console.log("User already exists, trying to sign in again");
                   const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({ 
                     email, 
-                    password,
-                    options: {
-                      captchaToken: undefined
-                    }
+                    password 
                   });
                   
                   if (retryError) {
@@ -63,11 +48,11 @@ export const useSignIn = ({ setUser, setSession, setLoading }: SignInProps) => {
                   }
                   
                   if (retryData.user) {
-                    console.log("Login retry bem-sucedido, atualizando proprietário de lavanderia");
+                    console.log("Successful retry login, updating laundry owner");
                     await updateLaundryOwner(laundryData.id, retryData.user.id);
                     
-                    // Certifique-se de atualizar o papel do usuário para business
-                    console.log("Definindo papel do usuário para business");
+                    // Make sure to update user role to business
+                    console.log("Setting user role to business");
                     await updateUserRole(retryData.user.id, 'business');
                     
                     // Atualiza o perfil com os dados de contato da lavanderia
@@ -78,15 +63,15 @@ export const useSignIn = ({ setUser, setSession, setLoading }: SignInProps) => {
                     return;
                   }
                 } else {
-                  console.error("Erro ao cadastrar:", signUpError);
+                  console.error("Error signing up:", signUpError);
                   throw signUpError;
                 }
               } else if (signUpData.user) {
-                console.log("Criado novo usuário para proprietário, atualizando lavanderia");
+                console.log("Created new user for business owner, updating laundry");
                 await updateLaundryOwner(laundryData.id, signUpData.user.id);
                 
-                // Certifique-se de atualizar o papel do usuário para business
-                console.log("Definindo papel do usuário para business para novo usuário");
+                // Make sure to update user role to business
+                console.log("Setting user role to business for new user");
                 await updateUserRole(signUpData.user.id, 'business');
                 
                 // Atualiza o perfil com os dados de contato da lavanderia
@@ -97,21 +82,21 @@ export const useSignIn = ({ setUser, setSession, setLoading }: SignInProps) => {
                 return;
               }
             } catch (error) {
-              console.error("Erro durante autenticação do proprietário:", error);
+              console.error("Error during business owner authentication:", error);
               throw error;
             }
           }
         } catch (error) {
-          console.error("Erro no processo de login:", error);
+          console.error("Error in sign in process:", error);
           throw error;
         }
       } else {
-        console.log("Login padrão bem-sucedido");
+        console.log("Standard login successful");
         setUser(data.user);
         setSession(data.session);
       }
     } catch (error) {
-      console.error("Erro durante sign in:", error);
+      console.error("Error during sign in:", error);
       throw error;
     } finally {
       setLoading(false);

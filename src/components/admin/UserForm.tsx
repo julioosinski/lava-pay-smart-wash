@@ -89,11 +89,14 @@ export function UserForm({ onClose, onSuccess, user, mode = "create" }: UserForm
             : "Proprietário atualizado com sucesso!"
         );
         
-        // Remover dados do cache completamente
-        queryClient.removeQueries({ queryKey: ['business-owners'] });
+        // Invalidar a query de proprietários para forçar uma nova busca
+        await queryClient.invalidateQueries({ queryKey: ['business-owners'] });
         
-        // Chamar o callback de sucesso imediatamente
-        onSuccess();
+        // Aguardar um curto período antes de executar o callback de sucesso
+        // para garantir que os dados tenham tempo de serem atualizados no servidor
+        setTimeout(() => {
+          onSuccess();
+        }, 500);
       } else {
         throw new Error(result.error || `Não foi possível ${mode === "create" ? "criar" : "atualizar"} o proprietário`);
       }
