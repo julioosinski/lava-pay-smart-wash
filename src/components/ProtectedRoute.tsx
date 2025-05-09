@@ -43,20 +43,25 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
           return;
         }
         
-        // Se não é admin, verificamos o papel geral do usuário usando a função segura
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .maybeSingle();
+        // Obter o papel diretamente do perfil
+        try {
+          // Acesso direto ao perfil do usuário atual (que é permitido pela nova política)
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single();
 
-        if (error) {
-          console.error("ProtectedRoute: Error fetching role:", error);
-          toast.error("Erro ao verificar permissões do usuário");
-        } else {
-          const userRole = data?.role || null;
-          console.log(`ProtectedRoute: User ${user.id} has role from database:`, userRole);
-          setRole(userRole);
+          if (error) {
+            console.error("ProtectedRoute: Error fetching role:", error);
+            toast.error("Erro ao verificar papel do usuário");
+          } else {
+            const userRole = data?.role || null;
+            console.log(`ProtectedRoute: User ${user.id} has role:`, userRole);
+            setRole(userRole);
+          }
+        } catch (error) {
+          console.error("ProtectedRoute: Error checking role:", error);
         }
         
         setLoading(false);
