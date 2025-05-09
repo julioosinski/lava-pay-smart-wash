@@ -65,7 +65,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
         if (!userRole) {
           try {
             const { data: directRoleData, error: directRoleError } = await supabase
-              .rpc('get_role_directly', { user_id: user.id });
+              .rpc('get_role_by_id', { user_id: user.id });
               
             if (!directRoleError && directRoleData) {
               userRole = directRoleData;

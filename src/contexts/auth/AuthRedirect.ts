@@ -28,7 +28,7 @@ export async function redirectBasedOnRole(userId: string, navigate: (path: strin
     
     try {
       const { data: roleData, error: roleError } = await supabase
-        .rpc('get_role_directly', { user_id: userId });
+        .rpc('get_role_by_id', { user_id: userId });
         
       if (!roleError && roleData) {
         role = roleData as UserRole;
@@ -160,7 +160,7 @@ async function updateUserRoleIfNeeded(userId: string, role: UserRole) {
   try {
     // First check if update is needed using secure function
     const { data: currentRole, error: roleError } = await supabase
-      .rpc('get_role_directly', { user_id: userId });
+      .rpc('get_role_by_id', { user_id: userId });
 
     if (roleError) {
       console.error("Error fetching current role:", roleError);
