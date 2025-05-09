@@ -5,7 +5,7 @@ import { useRevenueData } from './useRevenueData';
 import { useLocationSelection } from './useLocationSelection';
 
 export function useOwnerDashboard() {
-  const { ownerLaundries, ownerMachines, ownerPayments, isLoading } = useOwnerData();
+  const { ownerLaundries, ownerMachines, ownerPayments, isLoading, isAdmin } = useOwnerData();
   const { stats } = useOwnerStats(ownerMachines, ownerPayments);
   const { revenueByDay } = useRevenueData(ownerPayments);
   const { selectedLocation, setSelectedLocation } = useLocationSelection(ownerLaundries);
@@ -18,6 +18,7 @@ export function useOwnerDashboard() {
     setSelectedLocation,
     isLoading,
     stats,
-    revenueByDay
+    revenueByDay,
+    isAdmin
   };
 }
