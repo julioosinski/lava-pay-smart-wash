@@ -43,7 +43,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
           return;
         }
         
-        // Se não é admin, verificamos o papel geral do usuário
+        // Se não é admin, verificamos o papel geral do usuário usando a função segura
         const { data, error } = await supabase
           .from('profiles')
           .select('role')

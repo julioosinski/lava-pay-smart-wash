@@ -18,7 +18,7 @@ export function useAdminStatus(userId?: string) {
       try {
         setIsLoading(true);
         
-        // Usar a função RPC is_admin diretamente
+        // Usar a nova função RPC is_admin atualizada que usa is_user_admin_safely internamente
         const { data, error } = await supabase
           .rpc('is_admin', { user_id: userId });
           

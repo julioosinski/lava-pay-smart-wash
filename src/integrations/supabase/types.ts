@@ -505,11 +505,19 @@ export type Database = {
         Args: { user_id: string }
         Returns: string
       }
+      get_user_role_safely: {
+        Args: { user_id: string }
+        Returns: string
+      }
       has_laundry_access: {
         Args: { laundry_id: string; user_id: string }
         Returns: boolean
       }
       is_admin: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
+      is_user_admin_safely: {
         Args: { user_id: string }
         Returns: boolean
       }
