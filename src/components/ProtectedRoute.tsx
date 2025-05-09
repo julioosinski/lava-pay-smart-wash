@@ -45,23 +45,53 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
         
         // Obter o papel diretamente do perfil
         try {
-          // Acesso direto ao perfil do usuário atual (que é permitido pela nova política)
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .single();
-
-          if (error) {
-            console.error("ProtectedRoute: Error fetching role:", error);
-            toast.error("Erro ao verificar papel do usuário");
-          } else {
-            const userRole = data?.role || null;
+          // Tenta obter o perfil com várias abordagens diferentes
+          let userRole = null;
+          
+          // Abordagem 1: Tentar RPC segura
+          try {
+            const { data: roleData } = await supabase.rpc('get_user_role_safely', { user_id: user.id });
+            if (roleData) {
+              userRole = roleData;
+              console.log("Role via RPC:", userRole);
+            }
+          } catch (err) {
+            console.error("RPC role check failed:", err);
+          }
+          
+          // Abordagem 2: Tentar consulta direta com SELECT
+          if (!userRole) {
+            try {
+              const { data } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', user.id)
+                .maybeSingle();
+                
+              userRole = data?.role || null;
+              console.log("Role via direct query:", userRole);
+            } catch (err) {
+              console.error("Direct query role check failed:", err);
+            }
+          }
+          
+          // Abordagem 3: Verificar os metadados do usuário
+          if (!userRole && user.user_metadata?.role) {
+            userRole = user.user_metadata.role;
+            console.log("Role from user metadata:", userRole);
+          }
+          
+          // Define o papel detectado
+          if (userRole) {
             console.log(`ProtectedRoute: User ${user.id} has role:`, userRole);
             setRole(userRole);
+          } else {
+            console.log("No role detected, using default 'user' role");
+            setRole('user'); // Papel padrão
           }
         } catch (error) {
           console.error("ProtectedRoute: Error checking role:", error);
+          setRole('user'); // Papel padrão em caso de erro
         }
         
         setLoading(false);
