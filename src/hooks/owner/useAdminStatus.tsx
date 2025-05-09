@@ -18,29 +18,23 @@ export function useAdminStatus(userId?: string) {
       try {
         setIsLoading(true);
         
-        // Try multiple approaches to determine admin status
-        
-        // 1. First try to use the secure RPC function
-        try {
-          const { data: isAdminData, error: rpcError } = await supabase
-            .rpc('is_user_admin_safely', { user_id: userId });
-            
-          if (!rpcError) {
-            setIsAdmin(!!isAdminData);
-            setIsLoading(false);
-            console.log("User admin status (from secure RPC):", !!isAdminData);
-            return;
-          } else {
-            console.log("Secure RPC error:", rpcError);
-          }
-        } catch (rpcErr) {
-          console.error("Secure RPC error, trying alternative:", rpcErr);
+        // Usar a função segura com SECURITY DEFINER para evitar recursão
+        const { data: isAdminData, error: rpcError } = await supabase
+          .rpc('is_user_admin_safely', { user_id: userId });
+          
+        if (!rpcError) {
+          setIsAdmin(!!isAdminData);
+          setIsLoading(false);
+          console.log("User admin status (from secure RPC):", !!isAdminData);
+          return;
+        } else {
+          console.log("Secure RPC error:", rpcError);
         }
         
-        // 2. Try the direct role query function
+        // Fallback para função alternativa se a primeira falhar
         try {
           const { data: roleData, error: roleError } = await supabase
-            .rpc('get_role_by_id', { user_id: userId });
+            .rpc('get_user_role_safely', { user_id: userId });
             
           if (!roleError && roleData) {
             setIsAdmin(roleData === 'admin');
@@ -54,7 +48,7 @@ export function useAdminStatus(userId?: string) {
           console.error("Direct role query error, falling back:", directErr);
         }
         
-        // 3. Fallback: check user metadata
+        // Último fallback: verificar os metadados do usuário
         try {
           const { data: { user } } = await supabase.auth.getUser();
           

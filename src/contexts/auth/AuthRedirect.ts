@@ -18,26 +18,45 @@ export async function redirectBasedOnRole(userId: string, navigate: (path: strin
         console.log("Admin role confirmed via secure function, redirecting to admin page");
         navigate('/admin', { replace: true });
         return;
+      } else if (adminError) {
+        console.error("Error checking admin status via secure function:", adminError);
       }
     } catch (adminErr) {
       console.log("Error checking admin status via secure function:", adminErr);
     }
     
-    // Try getting the user role directly
+    // Try getting the user role using a secure function
     let role: UserRole | null = null;
     
     try {
       const { data: roleData, error: roleError } = await supabase
-        .rpc('get_role_by_id', { user_id: userId });
+        .rpc('get_user_role_safely', { user_id: userId });
         
       if (!roleError && roleData) {
         role = roleData as UserRole;
-        console.log("User role from direct query:", role);
+        console.log("User role from secure function:", role);
       } else {
-        console.log("Error getting role via direct query:", roleError);
+        console.log("Error getting role via secure function:", roleError);
       }
     } catch (roleErr) {
-      console.log("Exception when getting role via direct query:", roleErr);
+      console.log("Exception when getting role via secure function:", roleErr);
+    }
+    
+    // If failed to get role via secure function, try direct query
+    if (!role) {
+      try {
+        const { data: directRoleData, error: directRoleError } = await supabase
+          .rpc('get_role_by_id', { user_id: userId });
+          
+        if (!directRoleError && directRoleData) {
+          role = directRoleData as UserRole;
+          console.log("User role from direct query:", role);
+        } else {
+          console.log("Error getting role via direct query:", directRoleError);
+        }
+      } catch (directRoleErr) {
+        console.log("Exception when getting role via direct query:", directRoleErr);
+      }
     }
     
     // If failed to get role via RPC, try getting from user metadata
