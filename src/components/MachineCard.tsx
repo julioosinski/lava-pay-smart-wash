@@ -84,7 +84,11 @@ export function MachineCard({
               
               {showEdit && (
                 <div className="mt-2">
-                  <MachineForm variant="edit" machineData={machine} />
+                  <MachineForm 
+                    variant="edit" 
+                    machine={machine} 
+                    laundryId={machine.laundry_id} 
+                  />
                 </div>
               )}
             </div>
