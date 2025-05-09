@@ -501,6 +501,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_role_by_id: {
+        Args: { user_id: string }
+        Returns: string
+      }
       has_laundry_access: {
         Args: { laundry_id: string; user_id: string }
         Returns: boolean

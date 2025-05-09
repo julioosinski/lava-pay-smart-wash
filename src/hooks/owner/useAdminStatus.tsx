@@ -17,7 +17,7 @@ export function useAdminStatus(userId?: string) {
       
       try {
         setIsLoading(true);
-        // Chamando a função RPC is_admin para verificar se o usuário é admin
+        // Usando a função RPC is_admin que foi corrigida na migração SQL
         const { data, error } = await supabase
           .rpc('is_admin', { user_id: userId });
           
