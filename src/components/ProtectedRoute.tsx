@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAdminStatus } from '@/hooks/owner/useAdminStatus';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -15,13 +16,13 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
   const { user, loading: authLoading } = useAuth();
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { isAdmin, isLoading: isLoadingAdminStatus } = useAdminStatus(user?.id);
 
   useEffect(() => {
     const checkRole = async () => {
-      if (authLoading) {
-        // Esperar até que a autenticação seja concluída
-        console.log("ProtectedRoute: Waiting for auth to complete");
+      if (authLoading || isLoadingAdminStatus) {
+        // Esperar até que a autenticação e verificação de admin sejam concluídas
+        console.log("ProtectedRoute: Waiting for auth and admin checks to complete");
         return;
       }
       
@@ -34,21 +35,12 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
       try {
         console.log(`ProtectedRoute: Checking role for user ${user.id}, required role: ${requiredRole}`);
         
-        // Verificar se o usuário é admin usando a função RPC (corrigida na migração SQL)
-        const { data: adminStatus, error: adminError } = await supabase
-          .rpc('is_admin', { user_id: user.id });
-          
-        if (adminError) {
-          console.error("ProtectedRoute: Error checking admin role:", adminError);
-          toast.error("Erro ao verificar permissões de administrador");
-        } else {
-          setIsAdmin(!!adminStatus);
-          if (!!adminStatus) {
-            setRole('admin');
-            console.log("ProtectedRoute: User is confirmed as admin");
-            setLoading(false);
-            return;
-          }
+        // Se o usuário já foi verificado como admin, define o papel
+        if (isAdmin) {
+          console.log("ProtectedRoute: User is confirmed as admin by useAdminStatus");
+          setRole('admin');
+          setLoading(false);
+          return;
         }
         
         // Se não é admin, verificamos o papel geral do usuário
@@ -86,10 +78,10 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     }, 3000);
     
     return () => clearTimeout(timeout);
-  }, [user, requiredRole, authLoading]);
+  }, [user, requiredRole, authLoading, isAdmin, isLoadingAdminStatus]);
 
   // Se o contexto de autenticação ainda estiver carregando, mostrar um spinner
-  if (authLoading) {
+  if (authLoading || isLoadingAdminStatus) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
