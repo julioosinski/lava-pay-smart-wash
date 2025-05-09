@@ -6,37 +6,13 @@ import { usePayments } from "@/hooks/usePayments";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAdminStatus } from "./useAdminStatus";
 
 export function useOwnerData() {
   const { user } = useAuth();
-  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const { isAdmin } = useAdminStatus(user?.id);
   
-  // Check if user is an admin
-  useEffect(() => {
-    const checkAdminRole = async () => {
-      if (!user?.id) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .maybeSingle();
-          
-        if (error) {
-          console.error("Error checking user role:", error);
-          return;
-        }
-        
-        setIsAdmin(data?.role === 'admin');
-      } catch (error) {
-        console.error("Error checking admin status:", error);
-      }
-    };
-    
-    checkAdminRole();
-  }, [user?.id]);
-
+  // Fetch owner laundries, with forceShowAll only if user is admin
   const { 
     data: ownerLaundries = [], 
     isLoading: isLoadingLaundries,

@@ -33,6 +33,27 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
       try {
         console.log(`ProtectedRoute: Checking role for user ${user.id}, required role: ${requiredRole}`);
         
+        if (requiredRole === 'admin') {
+          // Use a função RPC para verificar se o usuário é admin
+          const { data: isAdmin, error: adminError } = await supabase
+            .rpc('is_admin', { user_id: user.id });
+            
+          if (adminError) {
+            console.error("ProtectedRoute: Error checking admin role:", adminError);
+            toast.error("Erro ao verificar permissões de administrador");
+            setLoading(false);
+            return;
+          }
+          
+          if (isAdmin) {
+            console.log("ProtectedRoute: User is confirmed as admin");
+            setRole('admin');
+            setLoading(false);
+            return;
+          }
+        }
+        
+        // Se não for admin ou o papel requerido não for admin, verificamos o papel geral
         const { data, error } = await supabase
           .from('profiles')
           .select('role')
