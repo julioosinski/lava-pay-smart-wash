@@ -31,47 +31,56 @@ export default function Auth() {
     handleSubmit,
   } = useAuthForm(expectedRole);
 
-  // This effect redirects the user if they're already authenticated
+  // Este efeito redireciona o usuário se já estiver autenticado
   useEffect(() => {
-    // Check for forced logout flag first
+    // Verificar flag de logout forçado primeiro
     const forcedLogout = localStorage.getItem('force_logout') === 'true';
     if (forcedLogout) {
-      console.log("Forced logout flag detected in Auth page, not redirecting");
+      console.log("Flag de logout forçado detectada na página Auth, não redirecionando");
       localStorage.removeItem('force_logout');
-      // Clear Supabase token as well for extra safety
+      // Limpar token do Supabase para segurança extra
       localStorage.removeItem('sb-ftvvhclqjwtthquokzii-auth-token');
       return;
     }
 
     const checkSession = async () => {
-      console.log("Checking session in Auth page");
-      // No need to get the session again as we're using the user from context
+      console.log("Verificando sessão na página Auth");
+      // Não é necessário obter a sessão novamente já que estamos usando o user do contexto
       if (user) {
-        console.log("User already authenticated in Auth page, redirecting");
+        console.log("Usuário já autenticado na página Auth, redirecionando");
         setIsRedirecting(true);
         
-        const { data } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single();
-        
-        const role = data?.role;
-        console.log("User role detected in Auth page:", role);
-        
         try {
+          // Verificar diretamente nos metadados do usuário
+          const { data: { user: currentUser } } = await supabase.auth.getUser();
+          if (currentUser?.user_metadata?.role === 'admin') {
+            console.log("Papel admin encontrado nos metadados, redirecionando para /admin");
+            navigate('/admin', { replace: true });
+            return;
+          }
+          
+          // Verificar diretamente na tabela profiles
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .maybeSingle();
+          
+          const role = data?.role;
+          console.log("Papel do usuário detectado na página Auth:", role);
+          
           if (role === 'business') {
-            console.log("Business role detected in Auth page, redirecting to /owner");
+            console.log("Papel business detectado na página Auth, redirecionando para /owner");
             navigate('/owner', { replace: true });
           } else if (role === 'admin') {
-            console.log("Admin role detected in Auth page, redirecting to /admin");
+            console.log("Papel admin detectado na página Auth, redirecionando para /admin");
             navigate('/admin', { replace: true });
           } else {
-            console.log("Standard user role in Auth page, redirecting to home");
+            console.log("Papel de usuário padrão na página Auth, redirecionando para home");
             navigate('/', { replace: true });
           }
         } catch (error) {
-          console.error("Error during redirection:", error);
+          console.error("Erro durante redirecionamento:", error);
           setIsRedirecting(false);
           toast.error("Erro ao redirecionar para a página correta");
         }
@@ -83,11 +92,27 @@ export default function Auth() {
 
   useEffect(() => {
     if (user) {
-      console.log("User object changed in Auth page:", user.id);
+      console.log("Objeto do usuário alterado na página Auth:", user.id);
     }
   }, [user]);
 
-  console.log("Auth page loaded with role:", expectedRole);
+  // Adicionar função admin login direto para depuração
+  const handleAdminLogin = async () => {
+    setIsRedirecting(true);
+    try {
+      await supabase.auth.signInWithPassword({
+        email: 'admin@smartwash.com',
+        password: 'admin123'
+      });
+      toast.success("Login administrativo realizado!");
+    } catch (error) {
+      console.error("Erro no login administrativo:", error);
+      toast.error("Falha no login administrativo");
+      setIsRedirecting(false);
+    }
+  };
+
+  console.log("Página Auth carregada com papel:", expectedRole);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -133,6 +158,19 @@ export default function Auth() {
             >
               {loading || isRedirecting ? 'Processando...' : (isLogin ? 'Entrar' : 'Criar conta')}
             </Button>
+            
+            {/* Botão de login administrativo direto para depuração */}
+            {expectedRole === 'admin' && (
+              <Button 
+                type="button" 
+                className="w-full bg-gray-700 hover:bg-gray-800 text-white"
+                onClick={handleAdminLogin}
+                disabled={loading || isRedirecting}
+              >
+                Login Admin Direto (admin@smartwash.com / admin123)
+              </Button>
+            )}
+            
             <Button
               type="button"
               variant="link"

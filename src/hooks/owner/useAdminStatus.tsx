@@ -18,53 +18,56 @@ export function useAdminStatus(userId?: string) {
       try {
         setIsLoading(true);
         
-        // Usar a função segura com SECURITY DEFINER para evitar recursão
-        const { data: isAdminData, error: rpcError } = await supabase
-          .rpc('is_user_admin_safely', { user_id: userId });
-          
-        if (!rpcError) {
-          setIsAdmin(!!isAdminData);
+        // Verificar diretamente se o usuário já existe na sessão atual
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user && user.user_metadata?.role === 'admin') {
+          console.log("Admin encontrado nos metadados do usuário:", user);
+          setIsAdmin(true);
           setIsLoading(false);
-          console.log("User admin status (from secure RPC):", !!isAdminData);
           return;
-        } else {
-          console.log("Secure RPC error:", rpcError);
         }
         
-        // Fallback para função alternativa se a primeira falhar
+        // Tentar obter o papel do usuário diretamente, sem RLS
         try {
+          // Usando uma direta RPC com security definer
           const { data: roleData, error: roleError } = await supabase
-            .rpc('get_user_role_safely', { user_id: userId });
-            
+            .rpc('get_role_directly', { user_id: userId });
+          
           if (!roleError && roleData) {
             setIsAdmin(roleData === 'admin');
             setIsLoading(false);
-            console.log("User admin status (from direct role query):", roleData === 'admin');
+            console.log("Papel do usuário (direto):", roleData);
             return;
           } else {
-            console.log("Direct role query error:", roleError);
+            console.error("Erro ao buscar papel via RPC direta:", roleError);
           }
         } catch (directErr) {
-          console.error("Direct role query error, falling back:", directErr);
+          console.error("Exceção ao verificar papel do usuário:", directErr);
         }
         
-        // Último fallback: verificar os metadados do usuário
+        // Último fallback: verificar a tabela de profiles sem usar RLS
         try {
-          const { data: { user } } = await supabase.auth.getUser();
+          // Esta chamada não usa RPC, mas sim executa SQL para buscar o papel
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', userId)
+            .maybeSingle();
           
-          if (user && user.user_metadata?.role === 'admin') {
-            setIsAdmin(true);
-            console.log("User admin status (from metadata):", true);
+          if (!error && data) {
+            console.log("Obtido papel diretamente da tabela profiles:", data.role);
+            setIsAdmin(data.role === 'admin');
           } else {
+            console.error("Erro ao verificar papel diretamente da tabela:", error);
             setIsAdmin(false);
-            console.log("User admin status (from metadata):", false);
           }
         } catch (error) {
-          console.error("Error checking admin status from metadata:", error);
+          console.error("Erro final ao verificar status admin:", error);
           setIsAdmin(false);
         }
       } catch (error) {
-        console.error("Error checking admin status:", error);
+        console.error("Erro ao verificar status de administrador:", error);
         toast.error("Erro ao verificar status de administrador");
         setIsAdmin(false);
       } finally {

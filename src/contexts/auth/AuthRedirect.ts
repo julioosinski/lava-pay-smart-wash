@@ -7,141 +7,47 @@ type UserRole = 'admin' | 'business' | 'user';
 
 export async function redirectBasedOnRole(userId: string, navigate: (path: string, options: { replace: boolean }) => void) {
   try {
-    console.log("Checking role for user ID:", userId);
+    console.log("Verificando papel para usuário ID:", userId);
     
-    // Check if the user has admin role using secure function
+    // Método direto: verificar metadados do usuário primeiro
     try {
-      const { data: isAdmin, error: adminError } = await supabase
-        .rpc('is_user_admin_safely', { user_id: userId });
-
-      if (!adminError && isAdmin === true) {
-        console.log("Admin role confirmed via secure function, redirecting to admin page");
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && user.user_metadata?.role === 'admin') {
+        console.log("Admin encontrado nos metadados do usuário");
         navigate('/admin', { replace: true });
         return;
-      } else if (adminError) {
-        console.error("Error checking admin status via secure function:", adminError);
       }
-    } catch (adminErr) {
-      console.log("Error checking admin status via secure function:", adminErr);
+    } catch (metaErr) {
+      console.error("Erro ao verificar metadados:", metaErr);
     }
     
-    // Try getting the user role using a secure function
-    let role: UserRole | null = null;
-    
+    // Verificar direto na tabela de profiles sem usar RPC
     try {
-      const { data: roleData, error: roleError } = await supabase
-        .rpc('get_user_role_safely', { user_id: userId });
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .maybeSingle();
         
-      if (!roleError && roleData) {
-        role = roleData as UserRole;
-        console.log("User role from secure function:", role);
-      } else {
-        console.log("Error getting role via secure function:", roleError);
-      }
-    } catch (roleErr) {
-      console.log("Exception when getting role via secure function:", roleErr);
-    }
-    
-    // If failed to get role via secure function, try direct query
-    if (!role) {
-      try {
-        const { data: directRoleData, error: directRoleError } = await supabase
-          .rpc('get_role_by_id', { user_id: userId });
-          
-        if (!directRoleError && directRoleData) {
-          role = directRoleData as UserRole;
-          console.log("User role from direct query:", role);
-        } else {
-          console.log("Error getting role via direct query:", directRoleError);
-        }
-      } catch (directRoleErr) {
-        console.log("Exception when getting role via direct query:", directRoleErr);
-      }
-    }
-    
-    // If failed to get role via RPC, try getting from user metadata
-    if (!role) {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user && user.user_metadata?.role) {
-          role = user.user_metadata.role as UserRole;
-          console.log("User role from metadata:", role);
-        }
-      } catch (metaErr) {
-        console.log("Error getting role from metadata:", metaErr);
-      }
-    }
-    
-    // Redirect based on detected role
-    if (role === 'admin') {
-      console.log("Admin role detected, redirecting to admin page");
-      navigate('/admin', { replace: true });
-      return;
-    } else if (role === 'business') {
-      console.log("Business role detected, redirecting to owner page");
-      
-      // Check if user has any laundries before redirecting - using try/catch to handle any potential errors
-      try {
-        const { data: laundryCheck, error: laundryError } = await supabase
-          .from('laundries')
-          .select('id')
-          .eq('owner_id', userId)
-          .limit(1);
-        
-        if (laundryError) {
-          console.error("Error checking laundries:", laundryError);
-        }
-        
-        if (laundryCheck && laundryCheck.length > 0) {
-          console.log(`User ${userId} already has laundries:`, laundryCheck);
-          navigate('/owner', { replace: true });
+      if (!error && data) {
+        console.log("Papel do usuário obtido diretamente da tabela:", data.role);
+        if (data.role === 'admin') {
+          console.log("Papel admin detectado, redirecionando para página admin");
+          navigate('/admin', { replace: true });
           return;
-        } else {
-          console.log("Business user has no laundries. Creating a test laundry...");
-          
-          try {
-            // Create a test laundry for this business user
-            const testLaundryName = `Lavanderia Teste ${Math.floor(Math.random() * 1000)}`;
-            const { data: newLaundry, error: createError } = await supabase
-              .from('laundries')
-              .insert({
-                name: testLaundryName,
-                address: 'Rua Teste, 123, Cidade Teste',
-                contact_email: 'test@example.com',
-                contact_phone: '(11) 99999-9999',
-                owner_id: userId,
-                status: 'active'
-              })
-              .select()
-              .single();
-              
-            if (createError) {
-              console.error("Error creating test laundry:", createError);
-              toast.error("Erro ao criar lavanderia de teste");
-            } else if (newLaundry) {
-              console.log("Successfully created test laundry:", newLaundry);
-              toast.success("Lavanderia de teste criada com sucesso");
-            }
-            
-            navigate('/owner', { replace: true });
-            return;
-          } catch (error) {
-            console.error("Error in test laundry creation:", error);
-            toast.error("Erro ao criar lavanderia de teste");
-          }
+        } else if (data.role === 'business') {
+          console.log("Papel business detectado, redirecionando para owner page");
+          await checkAndCreateLaundryIfNeeded(userId, navigate);
+          return;
         }
-        
-        navigate('/owner', { replace: true });
-        return;
-      } catch (error) {
-        console.error("Error checking laundries:", error);
-        // Still redirect to owner page, they can create laundries there
-        navigate('/owner', { replace: true });
-        return;
+      } else {
+        console.error("Erro ao verificar papel diretamente:", error);
       }
+    } catch (directErr) {
+      console.error("Exceção ao verificar papel diretamente:", directErr);
     }
     
-    // If we couldn't determine role, check if the user has any laundries (business owner)
+    // Verificar se o usuário é proprietário de alguma lavanderia
     try {
       const { data: laundryCheck, error: laundryError } = await supabase
         .from('laundries')
@@ -150,44 +56,47 @@ export async function redirectBasedOnRole(userId: string, navigate: (path: strin
         .limit(1);
 
       if (laundryError) {
-        console.error("Error checking laundries:", laundryError);
+        console.error("Erro ao verificar lavanderias:", laundryError);
       } else if (laundryCheck && laundryCheck.length > 0) {
-        console.log(`User ${userId} is a laundry owner, found laundry:`, laundryCheck[0]);
-        // Update user role to business if they own a laundry
+        console.log(`Usuário ${userId} é proprietário de lavanderia, lavanderia encontrada:`, laundryCheck[0]);
+        // Atualizar papel do usuário para business se ele possui uma lavanderia
         await updateUserRoleIfNeeded(userId, 'business');
-        console.log("Redirecting to owner dashboard");
+        console.log("Redirecionando para dashboard do proprietário");
         navigate('/owner', { replace: true });
         return;
       } else {
-        console.log(`User ${userId} has no laundries associated`);
+        console.log(`Usuário ${userId} não possui lavanderias associadas`);
       }
     } catch (error) {
-      console.error("Error checking laundries:", error);
+      console.error("Erro ao verificar lavanderias:", error);
     }
 
-    console.log("No specific role detected or user role, redirecting to home");
+    console.log("Nenhum papel específico detectado, redirecionando para home");
     navigate('/', { replace: true });
   } catch (error) {
-    console.error("Error in redirectBasedOnRole:", error);
+    console.error("Erro em redirectBasedOnRole:", error);
     toast.error("Erro no redirecionamento baseado no papel do usuário");
-    // Fallback to home page
+    // Fallback para página inicial
     navigate('/', { replace: true });
   }
 }
 
 async function updateUserRoleIfNeeded(userId: string, role: UserRole) {
   try {
-    // First check if update is needed using secure function
-    const { data: currentRole, error: roleError } = await supabase
-      .rpc('get_role_by_id', { user_id: userId });
+    // Verificar papel atual sem usar RPC para evitar recursão
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .maybeSingle();
 
-    if (roleError) {
-      console.error("Error fetching current role:", roleError);
+    if (error) {
+      console.error("Erro ao buscar papel atual:", error);
       return;
     }
 
-    if (currentRole !== role) {
-      console.log(`Updating user ${userId} role from ${currentRole} to ${role}`);
+    if (data?.role !== role) {
+      console.log(`Atualizando papel do usuário ${userId} de ${data?.role || 'null'} para ${role}`);
       
       const { error: updateError } = await supabase
         .from('profiles')
@@ -195,12 +104,71 @@ async function updateUserRoleIfNeeded(userId: string, role: UserRole) {
         .eq('id', userId);
 
       if (updateError) {
-        console.error("Error updating role:", updateError);
+        console.error("Erro ao atualizar papel:", updateError);
       } else {
-        console.log("Role successfully updated to:", role);
+        console.log("Papel atualizado com sucesso para:", role);
       }
     }
   } catch (error) {
-    console.error("Error in updateUserRoleIfNeeded:", error);
+    console.error("Erro em updateUserRoleIfNeeded:", error);
+  }
+}
+
+async function checkAndCreateLaundryIfNeeded(userId: string, navigate: (path: string, options: { replace: boolean }) => void) {
+  try {
+    const { data: laundryCheck, error: laundryError } = await supabase
+      .from('laundries')
+      .select('id')
+      .eq('owner_id', userId)
+      .limit(1);
+    
+    if (laundryError) {
+      console.error("Erro ao verificar lavanderias:", laundryError);
+    }
+    
+    if (laundryCheck && laundryCheck.length > 0) {
+      console.log(`Usuário ${userId} já possui lavanderias:`, laundryCheck);
+      navigate('/owner', { replace: true });
+      return;
+    } else {
+      console.log("Usuário business não tem lavanderias. Criando uma lavanderia teste...");
+      
+      try {
+        // Criar uma lavanderia teste para este usuário business
+        const testLaundryName = `Lavanderia Teste ${Math.floor(Math.random() * 1000)}`;
+        const { data: newLaundry, error: createError } = await supabase
+          .from('laundries')
+          .insert({
+            name: testLaundryName,
+            address: 'Rua Teste, 123, Cidade Teste',
+            contact_email: 'test@example.com',
+            contact_phone: '(11) 99999-9999',
+            owner_id: userId,
+            status: 'active'
+          })
+          .select()
+          .single();
+          
+        if (createError) {
+          console.error("Erro ao criar lavanderia teste:", createError);
+          toast.error("Erro ao criar lavanderia de teste");
+        } else if (newLaundry) {
+          console.log("Lavanderia teste criada com sucesso:", newLaundry);
+          toast.success("Lavanderia de teste criada com sucesso");
+        }
+        
+        navigate('/owner', { replace: true });
+        return;
+      } catch (error) {
+        console.error("Erro na criação de lavanderia teste:", error);
+        toast.error("Erro ao criar lavanderia de teste");
+      }
+    }
+    
+    navigate('/owner', { replace: true });
+  } catch (error) {
+    console.error("Erro ao verificar lavanderias:", error);
+    // Ainda redirecionar para página do proprietário, eles podem criar lavanderias lá
+    navigate('/owner', { replace: true });
   }
 }
