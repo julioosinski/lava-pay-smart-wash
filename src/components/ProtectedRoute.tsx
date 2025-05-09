@@ -21,7 +21,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
   useEffect(() => {
     const checkRole = async () => {
       if (authLoading || isLoadingAdminStatus) {
-        // Esperar até que a autenticação e verificação de admin sejam concluídas
+        // Wait for auth and admin status checks
         console.log("ProtectedRoute: Waiting for auth and admin checks to complete");
         return;
       }
@@ -35,7 +35,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
       try {
         console.log(`ProtectedRoute: Checking role for user ${user.id}, required role: ${requiredRole}`);
         
-        // Se o usuário já foi verificado como admin, define o papel
+        // If user is already confirmed as admin, set role
         if (isAdmin) {
           console.log("ProtectedRoute: User is confirmed as admin by useAdminStatus");
           setRole('admin');
@@ -43,55 +43,54 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
           return;
         }
         
-        // Obter o papel diretamente do perfil
+        // Try multiple methods to determine user role
+        let userRole = null;
+        
+        // Method 1: Try secure RPC function
         try {
-          // Tenta obter o perfil com várias abordagens diferentes
-          let userRole = null;
-          
-          // Abordagem 1: Tentar RPC segura
+          const { data: roleData, error: roleError } = await supabase
+            .rpc('get_user_role_safely', { user_id: user.id });
+            
+          if (!roleError && roleData) {
+            userRole = roleData;
+            console.log("Role via secure RPC:", userRole);
+          } else {
+            console.log("Secure RPC error:", roleError);
+          }
+        } catch (err) {
+          console.error("Secure RPC role check failed:", err);
+        }
+        
+        // Method 2: Try direct role query function
+        if (!userRole) {
           try {
-            const { data: roleData } = await supabase.rpc('get_user_role_safely', { user_id: user.id });
-            if (roleData) {
-              userRole = roleData;
-              console.log("Role via RPC:", userRole);
+            const { data: directRoleData, error: directRoleError } = await supabase
+              .rpc('get_role_directly', { user_id: user.id });
+              
+            if (!directRoleError && directRoleData) {
+              userRole = directRoleData;
+              console.log("Role via direct query RPC:", userRole);
+            } else {
+              console.log("Direct role RPC error:", directRoleError);
             }
           } catch (err) {
-            console.error("RPC role check failed:", err);
+            console.error("Direct role RPC failed:", err);
           }
-          
-          // Abordagem 2: Tentar consulta direta com SELECT
-          if (!userRole) {
-            try {
-              const { data } = await supabase
-                .from('profiles')
-                .select('role')
-                .eq('id', user.id)
-                .maybeSingle();
-                
-              userRole = data?.role || null;
-              console.log("Role via direct query:", userRole);
-            } catch (err) {
-              console.error("Direct query role check failed:", err);
-            }
-          }
-          
-          // Abordagem 3: Verificar os metadados do usuário
-          if (!userRole && user.user_metadata?.role) {
-            userRole = user.user_metadata.role;
-            console.log("Role from user metadata:", userRole);
-          }
-          
-          // Define o papel detectado
-          if (userRole) {
-            console.log(`ProtectedRoute: User ${user.id} has role:`, userRole);
-            setRole(userRole);
-          } else {
-            console.log("No role detected, using default 'user' role");
-            setRole('user'); // Papel padrão
-          }
-        } catch (error) {
-          console.error("ProtectedRoute: Error checking role:", error);
-          setRole('user'); // Papel padrão em caso de erro
+        }
+        
+        // Method 3: Check user metadata
+        if (!userRole && user.user_metadata?.role) {
+          userRole = user.user_metadata.role;
+          console.log("Role from user metadata:", userRole);
+        }
+        
+        // Set detected role
+        if (userRole) {
+          console.log(`ProtectedRoute: User ${user.id} has role:`, userRole);
+          setRole(userRole);
+        } else {
+          console.log("No role detected, using default 'user' role");
+          setRole('user'); // Default role
         }
         
         setLoading(false);
@@ -104,7 +103,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
 
     checkRole();
     
-    // Timeout de segurança para evitar carregamento infinito
+    // Safety timeout to prevent infinite loading
     const timeout = setTimeout(() => {
       if (loading) {
         console.log("ProtectedRoute: Safety timeout triggered");
@@ -115,7 +114,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     return () => clearTimeout(timeout);
   }, [user, requiredRole, authLoading, isAdmin, isLoadingAdminStatus]);
 
-  // Se o contexto de autenticação ainda estiver carregando, mostrar um spinner
+  // If auth context is still loading, show a spinner
   if (authLoading || isLoadingAdminStatus) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -127,7 +126,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     );
   }
 
-  // Se estamos verificando o papel, mostrar uma mensagem de carregamento diferente
+  // If checking role, show a different loading message
   if (loading && user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -139,15 +138,15 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     );
   }
 
-  // Se não houver usuário autenticado, redirecionar para página de login com o papel necessário
+  // If no authenticated user, redirect to login page with required role
   if (!user) {
     console.log("ProtectedRoute: No authenticated user, redirecting to auth page");
     return <Navigate to="/auth" state={{ role: requiredRole || 'user' }} replace />;
   }
 
-  // Se um papel específico for necessário, verificar se o usuário tem esse papel ou é admin
+  // If a specific role is required, check if user has that role or is admin
   if (requiredRole) {
-    // Verificar se o usuário é admin ou tem o papel necessário
+    // Check if user is admin or has required role
     if (requiredRole === 'admin' && !isAdmin) {
       console.log("ProtectedRoute: Access denied - User is not an admin");
       toast.error("Acesso negado. Você não tem permissões de administrador.");
@@ -163,7 +162,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     }
   }
 
-  // Se o usuário passar por todas as verificações, renderizar o conteúdo protegido
+  // If user passes all checks, render protected content
   console.log(`ProtectedRoute: User ${user.id} authorized for route requiring role: ${requiredRole}`);
   return <>{children}</>;
 }

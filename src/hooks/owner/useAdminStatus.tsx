@@ -18,38 +18,55 @@ export function useAdminStatus(userId?: string) {
       try {
         setIsLoading(true);
         
-        // Primeiro tenta usar a RPC is_admin
+        // Try multiple approaches to determine admin status
+        
+        // 1. First try to use the secure RPC function
         try {
           const { data: isAdminData, error: rpcError } = await supabase
-            .rpc('is_admin', { user_id: userId });
+            .rpc('is_user_admin_safely', { user_id: userId });
             
           if (!rpcError) {
             setIsAdmin(!!isAdminData);
             setIsLoading(false);
-            console.log("User admin status (from RPC):", !!isAdminData);
+            console.log("User admin status (from secure RPC):", !!isAdminData);
             return;
+          } else {
+            console.log("Secure RPC error:", rpcError);
           }
         } catch (rpcErr) {
-          console.error("RPC error, falling back to direct query:", rpcErr);
+          console.error("Secure RPC error, trying alternative:", rpcErr);
         }
         
-        // Fallback: consulta direta à tabela de perfis
+        // 2. Try the direct role query function
         try {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', userId)
-            .single();
+          const { data: roleData, error: roleError } = await supabase
+            .rpc('get_role_directly', { user_id: userId });
             
-          if (error) {
-            console.error("Error checking role directly:", error);
-            setIsAdmin(false);
+          if (!roleError && roleData) {
+            setIsAdmin(roleData === 'admin');
+            setIsLoading(false);
+            console.log("User admin status (from direct role query):", roleData === 'admin');
+            return;
           } else {
-            setIsAdmin(data?.role === 'admin');
-            console.log("User admin status (from direct query):", data?.role === 'admin');
+            console.log("Direct role query error:", roleError);
+          }
+        } catch (directErr) {
+          console.error("Direct role query error, falling back:", directErr);
+        }
+        
+        // 3. Fallback: check user metadata
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          
+          if (user && user.user_metadata?.role === 'admin') {
+            setIsAdmin(true);
+            console.log("User admin status (from metadata):", true);
+          } else {
+            setIsAdmin(false);
+            console.log("User admin status (from metadata):", false);
           }
         } catch (error) {
-          console.error("Error in direct role check:", error);
+          console.error("Error checking admin status from metadata:", error);
           setIsAdmin(false);
         }
       } catch (error) {
