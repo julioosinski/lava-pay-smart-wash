@@ -28,6 +28,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     navigate 
   });
 
+  // Check for direct admin access
+  useEffect(() => {
+    const directAdminAccess = localStorage.getItem('direct_admin') === 'true';
+    
+    // If on admin page with direct access, allow
+    if (directAdminAccess && location.pathname.startsWith('/admin')) {
+      console.log("Direct admin access detected on admin page");
+      if (loading) {
+        setLoading(false);
+        setInitialized(true);
+      }
+    }
+  }, [location.pathname, loading]);
+
   // Effects come after all hooks
   useEffect(() => {
     const setupAuth = async () => {
@@ -46,6 +60,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       
+      // Check for direct admin access
+      const directAdminAccess = localStorage.getItem('direct_admin') === 'true';
+      if (directAdminAccess && location.pathname.startsWith('/admin')) {
+        console.log("Direct admin access detected on admin page, skipping auth setup");
+        setLoading(false);
+        setInitialized(true);
+        return;
+      }
+      
       // Set up the subscription first
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         (event, newSession) => {
@@ -56,6 +79,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.log("User signed out or session expired, clearing state");
             setSession(null);
             setUser(null);
+            
+            // Clear direct admin access on sign out
+            localStorage.removeItem('direct_admin');
             
             // Only redirect if not already on auth page
             if (location.pathname !== '/auth') {

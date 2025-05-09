@@ -269,6 +269,44 @@ export type Database = {
           },
         ]
       }
+      payment_receipts: {
+        Row: {
+          created_at: string
+          customer_receipt: string | null
+          id: string
+          machine_id: string | null
+          merchant_receipt: string | null
+          transaction_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_receipt?: string | null
+          id?: string
+          machine_id?: string | null
+          merchant_receipt?: string | null
+          transaction_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_receipt?: string | null
+          id?: string
+          machine_id?: string | null
+          merchant_receipt?: string | null
+          transaction_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_receipts_machine_id_fkey"
+            columns: ["machine_id"]
+            isOneToOne: false
+            referencedRelation: "machines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_settings: {
         Row: {
           access_token: string | null
@@ -463,11 +501,31 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_role_by_id: {
+        Args: { user_id: string }
+        Returns: string
+      }
+      get_role_directly: {
+        Args: { user_id: string }
+        Returns: string
+      }
+      get_user_role_safely: {
+        Args: { user_id: string }
+        Returns: string
+      }
       has_laundry_access: {
         Args: { laundry_id: string; user_id: string }
         Returns: boolean
       }
       is_admin: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
+      is_admin_safely: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_user_admin_safely: {
         Args: { user_id: string }
         Returns: boolean
       }

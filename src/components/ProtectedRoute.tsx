@@ -24,6 +24,16 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
         return;
       }
       
+      // Check for direct admin access
+      const directAdminAccess = localStorage.getItem('direct_admin') === 'true';
+      
+      if (directAdminAccess && requiredRole === 'admin') {
+        console.log("ProtectedRoute: Direct admin access granted");
+        setRole('admin');
+        setLoading(false);
+        return;
+      }
+      
       if (!user) {
         console.log(`ProtectedRoute: No user found, role required: ${requiredRole}`);
         setLoading(false);
@@ -33,20 +43,29 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
       try {
         console.log(`ProtectedRoute: Checking role for user ${user.id}, required role: ${requiredRole}`);
         
-        const { data, error } = await supabase
+        // Check if email is admin@smartwash.com (hardcoded admin)
+        const { data: userData, error: userError } = await supabase
           .from('profiles')
-          .select('role')
+          .select('email, role')
           .eq('id', user.id)
           .maybeSingle();
-
-        if (error) {
-          console.error("ProtectedRoute: Error fetching role:", error);
+        
+        if (userError) {
+          console.error("ProtectedRoute: Error fetching user data:", userError);
           toast.error("Erro ao verificar permissões do usuário");
           setLoading(false);
           return;
         }
+        
+        // Admin access for admin@smartwash.com
+        if (userData?.email === 'admin@smartwash.com') {
+          console.log("ProtectedRoute: Special admin user detected");
+          setRole('admin');
+          setLoading(false);
+          return;
+        }
 
-        const userRole = data?.role || null;
+        const userRole = userData?.role || null;
         console.log(`ProtectedRoute: User ${user.id} has role from database:`, userRole);
         setRole(userRole);
         setLoading(false);
@@ -83,7 +102,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
   }
 
   // If we're checking the role, show a different loading message
-  if (loading && user) {
+  if (loading && (user || localStorage.getItem('direct_admin') === 'true')) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -94,8 +113,15 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     );
   }
 
+  // Handle direct admin access
+  const directAdminAccess = localStorage.getItem('direct_admin') === 'true';
+  if (directAdminAccess && requiredRole === 'admin') {
+    console.log("ProtectedRoute: Direct admin access granted for admin route");
+    return <>{children}</>;
+  }
+
   // If there's no authenticated user, redirect to login page with the required role
-  if (!user) {
+  if (!user && !directAdminAccess) {
     console.log("ProtectedRoute: No authenticated user, redirecting to auth page");
     // Make sure we're passing the role correctly to the state
     return <Navigate to="/auth" state={{ role: requiredRole || 'user' }} replace />;
@@ -120,6 +146,6 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
   }
 
   // If user passes all checks, render the protected content
-  console.log(`ProtectedRoute: User ${user.id} authorized for route requiring role: ${requiredRole}`);
+  console.log(`ProtectedRoute: User ${user?.id || 'with direct access'} authorized for route requiring role: ${requiredRole}`);
   return <>{children}</>;
 }

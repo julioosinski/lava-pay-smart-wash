@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { WashingMachine } from 'lucide-react';
+import { WashingMachine, Lock, Shield } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/auth';
@@ -30,6 +30,27 @@ export default function Auth() {
     setShowPassword,
     handleSubmit,
   } = useAuthForm(expectedRole);
+
+  // Direct admin access function
+  const handleDirectAdminAccess = async () => {
+    setIsRedirecting(true);
+    
+    try {
+      // Set direct admin flag in localStorage
+      localStorage.setItem('direct_admin', 'true');
+      toast.success("Acesso de administrador concedido");
+      
+      // Redirect to admin page
+      setTimeout(() => {
+        navigate('/admin', { replace: true });
+      }, 500);
+    } catch (error) {
+      console.error("Error during direct admin access:", error);
+      setIsRedirecting(false);
+      toast.error("Erro ao acessar como administrador");
+      localStorage.removeItem('direct_admin');
+    }
+  };
 
   // This effect redirects the user if they're already authenticated
   useEffect(() => {
@@ -89,6 +110,8 @@ export default function Auth() {
 
   console.log("Auth page loaded with role:", expectedRole);
 
+  const isAdminLogin = expectedRole === 'admin';
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <Card className="w-full max-w-md">
@@ -133,6 +156,21 @@ export default function Auth() {
             >
               {loading || isRedirecting ? 'Processando...' : (isLogin ? 'Entrar' : 'Criar conta')}
             </Button>
+            
+            {isAdminLogin && (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full flex items-center justify-center gap-2 border-red-500 hover:bg-red-50 text-red-600"
+                onClick={handleDirectAdminAccess}
+                disabled={loading || isRedirecting}
+              >
+                <Shield className="h-4 w-4" />
+                <span>Acesso Direto de Administrador</span>
+                <Lock className="h-4 w-4" />
+              </Button>
+            )}
+            
             <Button
               type="button"
               variant="link"

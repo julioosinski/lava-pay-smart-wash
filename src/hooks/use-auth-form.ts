@@ -32,48 +32,35 @@ export const useAuthForm = (expectedRole: string = 'user') => {
       if (isLogin) {
         console.log("Attempting login with email:", email);
         
-        if (expectedRole === 'business') {
-          console.log("Business login attempt with email and phone");
+        try {
+          await signIn(email.trim(), password.trim());
+          console.log("Login successful");
+          // Toast is shown in signIn function now
           
-          try {
-            await signIn(email.trim(), password.trim());
-            console.log("Business login successful");
-            sonnerToast.success("Login realizado com sucesso!");
-            navigate('/owner');
-          } catch (error) {
-            console.error("Business login failed:", error);
-            
-            // Create a more helpful error message
-            let errorMessage = "Verifique se o email e telefone estão corretos.";
-            
-            // Try to get more specific error information
-            if (error instanceof Error) {
-              if (error.message.includes("no matching laundry")) {
-                errorMessage = "Não encontramos uma lavanderia com esse email e telefone. Verifique se estão corretos.";
-              } else if (error.message.includes("Invalid login")) {
-                errorMessage = "Credenciais inválidas. Verifique se o email e telefone estão corretos.";
-              }
-            }
-            
-            toast({
-              variant: "destructive",
-              title: "Erro de autenticação",
-              description: errorMessage
-            });
+          // Special case for admin
+          if (expectedRole === 'admin') {
+            navigate('/admin', { replace: true });
+          } else if (expectedRole === 'business') {
+            navigate('/owner', { replace: true });
+          } else {
+            navigate('/', { replace: true });
           }
-        } else {
-          // Normal login for other user types
-          try {
-            await signIn(email.trim(), password.trim());
-            sonnerToast.success("Login realizado com sucesso!");
-          } catch (error) {
-            console.error("Login error:", error);
-            toast({
-              variant: "destructive",
-              title: "Erro ao fazer login",
-              description: error instanceof Error ? error.message : "Ocorreu um erro durante o login"
-            });
+        } catch (error) {
+          console.error("Login error:", error);
+          
+          // Create a more helpful error message
+          let errorMessage = "Erro de autenticação. Verifique suas credenciais.";
+          
+          // Try to get more specific error information
+          if (error instanceof Error) {
+            errorMessage = error.message;
           }
+          
+          toast({
+            variant: "destructive",
+            title: "Erro ao fazer login",
+            description: errorMessage
+          });
         }
       } else {
         // Registration flow

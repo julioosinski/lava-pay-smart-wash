@@ -9,6 +9,27 @@ export async function redirectBasedOnRole(userId: string, navigate: (path: strin
   try {
     console.log("Checking role for user ID:", userId);
     
+    // Check for direct admin access
+    const directAdminAccess = localStorage.getItem('direct_admin') === 'true';
+    if (directAdminAccess) {
+      console.log("Direct admin access detected, redirecting to admin page");
+      navigate('/admin', { replace: true });
+      return;
+    }
+    
+    // Special case for admin@smartwash.com
+    const { data: emailCheck, error: emailError } = await supabase
+      .from('profiles')
+      .select('email')
+      .eq('id', userId)
+      .single();
+      
+    if (!emailError && emailCheck?.email === 'admin@smartwash.com') {
+      console.log("Special admin user detected, redirecting to admin page");
+      navigate('/admin', { replace: true });
+      return;
+    }
+    
     // First check if there's a profile with role for this user
     const { data: profileData, error: profileError } = await supabase
       .from('profiles')
