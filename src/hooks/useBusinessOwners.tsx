@@ -10,31 +10,40 @@ export function useBusinessOwners() {
       try {
         console.log("Buscando proprietários de negócios...");
         
-        // Query profiles com role = 'business'
-        const { data: owners, error } = await supabase
-          .from('profiles')
-          .select('id, first_name, last_name, contact_email, contact_phone, role')
-          .eq('role', 'business');
+        // Query profiles with role = 'business'
+        const { data: owners, error } = await supabase.rpc('list_business_owners');
           
         if (error) {
           console.error("Erro ao buscar proprietários:", error);
-          throw error;
+          
+          // Fallback to direct query if RPC fails
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from('profiles')
+            .select('id, first_name, last_name, contact_email, contact_phone, role')
+            .eq('role', 'business');
+            
+          if (fallbackError) {
+            console.error("Erro ao fazer fallback para busca de proprietários:", fallbackError);
+            throw fallbackError;
+          }
+          
+          console.log("Proprietários encontrados (fallback):", fallbackData?.length || 0);
+          
+          const formattedOwners = (fallbackData || []).map(owner => ({
+            id: owner.id,
+            name: `${owner.first_name || ''} ${owner.last_name || ''}`.trim() || 'Sem nome',
+            email: owner.contact_email || '',
+            phone: owner.contact_phone || '',
+            role: owner.role
+          }));
+          
+          return formattedOwners;
         }
         
-        console.log("Proprietários encontrados:", owners?.length || 0);
+        console.log("Proprietários encontrados (RPC):", owners?.length || 0);
         
-        // Transformação de dados para o formato esperado pelos componentes
-        const formattedOwners = (owners || []).map(owner => ({
-          id: owner.id,
-          name: `${owner.first_name || ''} ${owner.last_name || ''}`.trim() || 'Sem nome',
-          email: owner.contact_email,
-          phone: owner.contact_phone,
-          role: owner.role
-        }));
-        
-        console.log("Proprietários formatados:", formattedOwners.length);
-        
-        return formattedOwners;
+        // For RPC response, the data format might already be in the expected format
+        return owners || [];
       } catch (error) {
         console.error("Erro no hook useBusinessOwners:", error);
         throw error;

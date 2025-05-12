@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MapPin, Calendar, WashingMachine, Users } from "lucide-react";
@@ -10,6 +10,7 @@ import { UsersTab } from "@/components/admin/tabs/UsersTab";
 import { useMachines } from "@/hooks/useMachines";
 import { useLaundries } from "@/hooks/useLaundries";
 import { LaundryLocation } from "@/types";
+import { createListBusinessOwnersRPC } from "@/rpc/businessOwnerRPC";
 
 export default function Admin() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -18,6 +19,11 @@ export default function Admin() {
   // Force showing all laundries for admin
   const { data: allLaundries = [] as LaundryLocation[] } = useLaundries({ forceShowAll: true });
   const { data: machines = [] } = useMachines();
+  
+  // Create RPC function if it doesn't exist
+  useEffect(() => {
+    createListBusinessOwnersRPC();
+  }, []);
 
   return (
     <Layout>

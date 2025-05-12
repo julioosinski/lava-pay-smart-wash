@@ -509,6 +509,10 @@ export type Database = {
         Args: { user_id: string }
         Returns: string
       }
+      get_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_user_role_safely: {
         Args: { user_id: string }
         Returns: string

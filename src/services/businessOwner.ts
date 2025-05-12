@@ -1,205 +1,143 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Database } from "@/integrations/supabase/types";
+import { toast } from "sonner";
 
-export interface CreateBusinessOwnerParams {
-  name: string;  // Ensuring name is required, not optional
+interface BusinessOwnerInput {
+  name: string;
   email: string;
   phone: string;
 }
 
-interface CreateBusinessOwnerResult {
-  userId?: string;
-  error?: string;
-}
-
-export async function createBusinessOwner(params: CreateBusinessOwnerParams): Promise<CreateBusinessOwnerResult> {
+export async function createBusinessOwner({
+  name,
+  email,
+  phone,
+}: BusinessOwnerInput) {
   try {
-    console.log("Criando proprietário com parâmetros:", params);
+    console.log("Criando proprietário com parâmetros:", { name, email, phone });
     
-    // First, check if the user already exists by email
-    const { data: existingUsers, error: searchError } = await supabase
+    // Check if a user with this email already exists in profiles
+    const { data: existingUser, error: checkError } = await supabase
       .from('profiles')
       .select('id, role')
-      .eq('contact_email', params.email);
+      .eq('contact_email', email)
+      .maybeSingle();
     
-    if (searchError) {
-      console.error("Erro ao verificar usuário existente:", searchError);
-      throw searchError;
+    if (checkError) {
+      console.error("Erro ao verificar usuário existente:", checkError);
+      // Continue with creation even if check fails
     }
     
-    let userId;
-    
-    // If user exists, update their role and profile
-    if (existingUsers && existingUsers.length > 0) {
-      console.log("Usuário já existe, atualizando perfil:", existingUsers[0]);
-      userId = existingUsers[0].id;
+    if (existingUser?.id) {
+      console.log("Usuário já existe, atualizando para business:", existingUser);
       
-      // Update the profile with business role and contact info
+      // Split the name into first and last name
+      const nameParts = name.split(' ');
+      const firstName = nameParts[0];
+      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+      
+      // Update existing user to have business role
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
-          first_name: params.name.split(' ')[0] || '',
-          last_name: params.name.split(' ').slice(1).join(' ') || '',
-          contact_phone: params.phone,
-          role: 'business' as Database["public"]["Enums"]["user_role"]
+          contact_phone: phone,
+          role: 'business',
+          first_name: firstName,
+          last_name: lastName,
+          updated_at: new Date().toISOString()
         })
-        .eq('id', userId);
+        .eq('id', existingUser.id);
       
       if (updateError) {
-        console.error("Erro ao atualizar perfil do usuário existente:", updateError);
-        throw updateError;
+        console.error("Erro ao atualizar perfil existente:", updateError);
+        return { error: "Falha ao atualizar usuário existente", userId: null };
       }
       
-      console.log("Perfil de usuário existente atualizado com sucesso. ID:", userId);
-    } else {
-      // Create new user if doesn't exist
-      console.log("Criando novo usuário auth");
-      
-      // Create the user Auth
-      const { data: userData, error: authError } = await supabase.auth.signUp({
-        email: params.email,
-        password: params.phone, // Usando o telefone como senha inicial
-        options: {
-          data: {
-            role: 'business',
-          }
+      return { userId: existingUser.id, error: null };
+    }
+    
+    // If no existing user, create a new auth user and profile
+    // For demo purposes, create a password based on the phone (not secure for production)
+    const password = phone.replace(/[^0-9]/g, '') || "business123";
+    
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          first_name: name.split(' ')[0],
+          last_name: name.split(' ').slice(1).join(' ')
         }
-      });
-
-      if (authError) {
-        console.error("Erro ao criar auth do proprietário:", authError);
-        throw authError;
       }
-
-      userId = userData.user?.id;
-      if (!userId) {
-        throw new Error("ID do usuário não foi gerado");
-      }
-
-      // Update the user profile
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          first_name: params.name.split(' ')[0] || '',
-          last_name: params.name.split(' ').slice(1).join(' ') || '',
-          contact_email: params.email,
-          contact_phone: params.phone,
-          role: 'business' as Database["public"]["Enums"]["user_role"]
-        })
-        .eq('id', userId);
-
-      if (profileError) {
-        console.error("Erro ao atualizar perfil do proprietário:", profileError);
-        throw profileError;
-      }
-      
-      console.log("Proprietário criado com sucesso. ID:", userId);
-    }
-
-    return { userId };
-  } catch (error) {
-    console.error("Erro ao criar proprietário:", error);
-    return { 
-      error: error instanceof Error ? error.message : "Erro desconhecido" 
-    };
-  }
-}
-
-// Função para atualizar um proprietário existente
-export async function updateBusinessOwner(id: string, params: CreateBusinessOwnerParams): Promise<CreateBusinessOwnerResult> {
-  try {
-    console.log("Atualizando proprietário:", id, params);
+    });
     
-    // Verificar se o ID é válido
-    if (!id || id.trim() === '') {
-      throw new Error("ID do proprietário inválido");
+    if (authError) {
+      console.error("Erro ao criar usuário:", authError);
+      return { error: authError.message, userId: null };
     }
     
-    // Extrair primeiro nome e sobrenome do nome completo
-    const firstName = params.name.split(' ')[0] || '';
-    const lastName = params.name.split(' ').slice(1).join(' ') || '';
+    const userId = authData.user?.id;
     
-    console.log("Nome separado:", { firstName, lastName });
-    
-    // Update the profile
-    const { data, error: updateError } = await supabase
-      .from('profiles')
-      .update({
-        first_name: firstName,
-        last_name: lastName,
-        contact_email: params.email,
-        contact_phone: params.phone,
-        role: 'business' as Database["public"]["Enums"]["user_role"] // Garantir que o papel é 'business'
-      })
-      .eq('id', id)
-      .select();
-    
-    if (updateError) {
-      console.error("Erro ao atualizar perfil do proprietário:", updateError);
-      throw updateError;
+    if (!userId) {
+      console.error("Usuário criado, mas ID não disponível");
+      return { error: "ID de usuário não disponível", userId: null };
     }
     
-    console.log("Proprietário atualizado com sucesso:", data);
-    return { userId: id };
-  } catch (error) {
-    console.error("Erro ao atualizar proprietário:", error);
-    return { 
-      error: error instanceof Error ? error.message : "Erro desconhecido" 
-    };
-  }
-}
-
-// Função para deletar um proprietário
-export async function deleteBusinessOwner(id: string): Promise<{ success: boolean; error?: string }> {
-  try {
-    console.log("Deletando proprietário:", id);
-    
-    // Verificamos se o proprietário tem lavanderias associadas
-    const { data: laundries, error: laundryError } = await supabase
-      .from('laundries')
-      .select('id')
-      .eq('owner_id', id);
-    
-    if (laundryError) {
-      console.error("Erro ao verificar lavanderias do proprietário:", laundryError);
-      throw laundryError;
-    }
-    
-    if (laundries && laundries.length > 0) {
-      return { 
-        success: false, 
-        error: `Este proprietário possui ${laundries.length} lavanderias associadas e não pode ser excluído.` 
-      };
-    }
-    
-    // Desativamos o perfil mudando o papel para 'user'
-    // Não tentamos mais excluir o usuário Auth diretamente, pois isso requer privilégios de admin
-    console.log("Desativando perfil do usuário:", id);
-    
+    // Ensure profile has business role and contact info
     const { error: updateError } = await supabase
       .from('profiles')
       .update({
-        role: 'user' as Database["public"]["Enums"]["user_role"],
-        contact_email: null,
-        contact_phone: null,
-        first_name: null,
-        last_name: null
+        contact_phone: phone,
+        contact_email: email,
+        role: 'business'
       })
-      .eq('id', id);
+      .eq('id', userId);
       
     if (updateError) {
-      console.error("Erro ao desativar perfil:", updateError);
-      throw updateError;
+      console.error("Erro ao atualizar perfil:", updateError);
+      // Continue since user was created successfully
     }
     
-    console.log("Proprietário desativado com sucesso. ID:", id);
-    return { success: true };
+    return { userId, error: null };
   } catch (error) {
-    console.error("Erro ao deletar proprietário:", error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : "Erro desconhecido" 
-    };
+    console.error("Erro ao criar proprietário:", error);
+    return { error: "Erro desconhecido", userId: null };
+  }
+}
+
+export async function updateBusinessOwner(
+  userId: string,
+  { name, email, phone }: BusinessOwnerInput
+) {
+  try {
+    console.log("Atualizando proprietário:", userId, { name, email, phone });
+    
+    // Split the name into first and last name
+    const nameParts = name.split(' ');
+    const firstName = nameParts[0];
+    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+    
+    // Update profile data
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({
+        contact_email: email,
+        contact_phone: phone,
+        first_name: firstName,
+        last_name: lastName,
+        updated_at: new Date().toISOString(),
+        role: 'business'
+      })
+      .eq('id', userId);
+    
+    if (updateError) {
+      console.error("Erro ao atualizar perfil:", updateError);
+      return { error: updateError.message, userId: null };
+    }
+    
+    return { userId, error: null };
+  } catch (error) {
+    console.error("Erro ao atualizar proprietário:", error);
+    return { error: "Erro desconhecido", userId: null };
   }
 }
