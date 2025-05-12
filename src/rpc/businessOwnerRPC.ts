@@ -3,20 +3,21 @@ import { supabase } from "@/integrations/supabase/client";
 
 export async function createListBusinessOwnersRPC() {
   try {
-    // We can't check if the RPC exists using rpc() directly,
-    // so we'll try to invoke the edge function to create it
-    console.log('Creating list_business_owners RPC function...');
+    console.log('Verificando função edge list-business-owners...');
     
-    const { error: createError } = await supabase.functions.invoke('create-business-owners-rpc', {
-      body: { action: 'create' }
-    });
+    // Apenas enviamos um log para confirmação, já que vamos usar a Edge Function diretamente
+    console.log('Usando Edge Function list-business-owners para buscar proprietários de negócios');
     
-    if (createError) {
-      console.error('Error creating RPC function:', createError);
+    // Invocar a função uma vez para garantir que está funcionando e registrar logs
+    const { data, error } = await supabase.functions.invoke('list-business-owners');
+    
+    if (error) {
+      console.error('Erro ao testar a função list-business-owners:', error);
     } else {
-      console.log('RPC function created successfully');
+      console.log('Edge Function list-business-owners está funcionando corretamente');
+      console.log('Retornou', (data as any[])?.length || 0, 'proprietários');
     }
   } catch (error) {
-    console.error('Error checking/creating RPC function:', error);
+    console.error('Erro ao verificar função edge list-business-owners:', error);
   }
 }

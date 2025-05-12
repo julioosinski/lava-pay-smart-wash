@@ -47,19 +47,27 @@ export function LaundryForm({ initialData, mode = "create", onSuccess }: Laundry
       address: "",
       contact_phone: "",
       contact_email: "",
-      owner_id: Array.isArray(businessOwners) && businessOwners.length > 0 ? businessOwners[0].id : ""
+      owner_id: ""
     },
   });
 
   // Atualizar o campo owner_id quando os proprietários carregarem
   useEffect(() => {
-    if (Array.isArray(businessOwners) && businessOwners.length > 0 && !initialData && !form.getValues('owner_id')) {
+    // Só definimos um owner_id padrão se não houver um já selecionado e se houver proprietários disponíveis
+    const currentOwnerId = form.getValues('owner_id');
+    if (Array.isArray(businessOwners) && businessOwners.length > 0 && !currentOwnerId && !initialData) {
       form.setValue('owner_id', businessOwners[0].id);
     }
   }, [businessOwners, form, initialData]);
 
   const onSubmit = async (values: FormValues) => {
     try {
+      // Verificar se um proprietário foi selecionado
+      if (!values.owner_id) {
+        toast.error("Selecione um proprietário para a lavanderia");
+        return;
+      }
+      
       if (mode === "create") {
         await createLaundry.mutateAsync({
           name: values.name,

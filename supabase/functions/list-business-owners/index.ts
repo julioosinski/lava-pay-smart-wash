@@ -20,28 +20,31 @@ serve(async (req) => {
 
     // Get auth token from request
     const authHeader = req.headers.get('Authorization');
-    let businessOwners = [];
-
-    if (authHeader) {
-      // Query profiles with role = 'business'
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, first_name, last_name, contact_email, contact_phone, role')
-        .eq('role', 'business');
-
-      if (error) {
-        throw error;
-      }
-
-      businessOwners = (data || []).map(owner => ({
-        id: owner.id,
-        name: `${owner.first_name || ''} ${owner.last_name || ''}`.trim() || 'Sem nome',
-        email: owner.contact_email || '',
-        phone: owner.contact_phone || '',
-        role: owner.role
-      }));
+    
+    if (!authHeader) {
+      throw new Error('Authorization header is required');
     }
 
+    // Query profiles with role = 'business'
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, first_name, last_name, contact_email, contact_phone, role')
+      .eq('role', 'business');
+
+    if (error) {
+      console.error("Error querying business owners:", error);
+      throw error;
+    }
+
+    const businessOwners = (data || []).map(owner => ({
+      id: owner.id,
+      name: `${owner.first_name || ''} ${owner.last_name || ''}`.trim() || 'Sem nome',
+      email: owner.contact_email || '',
+      phone: owner.contact_phone || '',
+      role: owner.role
+    }));
+
+    console.log(`Found ${businessOwners.length} business owners`);
     return new Response(
       JSON.stringify(businessOwners),
       { 

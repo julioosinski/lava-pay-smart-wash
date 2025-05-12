@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UseFormReturn } from "react-hook-form";
 import { FormValues } from "./schema";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { BusinessOwner } from "@/types";
 
 interface LaundryFormContentProps {
@@ -51,7 +51,14 @@ export function LaundryFormContent({ form, onSubmit, mode, isLoading, businessOw
           name="owner_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Proprietário</FormLabel>
+              <FormLabel className="flex items-center gap-2">
+                Proprietário
+                {businessOwners.length === 0 && !isLoading && (
+                  <span className="text-red-500 text-xs flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" /> Cadastre proprietários primeiro
+                  </span>
+                )}
+              </FormLabel>
               <FormControl>
                 <Select
                   value={field.value}
@@ -67,7 +74,7 @@ export function LaundryFormContent({ form, onSubmit, mode, isLoading, businessOw
                   <SelectContent>
                     {businessOwners.length === 0 ? (
                       <SelectItem value="none" disabled>
-                        Nenhum proprietário disponível
+                        {isLoading ? "Carregando proprietários..." : "Nenhum proprietário disponível"}
                       </SelectItem>
                     ) : (
                       businessOwners.map((owner) => (
@@ -127,7 +134,7 @@ export function LaundryFormContent({ form, onSubmit, mode, isLoading, businessOw
         />
 
         <div className="flex justify-end gap-2 pt-4">
-          <Button type="submit" disabled={isLoading}>
+          <Button type="submit" disabled={isLoading || businessOwners.length === 0}>
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

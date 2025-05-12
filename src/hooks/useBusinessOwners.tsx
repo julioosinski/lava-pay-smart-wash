@@ -2,6 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { BusinessOwner } from "@/types";
+import { toast } from "sonner";
 
 export function useBusinessOwners() {
   return useQuery<BusinessOwner[]>({
@@ -15,33 +16,16 @@ export function useBusinessOwners() {
           
         if (error) {
           console.error("Erro ao buscar proprietários:", error);
-          
-          // Fallback to direct query if edge function fails
-          const { data: fallbackData, error: fallbackError } = await supabase
-            .from('profiles')
-            .select('id, first_name, last_name, contact_email, contact_phone, role')
-            .eq('role', 'business');
-            
-          if (fallbackError) {
-            console.error("Erro ao fazer fallback para busca de proprietários:", fallbackError);
-            throw fallbackError;
-          }
-          
-          console.log("Proprietários encontrados (fallback):", fallbackData?.length || 0);
-          
-          const formattedOwners = (fallbackData || []).map(owner => ({
-            id: owner.id,
-            name: `${owner.first_name || ''} ${owner.last_name || ''}`.trim() || 'Sem nome',
-            email: owner.contact_email || '',
-            phone: owner.contact_phone || '',
-            role: owner.role
-          }));
-          
-          return formattedOwners;
+          throw error;
         }
         
         if (Array.isArray(data)) {
-          console.log("Proprietários encontrados (Edge Function):", data.length || 0);
+          console.log("Proprietários encontrados (Edge Function):", data.length);
+          
+          if (data.length === 0) {
+            console.log("Nenhum proprietário encontrado. Verifique se existem usuários com role='business'");
+          }
+          
           return data as BusinessOwner[];
         }
         
@@ -49,6 +33,7 @@ export function useBusinessOwners() {
         return [];
       } catch (error) {
         console.error("Erro no hook useBusinessOwners:", error);
+        toast.error("Erro ao buscar proprietários: " + ((error as Error)?.message || "Erro desconhecido"));
         return []; // Return empty array instead of throwing to avoid breaking the UI
       }
     },
