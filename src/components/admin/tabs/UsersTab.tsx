@@ -5,6 +5,7 @@ import { UsersHeader } from "../users/UsersHeader";
 import { UsersTable } from "../users/UsersTable";
 import { UserForm } from "../UserForm";
 import { DeleteUserDialog } from "../DeleteUserDialog";
+import { BusinessOwner } from "@/types";
 
 interface UsersTabProps {
   searchQuery: string;
@@ -29,7 +30,10 @@ export function UsersTab({ searchQuery, onSearchChange }: UsersTabProps) {
     setSelectedUser
   } = useUserActions(refetch);
   
-  const filteredUsers = businessOwners.filter(user =>
+  // Make sure businessOwners is always an array before filtering
+  const ownersArray = Array.isArray(businessOwners) ? businessOwners : [];
+  
+  const filteredUsers = ownersArray.filter(user =>
     user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.phone?.includes(searchQuery)

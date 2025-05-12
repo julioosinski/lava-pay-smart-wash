@@ -10,13 +10,13 @@ export function useBusinessOwners() {
       try {
         console.log("Buscando proprietários de negócios...");
         
-        // Query profiles with role = 'business'
-        const { data: owners, error } = await supabase.rpc('list_business_owners');
+        // Try to use the edge function to get business owners
+        const { data, error } = await supabase.functions.invoke('list-business-owners');
           
         if (error) {
           console.error("Erro ao buscar proprietários:", error);
           
-          // Fallback to direct query if RPC fails
+          // Fallback to direct query if edge function fails
           const { data: fallbackData, error: fallbackError } = await supabase
             .from('profiles')
             .select('id, first_name, last_name, contact_email, contact_phone, role')
@@ -40,13 +40,16 @@ export function useBusinessOwners() {
           return formattedOwners;
         }
         
-        console.log("Proprietários encontrados (RPC):", owners?.length || 0);
+        if (Array.isArray(data)) {
+          console.log("Proprietários encontrados (Edge Function):", data.length || 0);
+          return data as BusinessOwner[];
+        }
         
-        // For RPC response, the data format might already be in the expected format
-        return owners || [];
+        console.error("Formato de resposta inesperado:", data);
+        return [];
       } catch (error) {
         console.error("Erro no hook useBusinessOwners:", error);
-        throw error;
+        return []; // Return empty array instead of throwing to avoid breaking the UI
       }
     },
     staleTime: 1000, // 1 segundo de staleness para permitir múltiplas atualizações próximas

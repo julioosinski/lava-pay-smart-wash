@@ -6,7 +6,7 @@ import { Plus } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useCreateLaundry, useUpdateLaundry } from "@/hooks/useLaundries";
-import { LaundryLocation } from "@/types";
+import { LaundryLocation, BusinessOwner } from "@/types";
 import { toast } from "sonner";
 import { LaundryFormContent } from "./laundry-form/LaundryFormContent";
 import { formSchema, FormValues } from "./laundry-form/schema";
@@ -47,13 +47,13 @@ export function LaundryForm({ initialData, mode = "create", onSuccess }: Laundry
       address: "",
       contact_phone: "",
       contact_email: "",
-      owner_id: businessOwners.length > 0 ? businessOwners[0].id : ""
+      owner_id: Array.isArray(businessOwners) && businessOwners.length > 0 ? businessOwners[0].id : ""
     },
   });
 
   // Atualizar o campo owner_id quando os proprietários carregarem
   useEffect(() => {
-    if (businessOwners.length > 0 && !initialData && !form.getValues('owner_id')) {
+    if (Array.isArray(businessOwners) && businessOwners.length > 0 && !initialData && !form.getValues('owner_id')) {
       form.setValue('owner_id', businessOwners[0].id);
     }
   }, [businessOwners, form, initialData]);
@@ -96,7 +96,7 @@ export function LaundryForm({ initialData, mode = "create", onSuccess }: Laundry
       form={form} 
       onSubmit={onSubmit} 
       mode={mode} 
-      businessOwners={businessOwners}
+      businessOwners={businessOwners as BusinessOwner[]}
       isLoading={createLaundry.isPending || updateLaundry.isPending || isLoadingOwners}
     />
   );

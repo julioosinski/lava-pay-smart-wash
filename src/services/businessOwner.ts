@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -139,5 +138,49 @@ export async function updateBusinessOwner(
   } catch (error) {
     console.error("Erro ao atualizar proprietário:", error);
     return { error: "Erro desconhecido", userId: null };
+  }
+}
+
+export async function deleteBusinessOwner(userId: string) {
+  try {
+    console.log("Excluindo proprietário:", userId);
+    
+    // First check if this user owns any laundries
+    const { data: laundries, error: checkError } = await supabase
+      .from('laundries')
+      .select('id, name')
+      .eq('owner_id', userId);
+      
+    if (checkError) {
+      console.error("Erro ao verificar lavanderias do proprietário:", checkError);
+      return { success: false, error: "Erro ao verificar lavanderias do proprietário" };
+    }
+    
+    // If user has laundries, don't allow deletion
+    if (laundries && laundries.length > 0) {
+      return { 
+        success: false, 
+        error: `Este proprietário possui ${laundries.length} lavanderia(s). Remova as lavanderias primeiro.` 
+      };
+    }
+    
+    // Update the profile to remove business role
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({
+        role: 'user',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId);
+    
+    if (updateError) {
+      console.error("Erro ao remover proprietário:", updateError);
+      return { success: false, error: updateError.message };
+    }
+    
+    return { success: true, error: null };
+  } catch (error) {
+    console.error("Erro ao excluir proprietário:", error);
+    return { success: false, error: "Erro desconhecido" };
   }
 }

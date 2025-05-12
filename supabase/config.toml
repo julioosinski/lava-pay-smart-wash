@@ -29,3 +29,5 @@ enabled = true
 verify_jwt = true
 [functions.execute-sql]
 verify_jwt = true
+[functions.list-business-owners]
+verify_jwt = true
