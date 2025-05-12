@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -28,6 +28,18 @@ export function LaundryFormContent({ form, onSubmit, mode, isLoading, businessOw
       form.setValue('contact_phone', selectedOwner.phone || '');
     }
   };
+
+  // Set first business owner as default when list loads and there's no selected owner
+  useEffect(() => {
+    if (businessOwners.length > 0 && !form.getValues('owner_id') && mode === 'create') {
+      const firstOwner = businessOwners[0];
+      form.setValue('owner_id', firstOwner.id);
+      
+      // Also set the contact information
+      form.setValue('contact_email', firstOwner.email || '');
+      form.setValue('contact_phone', firstOwner.phone || '');
+    }
+  }, [businessOwners, form, mode]);
 
   return (
     <Form {...form}>

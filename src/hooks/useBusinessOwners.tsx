@@ -16,6 +16,34 @@ export function useBusinessOwners() {
           
         if (error) {
           console.error("Erro ao buscar proprietários:", error);
+          
+          // Fallback: If the edge function fails, try to fetch directly
+          // This will work if the user has appropriate permissions
+          console.log("Tentando buscar proprietários diretamente...");
+          const { data: directData, error: directError } = await supabase
+            .from('profiles')
+            .select('id, first_name, last_name, contact_email, contact_phone, role')
+            .eq('role', 'business');
+            
+          if (directError) {
+            console.error("Erro na busca direta:", directError);
+            throw directError;
+          }
+          
+          if (Array.isArray(directData)) {
+            console.log("Proprietários encontrados (Busca direta):", directData.length);
+            
+            const formattedData = directData.map(owner => ({
+              id: owner.id,
+              name: `${owner.first_name || ''} ${owner.last_name || ''}`.trim() || 'Sem nome',
+              email: owner.contact_email || '',
+              phone: owner.contact_phone || '',
+              role: owner.role
+            }));
+            
+            return formattedData;
+          }
+          
           throw error;
         }
         
@@ -37,8 +65,8 @@ export function useBusinessOwners() {
         return []; // Return empty array instead of throwing to avoid breaking the UI
       }
     },
-    staleTime: 1000, // 1 segundo de staleness para permitir múltiplas atualizações próximas
-    refetchOnMount: true, // Recarregar quando o componente montar
-    refetchOnWindowFocus: true // Recarregar quando a janela receber foco
+    staleTime: 1000 * 60, // 1 minuto de staleness
+    refetchOnMount: true,
+    refetchOnWindowFocus: true
   });
 }

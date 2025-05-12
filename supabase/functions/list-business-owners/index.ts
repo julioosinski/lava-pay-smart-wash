@@ -14,8 +14,14 @@ serve(async (req) => {
   }
 
   try {
+    // Get Supabase client
     const supabaseUrl = Deno.env.get("SUPABASE_URL") || '';
-    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY") || '';
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || '';
+    
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Missing Supabase credentials');
+    }
+    
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Get auth token from request
@@ -25,7 +31,8 @@ serve(async (req) => {
       throw new Error('Authorization header is required');
     }
 
-    // Query profiles with role = 'business'
+    // Directly query for business owners using the service role key
+    // This bypasses RLS policies, which is safe since we're in an edge function
     const { data, error } = await supabase
       .from('profiles')
       .select('id, first_name, last_name, contact_email, contact_phone, role')
