@@ -62,14 +62,14 @@ export default function Auth() {
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <EmailInput 
                     value={email} 
-                    onChange={(e) => setEmail(e.target.value)} 
+                    onChange={(e) => setEmail(e)} 
                   />
                   
                   <PasswordInput 
                     value={password} 
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => setPassword(e)}
                     showPassword={showPassword}
-                    toggleVisibility={() => setShowPassword(!showPassword)}
+                    onToggleShow={() => setShowPassword(!showPassword)}
                   />
                   
                   <Button 
@@ -99,14 +99,14 @@ export default function Auth() {
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <EmailInput 
                     value={email} 
-                    onChange={(e) => setEmail(e.target.value)} 
+                    onChange={(e) => setEmail(e)} 
                   />
                   
                   <PasswordInput 
                     value={password} 
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => setPassword(e)}
                     showPassword={showPassword}
-                    toggleVisibility={() => setShowPassword(!showPassword)}
+                    onToggleShow={() => setShowPassword(!showPassword)}
                   />
                   
                   <Button 
