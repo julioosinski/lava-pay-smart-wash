@@ -1,190 +1,127 @@
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { WashingMachine, Lock, Shield } from 'lucide-react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/auth';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Layout } from '@/components/Layout';
 import { EmailInput } from '@/components/auth/EmailInput';
 import { PasswordInput } from '@/components/auth/PasswordInput';
 import { useAuthForm } from '@/hooks/use-auth-form';
-import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 export default function Auth() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const [isRedirecting, setIsRedirecting] = useState(false);
-  const expectedRole = location.state?.role || 'user';
-  
-  const {
-    isLogin,
-    email,
-    password,
-    showPassword,
-    loading,
-    setIsLogin,
-    setEmail,
-    setPassword,
-    setShowPassword,
-    handleSubmit,
-  } = useAuthForm(expectedRole);
+  const state = location.state as { role?: string } | null;
+  const role = state?.role || 'user';
 
-  // Direct admin access function
-  const handleDirectAdminAccess = async () => {
-    setIsRedirecting(true);
-    
-    try {
-      // Set direct admin flag in localStorage
-      localStorage.setItem('direct_admin', 'true');
-      toast.success("Acesso de administrador concedido");
-      
-      // Redirect to admin page
-      setTimeout(() => {
-        navigate('/admin', { replace: true });
-      }, 500);
-    } catch (error) {
-      console.error("Error during direct admin access:", error);
-      setIsRedirecting(false);
-      toast.error("Erro ao acessar como administrador");
-      localStorage.removeItem('direct_admin');
-    }
+  const [authType, setAuthType] = useState<'login' | 'register'>('login');
+  const { 
+    email, setEmail,
+    password, setPassword,
+    showPassword, setShowPassword,
+    isLogin, setIsLogin,
+    loading, handleSubmit
+  } = useAuthForm(role);
+
+  console.log(`Auth page loaded with role: ${role}`);
+
+  const handleDirectAdminAccess = () => {
+    localStorage.setItem('direct_admin', 'true');
+    navigate('/admin');
   };
 
-  // This effect redirects the user if they're already authenticated
-  useEffect(() => {
-    // Check for forced logout flag first
-    const forcedLogout = localStorage.getItem('force_logout') === 'true';
-    if (forcedLogout) {
-      console.log("Forced logout flag detected in Auth page, not redirecting");
-      localStorage.removeItem('force_logout');
-      // Clear Supabase token as well for extra safety
-      localStorage.removeItem('sb-ftvvhclqjwtthquokzii-auth-token');
-      return;
-    }
-
-    const checkSession = async () => {
-      console.log("Checking session in Auth page");
-      // No need to get the session again as we're using the user from context
-      if (user) {
-        console.log("User already authenticated in Auth page, redirecting");
-        setIsRedirecting(true);
-        
-        const { data } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single();
-        
-        const role = data?.role;
-        console.log("User role detected in Auth page:", role);
-        
-        try {
-          if (role === 'business') {
-            console.log("Business role detected in Auth page, redirecting to /owner");
-            navigate('/owner', { replace: true });
-          } else if (role === 'admin') {
-            console.log("Admin role detected in Auth page, redirecting to /admin");
-            navigate('/admin', { replace: true });
-          } else {
-            console.log("Standard user role in Auth page, redirecting to home");
-            navigate('/', { replace: true });
-          }
-        } catch (error) {
-          console.error("Error during redirection:", error);
-          setIsRedirecting(false);
-          toast.error("Erro ao redirecionar para a página correta");
-        }
-      }
-    };
-    
-    checkSession();
-  }, [navigate, user]);
-
-  useEffect(() => {
-    if (user) {
-      console.log("User object changed in Auth page:", user.id);
-    }
-  }, [user]);
-
-  console.log("Auth page loaded with role:", expectedRole);
-
-  const isAdminLogin = expectedRole === 'admin';
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 flex flex-col items-center">
-          <WashingMachine className="h-12 w-12 text-lavapay-600 mb-2" />
-          <CardTitle className="text-2xl font-bold text-center">
-            {isLogin ? 'Entrar' : 'Criar conta'} {expectedRole === 'admin' ? 'como Administrador' : expectedRole === 'business' ? 'como Proprietário' : ''}
-          </CardTitle>
-          <CardDescription className="text-center">
-            {isLogin 
-              ? 'Entre com suas credenciais para acessar o sistema'
-              : 'Crie sua conta para começar a usar o sistema'}
-          </CardDescription>
-          
-          {expectedRole === 'business' && isLogin && (
-            <div className="mt-2 text-sm text-gray-600 bg-blue-50 p-3 rounded-md">
-              <p className="font-medium mb-1">⚠️ Atenção proprietários:</p>
-              <p>Use o <strong>e-mail de contato</strong> da sua lavanderia como usuário e o <strong>telefone de contato</strong> como senha.</p>
-            </div>
-          )}
-        </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <EmailInput value={email} onChange={setEmail} />
-            </div>
-            <div className="space-y-2">
-              <PasswordInput
-                value={password}
-                onChange={setPassword}
-                showPassword={showPassword}
-                onToggleShow={() => setShowPassword(!showPassword)}
-                label={expectedRole === 'business' && isLogin ? "Telefone" : "Senha"}
-              />
-            </div>
+    <Layout>
+      <div className="flex items-center justify-center min-h-[80vh]">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>
+              {role === 'admin' ? 'Acesso Administrativo' : 
+               role === 'business' ? 'Acesso de Proprietário' : 
+               'Acesso ao Sistema'}
+            </CardTitle>
+            <CardDescription>
+              {role === 'admin' ? 'Entre com suas credenciais administrativas' :
+               role === 'business' ? 'Entre para gerenciar suas lavanderias' :
+               'Entre para usar o sistema de lavanderia'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs value={authType} onValueChange={(value) => {
+              setAuthType(value as 'login' | 'register');
+              setIsLogin(value === 'login');
+            }}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="login">Login</TabsTrigger>
+                <TabsTrigger value="register">Registro</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="login" className="space-y-4 pt-4">
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <EmailInput 
+                    value={email} 
+                    onChange={(e) => setEmail(e.target.value)} 
+                  />
+                  
+                  <PasswordInput 
+                    value={password} 
+                    onChange={(e) => setPassword(e.target.value)}
+                    showPassword={showPassword}
+                    toggleVisibility={() => setShowPassword(!showPassword)}
+                  />
+                  
+                  <Button 
+                    className="w-full" 
+                    type="submit" 
+                    disabled={loading}
+                  >
+                    {loading ? "Autenticando..." : "Entrar"}
+                  </Button>
+                </form>
+
+                {role === 'admin' && (
+                  <div className="mt-4 border-t pt-4">
+                    <p className="text-sm text-gray-500 mb-2">Acesso de emergência:</p>
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={handleDirectAdminAccess}
+                    >
+                      Acessar Direto como Admin
+                    </Button>
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="register" className="space-y-4 pt-4">
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <EmailInput 
+                    value={email} 
+                    onChange={(e) => setEmail(e.target.value)} 
+                  />
+                  
+                  <PasswordInput 
+                    value={password} 
+                    onChange={(e) => setPassword(e.target.value)}
+                    showPassword={showPassword}
+                    toggleVisibility={() => setShowPassword(!showPassword)}
+                  />
+                  
+                  <Button 
+                    className="w-full" 
+                    type="submit" 
+                    disabled={loading}
+                  >
+                    {loading ? "Registrando..." : "Registrar"}
+                  </Button>
+                </form>
+              </TabsContent>
+            </Tabs>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <Button 
-              type="submit" 
-              className="w-full bg-lavapay-600 hover:bg-lavapay-700"
-              disabled={loading || isRedirecting}
-            >
-              {loading || isRedirecting ? 'Processando...' : (isLogin ? 'Entrar' : 'Criar conta')}
-            </Button>
-            
-            {isAdminLogin && (
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full flex items-center justify-center gap-2 border-red-500 hover:bg-red-50 text-red-600"
-                onClick={handleDirectAdminAccess}
-                disabled={loading || isRedirecting}
-              >
-                <Shield className="h-4 w-4" />
-                <span>Acesso Direto de Administrador</span>
-                <Lock className="h-4 w-4" />
-              </Button>
-            )}
-            
-            <Button
-              type="button"
-              variant="link"
-              className="w-full"
-              onClick={() => setIsLogin(!isLogin)}
-              disabled={loading || isRedirecting}
-            >
-              {isLogin 
-                ? 'Não tem uma conta? Criar conta'
-                : 'Já tem uma conta? Fazer login'}
-            </Button>
-          </CardFooter>
-        </form>
-      </Card>
-    </div>
+        </Card>
+      </div>
+    </Layout>
   );
 }

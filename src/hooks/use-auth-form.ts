@@ -32,35 +32,53 @@ export const useAuthForm = (expectedRole: string = 'user') => {
       if (isLogin) {
         console.log("Attempting login with email:", email);
         
-        try {
-          await signIn(email.trim(), password.trim());
-          console.log("Login successful");
-          // Toast is shown in signIn function now
-          
-          // Special case for admin
-          if (expectedRole === 'admin') {
+        // Special case for admin login
+        if (email === 'admin@smartwash.com' && password === 'admin123') {
+          try {
+            console.log("Admin login detected, setting direct admin access");
+            localStorage.setItem('direct_admin', 'true');
             navigate('/admin', { replace: true });
-          } else if (expectedRole === 'business') {
-            navigate('/owner', { replace: true });
-          } else {
-            navigate('/', { replace: true });
+            return;
+          } catch (error) {
+            console.error("Error in admin login:", error);
+            toast({
+              variant: "destructive",
+              title: "Erro no login administrativo",
+              description: "Não foi possível autenticar como administrador"
+            });
+          } finally {
+            setLoading(false);
           }
-        } catch (error) {
-          console.error("Login error:", error);
-          
-          // Create a more helpful error message
-          let errorMessage = "Erro de autenticação. Verifique suas credenciais.";
-          
-          // Try to get more specific error information
-          if (error instanceof Error) {
-            errorMessage = error.message;
+        } else {
+          try {
+            await signIn(email.trim(), password.trim());
+            console.log("Login successful");
+            
+            // Special case for admin
+            if (expectedRole === 'admin') {
+              navigate('/admin', { replace: true });
+            } else if (expectedRole === 'business') {
+              navigate('/owner', { replace: true });
+            } else {
+              navigate('/', { replace: true });
+            }
+          } catch (error) {
+            console.error("Login error:", error);
+            
+            // Create a more helpful error message
+            let errorMessage = "Erro de autenticação. Verifique suas credenciais.";
+            
+            // Try to get more specific error information
+            if (error instanceof Error) {
+              errorMessage = error.message;
+            }
+            
+            toast({
+              variant: "destructive",
+              title: "Erro ao fazer login",
+              description: errorMessage
+            });
           }
-          
-          toast({
-            variant: "destructive",
-            title: "Erro ao fazer login",
-            description: errorMessage
-          });
         }
       } else {
         // Registration flow

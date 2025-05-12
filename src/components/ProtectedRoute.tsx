@@ -46,7 +46,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
         // Check if email is admin@smartwash.com (hardcoded admin)
         const { data: userData, error: userError } = await supabase
           .from('profiles')
-          .select('email, role')
+          .select('contact_email, role')
           .eq('id', user.id)
           .maybeSingle();
         
@@ -58,7 +58,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
         }
         
         // Admin access for admin@smartwash.com
-        if (userData?.email === 'admin@smartwash.com') {
+        if (userData?.contact_email === 'admin@smartwash.com') {
           console.log("ProtectedRoute: Special admin user detected");
           setRole('admin');
           setLoading(false);

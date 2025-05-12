@@ -22,7 +22,7 @@ export function useAdminStatus(userId?: string) {
         // Then check if the user email is admin@smartwash.com (hardcoded admin)
         const { data: userData, error: userError } = await supabase
           .from('profiles')
-          .select('email, role')
+          .select('contact_email, role')
           .eq('id', userId)
           .maybeSingle();
           
@@ -32,7 +32,7 @@ export function useAdminStatus(userId?: string) {
         }
         
         // Check if email is admin@smartwash.com or role is admin
-        const isSpecialAdmin = userData?.email === 'admin@smartwash.com';
+        const isSpecialAdmin = userData?.contact_email === 'admin@smartwash.com';
         const hasAdminRole = userData?.role === 'admin';
         
         setIsAdmin(isSpecialAdmin || hasAdminRole);
