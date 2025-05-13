@@ -34,17 +34,8 @@ export function useBusinessOwners() {
         if (directError) {
           console.error("Erro na busca direta:", directError);
           
-          // If direct query fails, try the RPC function
-          const { data: rpcData, error: rpcError } = await supabase.rpc('get_business_owners');
-          
-          if (!rpcError && Array.isArray(rpcData)) {
-            console.log("Proprietários encontrados via RPC:", rpcData.length);
-            return rpcData as BusinessOwner[];
-          }
-          
-          if (rpcError) {
-            console.error("Erro na busca via RPC:", rpcError);
-          }
+          // Remove the reference to the RPC function since it doesn't exist
+          // and directly try the edge function instead
           
           // Try edge function as last resort
           try {
