@@ -19,26 +19,37 @@ export function useAdminStatus(userId?: string) {
           return;
         }
         
-        // Then check if the user email is admin@smartwash.com (hardcoded admin)
-        const { data: userData, error: userError } = await supabase
-          .from('profiles')
-          .select('contact_email, role')
-          .eq('id', userId)
-          .maybeSingle();
+        // Call our security definer function to prevent recursion issues
+        const { data, error } = await supabase.rpc('is_admin_definer');
+        
+        if (error) {
+          console.error("Error using is_admin_definer function:", error);
           
-        if (userError) {
-          console.error("Error fetching user data:", userError);
+          // Fallback to direct query with special handling
+          const { data: userData, error: userError } = await supabase
+            .from('profiles')
+            .select('contact_email, role')
+            .eq('id', userId)
+            .maybeSingle();
+            
+          if (userError) {
+            console.error("Error fetching user data:", userError);
+            return;
+          }
+          
+          // Check if email is admin@smartwash.com or role is admin
+          const isSpecialAdmin = userData?.contact_email === 'admin@smartwash.com';
+          const hasAdminRole = userData?.role === 'admin';
+          
+          setIsAdmin(isSpecialAdmin || hasAdminRole);
+          console.log("User admin status:", isSpecialAdmin || hasAdminRole, 
+                      "Special admin:", isSpecialAdmin, 
+                      "Admin role:", hasAdminRole);
           return;
         }
         
-        // Check if email is admin@smartwash.com or role is admin
-        const isSpecialAdmin = userData?.contact_email === 'admin@smartwash.com';
-        const hasAdminRole = userData?.role === 'admin';
-        
-        setIsAdmin(isSpecialAdmin || hasAdminRole);
-        console.log("User admin status:", isSpecialAdmin || hasAdminRole, 
-                    "Special admin:", isSpecialAdmin, 
-                    "Admin role:", hasAdminRole);
+        setIsAdmin(!!data);
+        console.log("Admin status from RPC function:", !!data);
       } catch (error) {
         console.error("Error checking admin status:", error);
         toast.error("Erro ao verificar status de administrador");

@@ -11,24 +11,34 @@ export function useOwnerData() {
   const { user } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   
-  // Check if user is an admin
+  // Check if user is an admin using the security definer function
   useEffect(() => {
     const checkAdminRole = async () => {
       if (!user?.id) return;
       
       try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .maybeSingle();
-          
-        if (error) {
-          console.error("Error checking user role:", error);
-          return;
-        }
+        // First, try using our security definer function
+        const { data, error } = await supabase.rpc('is_admin_definer');
         
-        setIsAdmin(data?.role === 'admin');
+        if (error) {
+          console.error("Error using is_admin_definer function:", error);
+          
+          // Fallback to direct query if needed
+          const { data: userData, error: userError } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .maybeSingle();
+            
+          if (userError) {
+            console.error("Error checking user role:", userError);
+            return;
+          }
+          
+          setIsAdmin(userData?.role === 'admin');
+        } else {
+          setIsAdmin(!!data);
+        }
       } catch (error) {
         console.error("Error checking admin status:", error);
       }

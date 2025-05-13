@@ -8,91 +8,59 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
+  // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
-
+  
   try {
-    // Get Supabase client using service role key for admin access
-    const supabaseUrl = Deno.env.get("SUPABASE_URL") || '';
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || '';
-    
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Missing Supabase credentials');
-    }
-    
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
 
-    // Skip auth check in development mode to simplify testing
-    // In production, you would want proper authentication
-    const isDevelopment = true; // Set this based on environment
-
-    if (!isDevelopment) {
-      // Get auth token from request
-      const authHeader = req.headers.get('Authorization');
-      
-      if (!authHeader) {
-        throw new Error('Authorization header is required');
-      }
-
-      // Retrieve user info from the JWT token
-      const token = authHeader.replace('Bearer ', '');
-      const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-      
-      if (userError || !user) {
-        throw new Error('Invalid authorization token');
-      }
-      
-      // Check if user is admin
-      const { data: isAdminData, error: isAdminError } = await supabase.rpc('is_user_admin_safely', {
-        user_id: user.id
-      });
-      
-      if (isAdminError) {
-        console.error('Error checking admin status:', isAdminError);
-      }
-      
-      const isAdmin = isAdminData === true;
-      
-      if (!isAdmin) {
-        throw new Error('Only admins can access this function');
-      }
-    }
-    
-    // Query profiles with role = 'business' using the service role key
-    // This bypasses RLS policies
-    const { data, error } = await supabase
+    // Using service role key allows us to bypass RLS policies
+    const { data, error } = await supabaseAdmin
       .from('profiles')
       .select('id, first_name, last_name, contact_email, contact_phone, role')
       .eq('role', 'business');
 
     if (error) {
+      console.error("Error fetching business owners:", error);
       throw error;
     }
-
-    // Format the business owners data for the frontend
-    const businessOwners = data.map(owner => ({
-      id: owner.id,
-      name: `${owner.first_name || ''} ${owner.last_name || ''}`.trim() || 'Sem nome',
-      email: owner.contact_email || '',
-      phone: owner.contact_phone || '',
-      role: owner.role
+    
+    // Format the response to match the BusinessOwner type
+    const businessOwners = data.map(profile => ({
+      id: profile.id,
+      name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Sem nome',
+      email: profile.contact_email || '',
+      phone: profile.contact_phone || '',
+      role: profile.role
     }));
 
     return new Response(
       JSON.stringify(businessOwners),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { 
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json' 
+        }
+      }
     );
-    
   } catch (error) {
-    console.error('Error in list-business-owners function:', error);
+    console.error("Error:", error);
     
     return new Response(
-      JSON.stringify({ error: error.message || 'Unknown error occurred' }),
+      JSON.stringify({ 
+        error: error.message || "Failed to fetch business owners" 
+      }),
       { 
         status: 400, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json' 
+        }
       }
     );
   }

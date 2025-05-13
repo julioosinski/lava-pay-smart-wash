@@ -11,7 +11,23 @@ export function useBusinessOwners() {
       try {
         console.log("Buscando proprietários de negócios...");
         
-        // First approach: Try direct DB query with proper error handling
+        // Approach 1: Fetch with direct SQL access via edge function (more reliable with RLS)
+        try {
+          const { data: fnData, error: fnError } = await supabase.functions.invoke('list-business-owners');
+          
+          if (!fnError && Array.isArray(fnData)) {
+            console.log(`Proprietários encontrados via edge function: ${fnData.length}`);
+            return fnData as BusinessOwner[];
+          }
+          
+          if (fnError) {
+            console.error("Erro na edge function:", fnError);
+          }
+        } catch (fnErr) {
+          console.error("Falha ao invocar edge function:", fnErr);
+        }
+        
+        // Approach 2: Try direct DB query with proper error handling
         const { data: directData, error: directError } = await supabase
           .from('profiles')
           .select('id, first_name, last_name, contact_email, contact_phone, role')
@@ -33,33 +49,10 @@ export function useBusinessOwners() {
         
         if (directError) {
           console.error("Erro na busca direta:", directError);
-          
-          // Remove the reference to the RPC function since it doesn't exist
-          // and directly try the edge function instead
-          
-          // Try edge function as last resort
-          try {
-            console.log("Tentando buscar via edge function...");
-            const { data: fnData, error: fnError } = await supabase.functions.invoke('list-business-owners');
-            
-            if (fnError) {
-              console.error("Erro na edge function:", fnError);
-              throw fnError;
-            }
-            
-            if (Array.isArray(fnData)) {
-              return fnData as BusinessOwner[];
-            }
-          } catch (fnErr) {
-            console.error("Falha ao invocar edge function:", fnErr);
-          }
         }
         
-        // If all methods fail, we can provide some mock data or empty array
-        // Returning empty array in production is safer than breaking UI
-        console.warn("Não foi possível obter proprietários de negócios, usando dados mockados.");
-        
         // For development/demo only: return some mock data so form still works
+        console.warn("Não foi possível obter proprietários de negócios, usando dados mockados.");
         return [
           {
             id: "mock-1",
