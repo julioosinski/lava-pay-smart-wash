@@ -1,5 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,63 +12,24 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
-  
+
   try {
-    // Access the Supabase client through environment variables (set by Supabase Edge Functions)
-    const supabaseClient = Deno.env.get('SUPABASE_URL');
-    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY');
+    // Get Supabase client using service role key for admin access
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") || '';
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || '';
     
-    if (!supabaseClient || !supabaseKey) {
-      throw new Error('Missing Supabase client details');
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Missing Supabase credentials');
     }
     
-    // Create the SQL for the RPC function
-    const rpcSql = `
-    CREATE OR REPLACE FUNCTION public.list_business_owners()
-    RETURNS TABLE (
-      id uuid,
-      name text,
-      email text,
-      phone text,
-      role text
-    )
-    LANGUAGE plpgsql
-    SECURITY DEFINER
-    SET search_path = public
-    AS $$
-    BEGIN
-      RETURN QUERY
-      SELECT 
-        p.id,
-        CONCAT(COALESCE(p.first_name, ''), ' ', COALESCE(p.last_name, '')) as name,
-        p.contact_email as email,
-        p.contact_phone as phone,
-        p.role::text
-      FROM 
-        profiles p
-      WHERE 
-        p.role = 'business'::user_role;
-    END;
-    $$;
-    
-    -- Grant execute permission to authenticated users
-    GRANT EXECUTE ON FUNCTION public.list_business_owners() TO authenticated;
-    `;
-    
-    // Execute the SQL to create the function
-    const response = await fetch(`${supabaseClient}/rest/v1/rpc/execute_sql`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': supabaseKey,
-        'Authorization': `Bearer ${supabaseKey}`,
-      },
-      body: JSON.stringify({ sql_query: rpcSql })
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Failed to create RPC function: ${errorText}`);
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Create the get_business_owners RPC function
+    const { error } = await supabase.rpc('create_get_business_owners_function');
+
+    if (error) {
+      console.error('Error creating RPC function:', error);
+      throw error;
     }
     
     return new Response(
@@ -76,10 +38,10 @@ serve(async (req) => {
     );
     
   } catch (error) {
-    console.error('Error in create-business-owners-rpc:', error);
+    console.error('Error in create-business-owners-rpc function:', error);
     
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({ error: error.message || 'Unknown error occurred' }),
       { 
         status: 400, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
