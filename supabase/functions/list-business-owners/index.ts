@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    // Get Supabase client
+    // Get Supabase client using service role key for admin access
     const supabaseUrl = Deno.env.get("SUPABASE_URL") || '';
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || '';
     
@@ -31,19 +31,40 @@ serve(async (req) => {
       throw new Error('Authorization header is required');
     }
 
-    // Directly query for business owners using the service role key
-    // This bypasses RLS policies, which is safe since we're in an edge function
+    // Retrieve user info from the JWT token
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    
+    if (userError || !user) {
+      throw new Error('Invalid authorization token');
+    }
+    
+    // Check if user is admin using our security definer function
+    const { data: isAdminData, error: isAdminError } = await supabase.rpc('is_user_admin');
+    
+    if (isAdminError) {
+      console.error('Error checking admin status:', isAdminError);
+    }
+    
+    const isAdmin = isAdminData === true;
+    
+    if (!isAdmin) {
+      throw new Error('Only admins can access this function');
+    }
+    
+    // Query profiles with role = 'business' using the service role key
+    // This bypasses RLS policies
     const { data, error } = await supabase
       .from('profiles')
       .select('id, first_name, last_name, contact_email, contact_phone, role')
       .eq('role', 'business');
 
     if (error) {
-      console.error("Error querying business owners:", error);
       throw error;
     }
 
-    const businessOwners = (data || []).map(owner => ({
+    // Format the business owners data for the frontend
+    const businessOwners = data.map(owner => ({
       id: owner.id,
       name: `${owner.first_name || ''} ${owner.last_name || ''}`.trim() || 'Sem nome',
       email: owner.contact_email || '',
@@ -51,27 +72,19 @@ serve(async (req) => {
       role: owner.role
     }));
 
-    console.log(`Found ${businessOwners.length} business owners`);
     return new Response(
       JSON.stringify(businessOwners),
-      { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
+    
   } catch (error) {
-    console.error("Error in list-business-owners function:", error);
+    console.error('Error in list-business-owners function:', error);
     
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message || 'Unknown error occurred' }),
       { 
         status: 400, 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
   }
