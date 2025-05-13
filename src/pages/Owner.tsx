@@ -15,7 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { LaundryForm } from "@/components/admin/LaundryForm";
 import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "@/hooks/use-toast";
+import { simplifiedToast } from "@/components/ui/use-toast";
 
 export default function Owner() {
   const { user } = useAuth();
@@ -68,10 +68,10 @@ export default function Owner() {
       await queryClient.invalidateQueries({ queryKey: ['laundries'] });
       await queryClient.invalidateQueries({ queryKey: ['machines'] });
       await queryClient.invalidateQueries({ queryKey: ['payments'] });
-      toast.success("Dados atualizados com sucesso!");
+      simplifiedToast.success("Dados atualizados com sucesso!");
     } catch (error) {
       console.error("Error refreshing data:", error);
-      toast.error("Erro ao atualizar os dados");
+      simplifiedToast.error("Erro ao atualizar os dados");
     } finally {
       setIsRefreshing(false);
     }
