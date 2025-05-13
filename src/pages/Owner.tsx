@@ -1,3 +1,4 @@
+
 import { Layout } from "@/components/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OwnerDashboardHeader } from "@/components/owner/dashboard/OwnerDashboardHeader";
@@ -14,7 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { LaundryForm } from "@/components/admin/LaundryForm";
 import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 
 export default function Owner() {
   const { user } = useAuth();

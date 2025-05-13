@@ -1,63 +1,40 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { useAuth } from "@/contexts/auth";
 
-export function useAdminStatus(userId?: string) {
+export function useAdminStatus() {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
-  
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const { user } = useAuth();
+
   useEffect(() => {
     const checkAdminRole = async () => {
-      if (!userId) return;
+      if (!user?.id) return setIsLoading(false);
       
       try {
-        // First check direct admin value in localStorage (for fallback login)
-        const directAdmin = localStorage.getItem('direct_admin') === 'true';
-        if (directAdmin) {
-          console.log("Direct admin access detected from localStorage");
-          setIsAdmin(true);
-          return;
-        }
-        
-        // Call our security definer function to prevent recursion issues
-        const { data, error } = await supabase.rpc('is_admin_definer');
-        
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .maybeSingle();
+          
         if (error) {
-          console.error("Error using is_admin_definer function:", error);
-          
-          // Fallback to direct query with special handling
-          const { data: userData, error: userError } = await supabase
-            .from('profiles')
-            .select('contact_email, role')
-            .eq('id', userId)
-            .maybeSingle();
-            
-          if (userError) {
-            console.error("Error fetching user data:", userError);
-            return;
-          }
-          
-          // Check if email is admin@smartwash.com or role is admin
-          const isSpecialAdmin = userData?.contact_email === 'admin@smartwash.com';
-          const hasAdminRole = userData?.role === 'admin';
-          
-          setIsAdmin(isSpecialAdmin || hasAdminRole);
-          console.log("User admin status:", isSpecialAdmin || hasAdminRole, 
-                      "Special admin:", isSpecialAdmin, 
-                      "Admin role:", hasAdminRole);
-          return;
+          console.error("Error checking user role:", error);
+          return setIsLoading(false);
         }
         
-        setIsAdmin(!!data);
-        console.log("Admin status from RPC function:", !!data);
+        setIsAdmin(data?.role === 'admin');
+        console.log("User is admin:", data?.role === 'admin');
       } catch (error) {
         console.error("Error checking admin status:", error);
-        toast.error("Erro ao verificar status de administrador");
+      } finally {
+        setIsLoading(false);
       }
     };
     
     checkAdminRole();
-  }, [userId]);
+  }, [user?.id]);
 
-  return isAdmin;
+  return { isAdmin, isLoading };
 }
