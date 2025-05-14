@@ -8,8 +8,7 @@ interface SignUpProps {
 }
 
 export const useSignUp = ({ setLoading }: SignUpProps) => {
-  // Initialize hooks at the top level
-  const { toast } = useToast();
+  const toast = useToast((state) => state.toast);
 
   const signUp = async (email: string, password: string) => {
     setLoading(true);
@@ -17,9 +16,7 @@ export const useSignUp = ({ setLoading }: SignUpProps) => {
       const { error } = await supabase.auth.signUp({ email, password });
       
       if (error) {
-        toast({
-          variant: "destructive",
-          title: "Erro ao criar conta",
+        toast.error("Erro ao criar conta", {
           description: error.message
         });
         throw error;

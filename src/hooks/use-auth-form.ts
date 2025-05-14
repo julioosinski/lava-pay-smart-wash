@@ -13,7 +13,7 @@ export const useAuthForm = (expectedRole: string = 'user') => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { signIn, signUp, user } = useAuth();
-  const { toast } = useToast();
+  const toast = useToast((state) => state.toast);
   const navigate = useNavigate();
 
   console.log("Auth form initialized with expected role:", expectedRole);
