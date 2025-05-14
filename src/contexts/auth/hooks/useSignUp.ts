@@ -8,7 +8,7 @@ interface SignUpProps {
 }
 
 export const useSignUp = ({ setLoading }: SignUpProps) => {
-  const toast = useToast((state) => state.toast);
+  const { toast } = useToast();
 
   const signUp = async (email: string, password: string) => {
     setLoading(true);
