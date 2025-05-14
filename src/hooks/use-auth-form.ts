@@ -41,9 +41,7 @@ export const useAuthForm = (expectedRole: string = 'user') => {
             return;
           } catch (error) {
             console.error("Error in admin login:", error);
-            toast({
-              variant: "destructive",
-              title: "Erro no login administrativo",
+            toast.error("Erro no login administrativo", {
               description: "Não foi possível autenticar como administrador"
             });
           } finally {
@@ -73,9 +71,7 @@ export const useAuthForm = (expectedRole: string = 'user') => {
               errorMessage = error.message;
             }
             
-            toast({
-              variant: "destructive",
-              title: "Erro ao fazer login",
+            toast.error("Erro ao fazer login", {
               description: errorMessage
             });
           }
@@ -105,15 +101,12 @@ export const useAuthForm = (expectedRole: string = 'user') => {
             }
           }
           
-          toast({
-            title: "Registro realizado com sucesso!",
+          toast.success("Registro realizado com sucesso!", {
             description: "Verifique seu email para confirmar o cadastro.",
           });
         } catch (error) {
           console.error("Registration error:", error);
-          toast({
-            variant: "destructive",
-            title: "Erro ao criar conta",
+          toast.error("Erro ao criar conta", {
             description: error instanceof Error ? error.message : "Ocorreu um erro durante o cadastro"
           });
         }
