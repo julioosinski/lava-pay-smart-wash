@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Layout } from '@/components/Layout';
@@ -9,6 +9,8 @@ import { EmailInput } from '@/components/auth/EmailInput';
 import { PasswordInput } from '@/components/auth/PasswordInput';
 import { useAuthForm } from '@/hooks/use-auth-form';
 import { useNavigate } from 'react-router-dom';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { InfoIcon } from 'lucide-react';
 
 export default function Auth() {
   const location = useLocation();
@@ -49,6 +51,15 @@ export default function Auth() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {role === 'business' && (
+              <Alert variant="default" className="mb-4 bg-blue-50 border-blue-200">
+                <InfoIcon className="h-4 w-4 text-blue-600" />
+                <AlertDescription className="text-blue-800">
+                  Proprietários devem usar seu email como login e telefone como senha.
+                </AlertDescription>
+              </Alert>
+            )}
+            
             <Tabs value={authType} onValueChange={(value) => {
               setAuthType(value as 'login' | 'register');
               setIsLogin(value === 'login');
@@ -70,6 +81,7 @@ export default function Auth() {
                     onChange={(e) => setPassword(e)}
                     showPassword={showPassword}
                     onToggleShow={() => setShowPassword(!showPassword)}
+                    placeholder={role === 'business' ? "Digite seu telefone como senha" : "Digite sua senha"}
                   />
                   
                   <Button 
@@ -107,6 +119,7 @@ export default function Auth() {
                     onChange={(e) => setPassword(e)}
                     showPassword={showPassword}
                     onToggleShow={() => setShowPassword(!showPassword)}
+                    placeholder={role === 'business' ? "Digite seu telefone como senha" : "Digite sua senha"}
                   />
                   
                   <Button 
@@ -120,6 +133,13 @@ export default function Auth() {
               </TabsContent>
             </Tabs>
           </CardContent>
+          <CardFooter className="flex flex-col">
+            {role === 'business' && (
+              <p className="text-xs text-gray-500 w-full text-center mt-2">
+                Se você é proprietário e não consegue entrar, entre em contato com o administrador do sistema.
+              </p>
+            )}
+          </CardFooter>
         </Card>
       </div>
     </Layout>

@@ -11,6 +11,7 @@ import { createBusinessOwner, updateBusinessOwner } from "@/services/businessOwn
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { BusinessOwner } from "@/types";
+import { AlertCircle } from "lucide-react";
 
 interface UserFormProps {
   onClose: () => void;
@@ -85,7 +86,7 @@ export function UserForm({ onClose, onSuccess, user, mode = "create" }: UserForm
       if (result.userId) {
         toast.success(
           mode === "create" 
-            ? "Proprietário cadastrado com sucesso! Se for novo usuário, o login será feito com email e telefone como senha."
+            ? "Proprietário cadastrado com sucesso! O login será feito com email e o telefone será usado como senha."
             : "Proprietário atualizado com sucesso!"
         );
         
@@ -113,6 +114,19 @@ export function UserForm({ onClose, onSuccess, user, mode = "create" }: UserForm
       <h2 className="text-xl font-bold mb-4">
         {mode === "create" ? "Cadastrar Novo Proprietário" : "Editar Proprietário"}
       </h2>
+      
+      <div className="bg-amber-50 border border-amber-200 rounded-md p-3 mb-4 flex items-start gap-3">
+        <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+        <div>
+          <p className="text-sm text-amber-800 font-medium">Importante!</p>
+          <p className="text-sm text-amber-700">
+            {mode === "create" 
+              ? "O email será usado como login e o telefone como senha para o proprietário acessar o sistema."
+              : "Alterações no email e telefone afetarão o login do proprietário. O telefone é usado como senha."}
+          </p>
+        </div>
+      </div>
+      
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <div>
           <Label htmlFor="name">Nome</Label>
@@ -128,7 +142,7 @@ export function UserForm({ onClose, onSuccess, user, mode = "create" }: UserForm
         </div>
 
         <div>
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">Email (login)</Label>
           <Input
             id="email"
             type="email"
@@ -142,7 +156,7 @@ export function UserForm({ onClose, onSuccess, user, mode = "create" }: UserForm
         </div>
 
         <div>
-          <Label htmlFor="phone">Telefone</Label>
+          <Label htmlFor="phone">Telefone (senha)</Label>
           <Input
             id="phone"
             {...form.register("phone")}

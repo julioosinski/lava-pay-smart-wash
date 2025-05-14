@@ -59,8 +59,74 @@ export const useSignIn = ({ setUser, setSession, setLoading }: SignInProps) => {
             throw new Error("Falha ao configurar conta de administrador.");
           }
         }
+        
+        // Try to find business owner by email
+        try {
+          const { data: profiles, error: profileError } = await supabase
+            .from('profiles')
+            .select('id, contact_phone, role')
+            .eq('contact_email', email)
+            .eq('role', 'business')
+            .maybeSingle();
+            
+          if (profileError) {
+            console.error("Error checking for business profile:", profileError);
+          } else if (profiles) {
+            console.log("Found business profile:", profiles);
+            
+            // Check if the password matches the phone number
+            const cleanPhone = profiles.contact_phone?.replace(/\D/g, '') || '';
+            const cleanInputPassword = password.replace(/\D/g, '');
+            
+            if (cleanPhone && (cleanPhone === cleanInputPassword || password === profiles.contact_phone)) {
+              console.log("Phone number matches password, attempting login with real password");
+              
+              // Try to retrieve the auth user
+              const { data: userData, error: userError } = await supabase.auth
+                .getUser();
+                
+              if (userError) {
+                console.error("Error getting user data:", userError);
+              } else if (userData?.user) {
+                // Try to sign in using the phone as password
+                const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+                  email: email,
+                  password: cleanPhone || password
+                });
+                
+                if (loginError) {
+                  console.error("Business owner login failed:", loginError);
+                  
+                  // If login fails, reset the password to the phone number
+                  const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+                    email,
+                    { redirectTo: window.location.origin + '/reset-password' }
+                  );
+                  
+                  if (resetError) {
+                    console.error("Error sending password reset:", resetError);
+                    throw new Error("Falha ao redefinir senha. Entre em contato com o administrador.");
+                  }
+                  
+                  toast.success("Enviamos um link para redefinição de senha para seu email.");
+                  throw new Error("Senha incorreta. Enviamos um link para redefinição de senha para seu email.");
+                }
+                
+                if (loginData?.user) {
+                  console.log("Business owner login successful");
+                  setUser(loginData.user);
+                  setSession(loginData.session);
+                  toast.success("Login de proprietário bem-sucedido!");
+                  return;
+                }
+              }
+            }
+          }
+        } catch (profileError) {
+          console.error("Error checking business profile:", profileError);
+        }
           
-        // Try to find laundry with given credentials
+        // If no login succeeded, try original laundry ownership check method
         try {
           const laundryData = await checkLaundryOwnership(email, password);
           
@@ -132,6 +198,9 @@ export const useSignIn = ({ setUser, setSession, setLoading }: SignInProps) => {
           console.error("Error in sign in process:", error);
           throw new Error("Erro no banco de dados. Por favor, tente novamente mais tarde.");
         }
+        
+        // If we reached here, no login method succeeded
+        throw new Error("Credenciais inválidas. Verifique seu email e senha.");
       } else {
         console.log("Standard login successful");
         setUser(data.user);

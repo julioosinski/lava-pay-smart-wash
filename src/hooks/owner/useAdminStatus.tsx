@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
+import { simplifiedToast } from "@/components/ui/use-toast";
 
 export function useAdminStatus() {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
@@ -10,7 +11,10 @@ export function useAdminStatus() {
 
   useEffect(() => {
     const checkAdminRole = async () => {
-      if (!user?.id) return setIsLoading(false);
+      if (!user?.id) {
+        setIsLoading(false);
+        return;
+      }
       
       try {
         // Use RPC to safely check if user is admin
@@ -21,13 +25,16 @@ export function useAdminStatus() {
           
         if (error) {
           console.error("Error checking user role:", error);
-          return setIsLoading(false);
+          simplifiedToast.error("Erro ao verificar permissões de administrador");
+          setIsLoading(false);
+          return;
         }
         
         setIsAdmin(data === true);
         console.log("User is admin:", data === true);
       } catch (error) {
         console.error("Error checking admin status:", error);
+        simplifiedToast.error("Erro ao verificar permissões de administrador");
       } finally {
         setIsLoading(false);
       }

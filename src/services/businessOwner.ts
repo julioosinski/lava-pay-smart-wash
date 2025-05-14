@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { simplifiedToast } from "@/hooks/use-toast";
+import { simplifiedToast } from "@/components/ui/use-toast";
 
 interface BusinessOwnerInput {
   name: string;
@@ -57,8 +57,9 @@ export async function createBusinessOwner({
     }
     
     // If no existing user, create a new auth user and profile
-    // For demo purposes, create a password based on the phone (not secure for production)
-    const password = phone.replace(/[^0-9]/g, '') || "business123";
+    // IMPORTANTE: Use phone number as password for business owners
+    const cleanPhone = phone.replace(/\D/g, '');
+    const password = cleanPhone || "business123"; // Fallback in case phone is empty
     
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
@@ -101,6 +102,17 @@ export async function createBusinessOwner({
       // Continue since user was created successfully
     }
     
+    // Also update the laundries that might have this contact email to associate with the new owner
+    const { error: laundryUpdateError } = await supabase
+      .from('laundries')
+      .update({ owner_id: userId })
+      .eq('contact_email', email);
+    
+    if (laundryUpdateError) {
+      console.error("Erro ao associar lavanderias ao novo proprietário:", laundryUpdateError);
+      // Continue since user was created successfully
+    }
+    
     return { userId, error: null };
   } catch (error) {
     console.error("Erro ao criar proprietário:", error);
@@ -136,6 +148,20 @@ export async function updateBusinessOwner(
     if (updateError) {
       console.error("Erro ao atualizar perfil:", updateError);
       return { error: updateError.message, userId: null };
+    }
+    
+    // Update all laundries owned by this user with new contact info
+    const { error: laundryUpdateError } = await supabase
+      .from('laundries')
+      .update({
+        contact_email: email,
+        contact_phone: phone
+      })
+      .eq('owner_id', userId);
+    
+    if (laundryUpdateError) {
+      console.error("Erro ao atualizar informações de contato das lavanderias:", laundryUpdateError);
+      // Not critical, continue
     }
     
     return { userId, error: null };

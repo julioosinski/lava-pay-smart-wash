@@ -43,7 +43,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
       try {
         console.log(`ProtectedRoute: Checking role for user ${user.id}, required role: ${requiredRole}`);
         
-        // Use the new RPC function to safely get user role
+        // Use the RPC function to safely get user role
         const { data: userRole, error: roleError } = await supabase.rpc(
           'get_user_role_safely_no_rls',
           { user_id: user.id }
@@ -56,7 +56,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
           return;
         }
         
-        // Admin access for admin@smartwash.com
+        // Special admin email check
         if (user.email === 'admin@smartwash.com') {
           console.log("ProtectedRoute: Special admin user detected");
           setRole('admin');
@@ -121,7 +121,6 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
   // If there's no authenticated user, redirect to login page with the required role
   if (!user && !directAdminAccess) {
     console.log("ProtectedRoute: No authenticated user, redirecting to auth page");
-    // Make sure we're passing the role correctly to the state
     return <Navigate to="/auth" state={{ role: requiredRole || 'user' }} replace />;
   }
 
