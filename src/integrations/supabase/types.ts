@@ -517,6 +517,10 @@ export type Database = {
         Args: Record<PropertyKey, never> | { user_id: string }
         Returns: string
       }
+      get_user_role_safely_no_rls: {
+        Args: { user_id: string }
+        Returns: string
+      }
       has_laundry_access: {
         Args: { laundry_id: string; user_id: string }
         Returns: boolean
@@ -527,6 +531,10 @@ export type Database = {
       }
       is_admin_safely: {
         Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_admin_safely_no_rls: {
+        Args: { user_id: string }
         Returns: boolean
       }
       is_user_admin: {

@@ -13,19 +13,19 @@ export function useAdminStatus() {
       if (!user?.id) return setIsLoading(false);
       
       try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .maybeSingle();
+        // Use RPC to safely check if user is admin
+        const { data, error } = await supabase.rpc(
+          'is_admin_safely_no_rls',
+          { user_id: user.id }
+        );
           
         if (error) {
           console.error("Error checking user role:", error);
           return setIsLoading(false);
         }
         
-        setIsAdmin(data?.role === 'admin');
-        console.log("User is admin:", data?.role === 'admin');
+        setIsAdmin(data === true);
+        console.log("User is admin:", data === true);
       } catch (error) {
         console.error("Error checking admin status:", error);
       } finally {

@@ -43,29 +43,27 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
       try {
         console.log(`ProtectedRoute: Checking role for user ${user.id}, required role: ${requiredRole}`);
         
-        // Check if email is admin@smartwash.com (hardcoded admin)
-        const { data: userData, error: userError } = await supabase
-          .from('profiles')
-          .select('contact_email, role')
-          .eq('id', user.id)
-          .maybeSingle();
+        // Use the new RPC function to safely get user role
+        const { data: userRole, error: roleError } = await supabase.rpc(
+          'get_user_role_safely_no_rls',
+          { user_id: user.id }
+        );
         
-        if (userError) {
-          console.error("ProtectedRoute: Error fetching user data:", userError);
+        if (roleError) {
+          console.error("ProtectedRoute: Error fetching user role:", roleError);
           toast.error("Erro ao verificar permissões do usuário");
           setLoading(false);
           return;
         }
         
         // Admin access for admin@smartwash.com
-        if (userData?.contact_email === 'admin@smartwash.com') {
+        if (user.email === 'admin@smartwash.com') {
           console.log("ProtectedRoute: Special admin user detected");
           setRole('admin');
           setLoading(false);
           return;
         }
 
-        const userRole = userData?.role || null;
         console.log(`ProtectedRoute: User ${user.id} has role from database:`, userRole);
         setRole(userRole);
         setLoading(false);
@@ -87,7 +85,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     }, 3000);
     
     return () => clearTimeout(timeout);
-  }, [user, requiredRole, authLoading]);
+  }, [user, requiredRole, authLoading, loading]);
 
   // If the auth context is still loading, show a loading spinner
   if (authLoading) {
