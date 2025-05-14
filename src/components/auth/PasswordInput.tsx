@@ -8,6 +8,7 @@ interface PasswordInputProps {
   showPassword: boolean;
   onToggleShow: () => void;
   label?: string; // Make label optional
+  placeholder?: string; // Add optional placeholder prop
 }
 
 export const PasswordInput = ({ 
@@ -15,13 +16,14 @@ export const PasswordInput = ({
   onChange, 
   showPassword, 
   onToggleShow,
-  label = "Senha" // Default value if not provided
+  label = "Senha", // Default value if not provided
+  placeholder = "Digite sua senha" // Default placeholder if not provided
 }: PasswordInputProps) => {
   return (
     <div className="relative">
       <Input
         type={showPassword ? "text" : "password"}
-        placeholder={label}
+        placeholder={placeholder} // Use the placeholder prop instead of label
         value={value}
         onChange={(e) => onChange(e.target.value)}
         required
