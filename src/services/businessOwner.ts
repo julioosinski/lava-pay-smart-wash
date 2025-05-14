@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { simplifiedToast } from "@/hooks/use-toast";
 
 interface BusinessOwnerInput {
   name: string;
@@ -44,7 +44,7 @@ export async function createBusinessOwner({
           role: 'business',
           first_name: firstName,
           last_name: lastName,
-          updated_at: new Date()
+          updated_at: new Date().toISOString()
         })
         .eq('id', existingUser.id);
       
@@ -92,7 +92,7 @@ export async function createBusinessOwner({
         role: 'business',
         first_name: name.split(' ')[0],
         last_name: name.split(' ').slice(1).join(' ') || '',
-        updated_at: new Date()
+        updated_at: new Date().toISOString()
       })
       .eq('id', userId);
       
@@ -129,7 +129,7 @@ export async function updateBusinessOwner(
         role: 'business',
         first_name: firstName,
         last_name: lastName,
-        updated_at: new Date()
+        updated_at: new Date().toISOString()
       })
       .eq('id', userId);
     
@@ -173,7 +173,7 @@ export async function deleteBusinessOwner(userId: string) {
       .from('profiles')
       .update({
         role: 'user',
-        updated_at: new Date()
+        updated_at: new Date().toISOString()
       })
       .eq('id', userId);
     
