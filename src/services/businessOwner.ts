@@ -36,17 +36,17 @@ export async function createBusinessOwner({
       const firstName = nameParts[0];
       const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
       
-      // Call RPC function to avoid RLS recursion
-      const { data: updateData, error: updateError } = await supabase.rpc(
-        'update_profile_safely',
-        {
-          profile_id: existingUser.id,
-          contact_phone_val: phone,
-          role_val: 'business',
-          first_name_val: firstName,
-          last_name_val: lastName
-        }
-      );
+      // Update the profile directly using the update method instead of RPC
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          contact_phone: phone,
+          role: 'business',
+          first_name: firstName,
+          last_name: lastName,
+          updated_at: new Date()
+        })
+        .eq('id', existingUser.id);
       
       if (updateError) {
         console.error("Erro ao atualizar perfil existente:", updateError);
@@ -83,21 +83,21 @@ export async function createBusinessOwner({
       return { error: "ID de usuário não disponível", userId: null };
     }
     
-    // Ensure profile has business role and contact info using RPC
-    const { error: rpcError } = await supabase.rpc(
-      'update_profile_safely',
-      {
-        profile_id: userId,
-        contact_phone_val: phone,
-        contact_email_val: email,
-        role_val: 'business',
-        first_name_val: name.split(' ')[0],
-        last_name_val: name.split(' ').slice(1).join(' ') || ''
-      }
-    );
+    // Update the profile directly instead of using RPC
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({
+        contact_phone: phone,
+        contact_email: email,
+        role: 'business',
+        first_name: name.split(' ')[0],
+        last_name: name.split(' ').slice(1).join(' ') || '',
+        updated_at: new Date()
+      })
+      .eq('id', userId);
       
-    if (rpcError) {
-      console.error("Erro ao atualizar perfil:", rpcError);
+    if (updateError) {
+      console.error("Erro ao atualizar perfil:", updateError);
       // Continue since user was created successfully
     }
     
@@ -120,22 +120,22 @@ export async function updateBusinessOwner(
     const firstName = nameParts[0];
     const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
     
-    // Update profile data using RPC
-    const { error: rpcError } = await supabase.rpc(
-      'update_profile_safely',
-      {
-        profile_id: userId,
-        contact_phone_val: phone,
-        contact_email_val: email,
-        role_val: 'business',
-        first_name_val: firstName,
-        last_name_val: lastName
-      }
-    );
+    // Update profile data directly using the update method
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({
+        contact_phone: phone,
+        contact_email: email,
+        role: 'business',
+        first_name: firstName,
+        last_name: lastName,
+        updated_at: new Date()
+      })
+      .eq('id', userId);
     
-    if (rpcError) {
-      console.error("Erro ao atualizar perfil:", rpcError);
-      return { error: rpcError.message, userId: null };
+    if (updateError) {
+      console.error("Erro ao atualizar perfil:", updateError);
+      return { error: updateError.message, userId: null };
     }
     
     return { userId, error: null };
@@ -168,18 +168,18 @@ export async function deleteBusinessOwner(userId: string) {
       };
     }
     
-    // Update the profile to remove business role using RPC
-    const { error: rpcError } = await supabase.rpc(
-      'update_profile_safely',
-      {
-        profile_id: userId,
-        role_val: 'user'
-      }
-    );
+    // Update the profile directly to remove business role
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({
+        role: 'user',
+        updated_at: new Date()
+      })
+      .eq('id', userId);
     
-    if (rpcError) {
-      console.error("Erro ao remover proprietário:", rpcError);
-      return { success: false, error: rpcError.message };
+    if (updateError) {
+      console.error("Erro ao remover proprietário:", updateError);
+      return { success: false, error: updateError.message };
     }
     
     return { success: true, error: null };
