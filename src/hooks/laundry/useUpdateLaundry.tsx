@@ -5,14 +5,19 @@ import { LaundryLocation } from "@/types";
 import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
 import { convertToLaundry, LaundryDB } from "@/types/laundry";
+import { useAdminStatus } from "@/hooks/owner/useAdminStatus";
 
 export function useUpdateLaundry() {
   const queryClient = useQueryClient();
   const { session } = useAuth();
+  const { isAdmin } = useAdminStatus();
 
   return useMutation({
     mutationFn: async (laundry: Pick<LaundryLocation, 'id' | 'name' | 'address' | 'contact_phone' | 'contact_email' | 'owner_id'>) => {
-      if (!session?.user) {
+      // Verifica se o usuário está autenticado ou é administrador com acesso direto
+      const isAuthenticated = session?.user || (isAdmin || localStorage.getItem('direct_admin') === 'true');
+      
+      if (!isAuthenticated) {
         throw new Error('Você precisa estar autenticado para atualizar uma lavanderia');
       }
       
