@@ -22,7 +22,8 @@ export function useUpdateLaundry() {
       }
       
       try {
-        const { data, error } = await supabase
+        // Primeiro, atualizar os dados
+        const { error: updateError } = await supabase
           .from('laundries')
           .update({
             name: laundry.name,
@@ -31,16 +32,30 @@ export function useUpdateLaundry() {
             contact_email: laundry.contact_email,
             owner_id: laundry.owner_id
           })
-          .eq('id', laundry.id)
-          .select()
-          .single();
+          .eq('id', laundry.id);
 
-        if (error) {
-          console.error("Error updating laundry:", error);
-          throw new Error(`Erro ao atualizar lavanderia: ${error.message}`);
+        if (updateError) {
+          console.error("Error updating laundry:", updateError);
+          throw new Error(`Erro ao atualizar lavanderia: ${updateError.message}`);
         }
         
-        return convertToLaundry(data as LaundryDB);
+        // Depois, buscar os dados atualizados separadamente
+        const { data: fetchedData, error: fetchError } = await supabase
+          .from('laundries')
+          .select()
+          .eq('id', laundry.id)
+          .maybeSingle();
+
+        if (fetchError) {
+          console.error("Error fetching updated laundry:", fetchError);
+          throw new Error(`Erro ao buscar lavanderia atualizada: ${fetchError.message}`);
+        }
+        
+        if (!fetchedData) {
+          throw new Error("Lavanderia não encontrada após atualização");
+        }
+        
+        return convertToLaundry(fetchedData as LaundryDB);
       } catch (error: any) {
         console.error("Exception in laundry update:", error);
         throw new Error(`Erro ao atualizar lavanderia: ${error.message}`);
