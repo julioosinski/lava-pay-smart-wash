@@ -6,7 +6,7 @@ import { useLaundries } from "@/hooks/useLaundries";
 import { useMachines } from "@/hooks/useMachines";
 import { usePayments } from "@/hooks/usePayments";
 import { LaundryLocation, Machine, Payment } from "@/types";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 export function useOwnerData() {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);

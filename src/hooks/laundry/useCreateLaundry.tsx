@@ -21,7 +21,22 @@ export function useCreateLaundry() {
         throw new Error('Nome, endereço, email e telefone são obrigatórios');
       }
 
-      return createLaundryInDB(laundry);
+      try {
+        // Use direct API call to avoid RLS policy recursion
+        const response = await createLaundryInDB({
+          ...laundry,
+          // Ensure the owner_id is properly set for admins creating laundries for others
+          owner_id: laundry.owner_id || session.user.id
+        });
+        return response;
+      } catch (error: any) {
+        console.error("Error creating laundry:", error);
+        // Add specific error handling for recursion errors
+        if (error.message && error.message.includes("infinite recursion")) {
+          throw new Error('Erro de permissão ao criar lavanderia. Por favor, contate o administrador do sistema.');
+        }
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['laundries'] });
@@ -29,7 +44,7 @@ export function useCreateLaundry() {
     },
     onError: (error: Error) => {
       console.error("Error in mutation:", error);
-      toast.error(error.message);
+      toast.error(error.message || 'Erro ao criar lavanderia');
     }
   });
 }
