@@ -1,99 +1,41 @@
 
 import { toast as sonnerToast } from "sonner";
-import { Toast, ToastActionElement, type ToastProps } from "@/components/ui/toast";
-import { create } from "zustand";
+import { ToastActionElement, ToastProps } from "@/components/ui/toast";
 
-type ToasterToast = ToastProps & {
+const TOAST_LIMIT = 5;
+const TOAST_REMOVE_DELAY = 1000000;
+
+export type ToasterToast = ToastProps & {
   id: string;
   title?: React.ReactNode;
   description?: React.ReactNode;
   action?: ToastActionElement;
 };
 
-// Define the store type with the toast function included
-type ToastStore = {
-  toasts: ToasterToast[];
-  addToast: (toast: Omit<ToasterToast, "id">) => void;
-  dismissToast: (id: string) => void;
-  toast: {
-    default: (props: Omit<ToasterToast, "id">) => void;
-    success: (title: string, props?: Omit<ToasterToast, "id">) => void;
-    error: (title: string, props?: Omit<ToasterToast, "id">) => void;
-    warning: (title: string, props?: Omit<ToasterToast, "id">) => void;
-  };
-};
+const actionTypes = {
+  ADD_TOAST: "ADD_TOAST",
+  UPDATE_TOAST: "UPDATE_TOAST",
+  DISMISS_TOAST: "DISMISS_TOAST",
+  REMOVE_TOAST: "REMOVE_TOAST",
+} as const;
 
-// Create the store with the toast object included in the returned state
-export const useToast = create<ToastStore>((set) => {
-  // Create toast functions
-  const toast = {
-    // Default toast function
-    default: (props: Omit<ToasterToast, "id">) => {
-      const id = Math.random().toString(36).substring(2, 9);
-      set((state) => ({
-        toasts: [...state.toasts, { ...props, id }],
-      }));
-    },
-    // Toast with default variant
-    success: (title: string, props?: Omit<ToasterToast, "id">) => {
-      const id = Math.random().toString(36).substring(2, 9);
-      set((state) => ({
-        toasts: [...state.toasts, { ...props, title, variant: "success", id }],
-      }));
-    },
-    error: (title: string, props?: Omit<ToasterToast, "id">) => {
-      const id = Math.random().toString(36).substring(2, 9);
-      set((state) => ({
-        toasts: [...state.toasts, { ...props, title, variant: "destructive", id }],
-      }));
-    },
-    warning: (title: string, props?: Omit<ToasterToast, "id">) => {
-      const id = Math.random().toString(36).substring(2, 9);
-      set((state) => ({
-        toasts: [...state.toasts, { ...props, title, variant: "warning", id }],
-      }));
-    },
-  };
-  
-  return {
-    toasts: [],
-    addToast: (toast) => {
-      const id = Math.random().toString(36).substring(2, 9);
-      set((state) => ({
-        toasts: [...state.toasts, { ...toast, id }],
-      }));
-    },
-    dismissToast: (id) => {
-      set((state) => ({
-        toasts: state.toasts.filter((toast) => toast.id !== id),
-      }));
-    },
-    toast,
-  };
-});
-
-// For compatibility with previous code
-export const toast = {
-  default: (props: Omit<ToasterToast, "id">) => useToast.getState().toast.default(props),
-  success: (title: string, props?: Omit<ToasterToast, "id">) => useToast.getState().toast.success(title, props),
-  error: (title: string, props?: Omit<ToasterToast, "id">) => useToast.getState().toast.error(title, props),
-  warning: (title: string, props?: Omit<ToasterToast, "id">) => useToast.getState().toast.warning(title, props),
-};
-
-// Create a simplified toast interface with success and error methods
+// Simplified toast for direct usage
 export const simplifiedToast = {
-  success: (message: string) => {
-    return sonnerToast.success(message);
-  },
-  error: (message: string) => {
-    return sonnerToast.error(message);
-  },
-  info: (message: string) => {
-    return sonnerToast.info(message);
-  },
-  warning: (message: string) => {
-    return sonnerToast.warning(message);
-  }
+  success: (message: string) => sonnerToast.success(message),
+  error: (message: string) => sonnerToast.error(message),
+  warning: (message: string) => sonnerToast.warning(message),
+  info: (message: string) => sonnerToast.info(message),
 };
 
-export default useToast;
+export const useToast = () => {
+  return {
+    toast: simplifiedToast,
+    dismiss: (toastId?: string) => {
+      sonnerToast.dismiss(toastId);
+    },
+  };
+};
+
+// Export toast directly from sonner for ease of use
+export const toast = sonnerToast;
+

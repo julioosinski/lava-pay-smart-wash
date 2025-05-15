@@ -22,6 +22,8 @@ export function useUpdateLaundry() {
       }
       
       try {
+        console.log("Atualizando lavanderia:", laundry);
+        
         // Primeiro, atualizar os dados
         const { error: updateError } = await supabase
           .from('laundries')
@@ -30,7 +32,8 @@ export function useUpdateLaundry() {
             address: laundry.address,
             contact_phone: laundry.contact_phone,
             contact_email: laundry.contact_email,
-            owner_id: laundry.owner_id
+            owner_id: laundry.owner_id,
+            updated_at: new Date().toISOString() // Forçar atualização do timestamp
           })
           .eq('id', laundry.id);
 
@@ -38,6 +41,8 @@ export function useUpdateLaundry() {
           console.error("Error updating laundry:", updateError);
           throw new Error(`Erro ao atualizar lavanderia: ${updateError.message}`);
         }
+        
+        console.log("Atualizou com sucesso, agora buscando os dados atualizados");
         
         // Depois, buscar os dados atualizados separadamente
         const { data: fetchedData, error: fetchError } = await supabase
@@ -52,16 +57,19 @@ export function useUpdateLaundry() {
         }
         
         if (!fetchedData) {
+          console.error("No data returned after update");
           throw new Error("Lavanderia não encontrada após atualização");
         }
         
+        console.log("Dados atualizados recuperados com sucesso:", fetchedData);
         return convertToLaundry(fetchedData as LaundryDB);
       } catch (error: any) {
         console.error("Exception in laundry update:", error);
         throw new Error(`Erro ao atualizar lavanderia: ${error.message}`);
       }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Atualização bem-sucedida, invalidando queries", data);
       queryClient.invalidateQueries({ queryKey: ['laundries'] });
       toast.success('Lavanderia atualizada com sucesso');
     },
