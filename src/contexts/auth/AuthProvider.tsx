@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -166,7 +165,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (error) {
         console.error("Error getting session:", error);
-        toast("Erro ao verificar a sessão", {
+        toast.info("Erro ao verificar a sessão", {
           description: "Não foi possível verificar seu status de login",
           variant: "destructive"
         });

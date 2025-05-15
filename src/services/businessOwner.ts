@@ -1,6 +1,5 @@
-
 import { supabase } from "@/integrations/supabase/client";
-import { simplifiedToast } from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/use-toast";
 
 interface BusinessOwnerInput {
   name: string;

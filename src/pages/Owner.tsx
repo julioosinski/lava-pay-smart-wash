@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OwnerDashboardHeader } from "@/components/owner/dashboard/OwnerDashboardHeader";
@@ -15,7 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { LaundryForm } from "@/components/admin/LaundryForm";
 import { useQueryClient } from "@tanstack/react-query";
-import { simplifiedToast } from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/use-toast";
 
 export default function Owner() {
   const { user } = useAuth();
@@ -68,10 +67,10 @@ export default function Owner() {
       await queryClient.invalidateQueries({ queryKey: ['laundries'] });
       await queryClient.invalidateQueries({ queryKey: ['machines'] });
       await queryClient.invalidateQueries({ queryKey: ['payments'] });
-      simplifiedToast.success("Dados atualizados com sucesso!");
+      toast.success("Dados atualizados com sucesso!");
     } catch (error) {
       console.error("Error refreshing data:", error);
-      simplifiedToast.error("Erro ao atualizar os dados");
+      toast.error("Erro ao atualizar os dados");
     } finally {
       setIsRefreshing(false);
     }
