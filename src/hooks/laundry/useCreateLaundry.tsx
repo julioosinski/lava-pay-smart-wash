@@ -1,7 +1,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/auth";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/use-toast";
 import { createLaundryInDB, CreateLaundryParams } from "@/services/laundry";
 
 export function useCreateLaundry() {
@@ -22,7 +22,7 @@ export function useCreateLaundry() {
       }
 
       try {
-        // Use direct API call to avoid RLS policy recursion
+        // Usar o serviço atualizado que chama a edge function
         const response = await createLaundryInDB({
           ...laundry,
           // Ensure the owner_id is properly set for admins creating laundries for others
@@ -31,20 +31,24 @@ export function useCreateLaundry() {
         return response;
       } catch (error: any) {
         console.error("Error creating laundry:", error);
-        // Add specific error handling for recursion errors
-        if (error.message && error.message.includes("infinite recursion")) {
-          throw new Error('Erro de permissão ao criar lavanderia. Por favor, contate o administrador do sistema.');
-        }
         throw error;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['laundries'] });
-      toast.success('Lavanderia criada com sucesso');
+      toast({
+        title: "Sucesso",
+        description: 'Lavanderia criada com sucesso',
+        variant: "default",
+      });
     },
     onError: (error: Error) => {
       console.error("Error in mutation:", error);
-      toast.error(error.message || 'Erro ao criar lavanderia');
+      toast({
+        title: "Erro",
+        description: error.message || 'Erro ao criar lavanderia',
+        variant: "destructive",
+      });
     }
   });
 }
