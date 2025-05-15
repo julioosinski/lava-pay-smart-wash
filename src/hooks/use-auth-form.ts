@@ -1,134 +1,109 @@
+import { useState } from "react";
+import { toast } from "./use-toast";
+import { useAuth } from "@/contexts/auth";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { useNavigate } from "react-router-dom";
 
-import { useState } from 'react';
-import { useAuth } from '@/contexts/auth';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
-import { toast as sonnerToast } from 'sonner';
+// Define schemas for authentication forms
+const loginSchema = z.object({
+  email: z.string().email("Insira um email válido"),
+  password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
+});
 
-export const useAuthForm = (expectedRole: string = 'user') => {
-  const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const { signIn, signUp, user } = useAuth();
-  const { toast } = useToast();
+const signUpSchema = z.object({
+  email: z.string().email("Insira um email válido"),
+  password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
+  first_name: z.string().min(2, "Nome muito curto").max(50, "Nome muito longo"),
+  last_name: z.string().min(2, "Sobrenome muito curto").max(50, "Sobrenome muito longo"),
+});
+
+// Type for sign up form data
+type SignUpFormData = z.infer<typeof signUpSchema>;
+
+// Type for login form data
+type LoginFormData = z.infer<typeof loginSchema>;
+
+export function useAuthForm(type: 'login' | 'signup', role?: string) {
+  const [isLoading, setIsLoading] = useState(false);
+  const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
 
-  console.log("Auth form initialized with expected role:", expectedRole);
+  // Use appropriate schema based on form type
+  const schema = type === 'login' ? loginSchema : signUpSchema;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email || !password) {
-      sonnerToast.error("Por favor, preencha todos os campos");
-      return;
-    }
-    
-    setLoading(true);
+  const form = useForm({
+    resolver: zodResolver(schema),
+    defaultValues: type === 'login' 
+      ? { email: "", password: "" }
+      : { email: "", password: "", first_name: "", last_name: "" },
+  });
 
+  async function onSubmit(data: LoginFormData | SignUpFormData) {
+    setIsLoading(true);
+    
     try {
-      if (isLogin) {
-        console.log("Attempting login with email:", email);
+      if (type === 'login') {
+        const { email, password } = data as LoginFormData;
         
-        // Special case for admin login
-        if (email === 'admin@smartwash.com' && password === 'admin123') {
-          try {
-            console.log("Admin login detected, setting direct admin access");
-            localStorage.setItem('direct_admin', 'true');
-            navigate('/admin', { replace: true });
-            return;
-          } catch (error) {
-            console.error("Error in admin login:", error);
-            toast.error("Erro no login administrativo", {
-              description: "Não foi possível autenticar como administrador"
-            });
-          } finally {
-            setLoading(false);
-          }
+        // Fix the function call to match the expected signature
+        const { error } = await signIn({ email, password });
+        
+        if (error) {
+          console.error("Login error:", error);
+          // Use the simplified toast interface
+          toast.error("Falha no login: " + error.message);
+          return;
+        }
+        
+        // Use the simplified toast interface
+        toast.success("Login bem-sucedido!");
+        
+        // Redirect based on role
+        if (role === 'admin') {
+          navigate('/admin');
+        } else if (role === 'business') {
+          navigate('/owner');
         } else {
-          try {
-            await signIn(email.trim(), password.trim());
-            console.log("Login successful");
-            
-            // Special case for admin
-            if (expectedRole === 'admin') {
-              navigate('/admin', { replace: true });
-            } else if (expectedRole === 'business') {
-              navigate('/owner', { replace: true });
-            } else {
-              navigate('/', { replace: true });
-            }
-          } catch (error) {
-            console.error("Login error:", error);
-            
-            // Create a more helpful error message
-            let errorMessage = "Erro de autenticação. Verifique suas credenciais.";
-            
-            // Try to get more specific error information
-            if (error instanceof Error) {
-              errorMessage = error.message;
-            }
-            
-            toast.error("Erro ao fazer login", {
-              description: errorMessage
-            });
-          }
+          navigate('/');
         }
       } else {
-        // Registration flow
-        try {
-          await signUp(email.trim(), password.trim());
-          sonnerToast.success("Registro realizado com sucesso!");
-          
-          // Add role based on authentication screen context
-          if (expectedRole) {
-            // Fix: Cast the expectedRole to the appropriate union type
-            const validRole = (expectedRole === 'admin' || expectedRole === 'business' || expectedRole === 'user') 
-              ? expectedRole as 'admin' | 'business' | 'user'
-              : 'user'; // Default to 'user' if not one of the expected values
-            
-            const { error: roleError } = await supabase
-              .from('profiles')
-              .update({ role: validRole })
-              .eq('id', user?.id || '');
-              
-            if (roleError) {
-              console.error("Error setting user role:", roleError);
-            } else {
-              console.log(`Role set to ${validRole} for new user`);
-            }
+        const { email, password, first_name, last_name } = data as SignUpFormData;
+        
+        // Fix the function call to match the expected signature
+        const { error } = await signUp({ 
+          email, 
+          password, 
+          options: { 
+            data: { first_name, last_name } 
           }
-          
-          toast.success("Registro realizado com sucesso!", {
-            description: "Verifique seu email para confirmar o cadastro.",
-          });
-        } catch (error) {
-          console.error("Registration error:", error);
-          toast.error("Erro ao criar conta", {
-            description: error instanceof Error ? error.message : "Ocorreu um erro durante o cadastro"
-          });
+        });
+        
+        if (error) {
+          console.error("Signup error:", error);
+          // Use the simplified toast interface
+          toast.error("Falha no cadastro: " + error.message);
+          return;
         }
+        
+        // Use the simplified toast interface
+        toast.success("Cadastro realizado com sucesso! Verifique seu email.");
+        
+        navigate('/auth');
       }
     } catch (error) {
       console.error("Auth error:", error);
-      sonnerToast.error("Erro de autenticação");
+      // Use the simplified toast interface
+      toast.error(`Erro na autenticação: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
-  };
+  }
 
   return {
-    isLogin,
-    email,
-    password,
-    showPassword,
-    loading,
-    setIsLogin,
-    setEmail,
-    setPassword,
-    setShowPassword,
-    handleSubmit,
+    form,
+    isLoading,
+    onSubmit,
   };
-};
+}

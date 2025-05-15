@@ -1,34 +1,43 @@
 
-import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
-interface SignUpProps {
-  setLoading: (loading: boolean) => void;
-}
-
-export const useSignUp = ({ setLoading }: SignUpProps) => {
-  const { toast } = useToast();
-
-  const signUp = async (email: string, password: string) => {
-    setLoading(true);
-    try {
-      const { error } = await supabase.auth.signUp({ email, password });
-      
-      if (error) {
-        toast.error("Erro ao criar conta", {
-          description: error.message
-        });
-        throw error;
-      }
-      
-      console.log("Sign up successful");
-    } catch (error) {
-      throw error;
-    } finally {
-      setLoading(false);
+type SignUpParams = {
+  email: string;
+  password: string;
+  options?: {
+    data?: {
+      first_name?: string;
+      last_name?: string;
     }
-  };
-
-  return signUp;
+  }
 };
+
+export function useSignUp() {
+  const [error, setError] = useState<Error | null>(null);
+
+  async function signUp({ email, password, options }: SignUpParams) {
+    try {
+      // Fix the function call to match the expected signature from Supabase
+      const response = await supabase.auth.signUp({
+        email,
+        password,
+        options
+      });
+
+      if (response.error) {
+        setError(response.error);
+        return { error: response.error };
+      }
+
+      return { data: response.data, error: null };
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error("An unknown error occurred during sign up");
+      setError(error);
+      return { error };
+    }
+  }
+
+  return { signUp, error };
+}
