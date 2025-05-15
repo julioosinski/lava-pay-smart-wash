@@ -2,11 +2,22 @@
 import { createContext, useContext } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 
+type SignUpParams = {
+  email: string;
+  password: string;
+  options?: {
+    data?: {
+      first_name?: string;
+      last_name?: string;
+    }
+  }
+};
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
+  signUp: (params: SignUpParams) => Promise<void>;
   signOut: () => Promise<void>;
   loading: boolean;
 }
@@ -22,4 +33,4 @@ export function useAuth() {
 }
 
 export { AuthContext };
-export type { AuthContextType };
+export type { AuthContextType, SignUpParams };

@@ -4,10 +4,10 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
-import { AuthContext, type AuthContextType } from './AuthContext';
+import { AuthContext, type AuthContextType, type SignUpParams } from './AuthContext';
 import { redirectBasedOnRole } from './AuthRedirect';
 import { useAuthMethods } from './useAuthMethods';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/sonner';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Initialize all state hooks first, before any other hooks
@@ -21,12 +21,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const location = useLocation();
 
   // Initialize auth methods hook last
-  const { signIn, signUp, signOut } = useAuthMethods({ 
+  const authMethods = useAuthMethods({ 
     setUser, 
     setSession, 
     setLoading, 
     navigate 
   });
+
+  // Wrapper functions to ensure correct signatures
+  const signIn = async (email: string, password: string): Promise<void> => {
+    await authMethods.signIn(email, password);
+  };
+
+  const signUp = async (params: SignUpParams): Promise<void> => {
+    const result = await authMethods.signUp(params);
+    if (result && result.error) {
+      throw result.error;
+    }
+  };
+
+  const signOut = async (): Promise<void> => {
+    await authMethods.signOut();
+  };
 
   // Check for direct admin access
   useEffect(() => {
@@ -150,7 +166,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (error) {
         console.error("Error getting session:", error);
-        toast.error("Erro ao verificar a sessão");
+        toast("Erro ao verificar a sessão", {
+          description: "Não foi possível verificar seu status de login",
+          variant: "destructive"
+        });
       } finally {
         // Always set initialized and loading to false after getting session
         setInitialized(true);

@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -8,9 +8,9 @@ import { Layout } from '@/components/Layout';
 import { EmailInput } from '@/components/auth/EmailInput';
 import { PasswordInput } from '@/components/auth/PasswordInput';
 import { useAuthForm } from '@/hooks/use-auth-form';
-import { useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { InfoIcon } from 'lucide-react';
+import { Form } from '@/components/ui/form';
 
 export default function Auth() {
   const location = useLocation();
@@ -19,13 +19,12 @@ export default function Auth() {
   const role = state?.role || 'user';
 
   const [authType, setAuthType] = useState<'login' | 'register'>('login');
-  const { 
-    email, setEmail,
-    password, setPassword,
-    showPassword, setShowPassword,
-    isLogin, setIsLogin,
-    loading, handleSubmit
-  } = useAuthForm(role);
+  const [showPassword, setShowPassword] = useState(false);
+  
+  const { form, isLoading, onSubmit } = useAuthForm(
+    authType === 'login' ? 'login' : 'signup', 
+    role
+  );
 
   console.log(`Auth page loaded with role: ${role}`);
 
@@ -62,7 +61,6 @@ export default function Auth() {
             
             <Tabs value={authType} onValueChange={(value) => {
               setAuthType(value as 'login' | 'register');
-              setIsLogin(value === 'login');
             }}>
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="login">Login</TabsTrigger>
@@ -70,28 +68,30 @@ export default function Auth() {
               </TabsList>
 
               <TabsContent value="login" className="space-y-4 pt-4">
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <EmailInput 
-                    value={email} 
-                    onChange={(e) => setEmail(e)} 
-                  />
-                  
-                  <PasswordInput 
-                    value={password} 
-                    onChange={(e) => setPassword(e)}
-                    showPassword={showPassword}
-                    onToggleShow={() => setShowPassword(!showPassword)}
-                    placeholder={role === 'business' ? "Digite seu telefone como senha" : "Digite sua senha"}
-                  />
-                  
-                  <Button 
-                    className="w-full" 
-                    type="submit" 
-                    disabled={loading}
-                  >
-                    {loading ? "Autenticando..." : "Entrar"}
-                  </Button>
-                </form>
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <EmailInput 
+                      control={form.control}
+                      name="email"
+                    />
+                    
+                    <PasswordInput 
+                      control={form.control}
+                      name="password"
+                      showPassword={showPassword}
+                      onToggleShow={() => setShowPassword(!showPassword)}
+                      placeholder={role === 'business' ? "Digite seu telefone como senha" : "Digite sua senha"}
+                    />
+                    
+                    <Button 
+                      className="w-full" 
+                      type="submit" 
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Autenticando..." : "Entrar"}
+                    </Button>
+                  </form>
+                </Form>
 
                 {role === 'admin' && (
                   <div className="mt-4 border-t pt-4">
@@ -108,28 +108,48 @@ export default function Auth() {
               </TabsContent>
 
               <TabsContent value="register" className="space-y-4 pt-4">
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <EmailInput 
-                    value={email} 
-                    onChange={(e) => setEmail(e)} 
-                  />
-                  
-                  <PasswordInput 
-                    value={password} 
-                    onChange={(e) => setPassword(e)}
-                    showPassword={showPassword}
-                    onToggleShow={() => setShowPassword(!showPassword)}
-                    placeholder={role === 'business' ? "Digite seu telefone como senha" : "Digite sua senha"}
-                  />
-                  
-                  <Button 
-                    className="w-full" 
-                    type="submit" 
-                    disabled={loading}
-                  >
-                    {loading ? "Registrando..." : "Registrar"}
-                  </Button>
-                </form>
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <EmailInput 
+                      control={form.control}
+                      name="email" 
+                    />
+                    
+                    <PasswordInput 
+                      control={form.control}
+                      name="password"
+                      showPassword={showPassword}
+                      onToggleShow={() => setShowPassword(!showPassword)}
+                      placeholder={role === 'business' ? "Digite seu telefone como senha" : "Digite sua senha"}
+                    />
+                    
+                    {authType === 'register' && (
+                      <>
+                        <EmailInput 
+                          control={form.control}
+                          name="first_name"
+                          label="Nome"
+                          placeholder="Digite seu nome"
+                        />
+                        
+                        <EmailInput 
+                          control={form.control}
+                          name="last_name"
+                          label="Sobrenome"
+                          placeholder="Digite seu sobrenome"
+                        />
+                      </>
+                    )}
+                    
+                    <Button 
+                      className="w-full" 
+                      type="submit" 
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Registrando..." : "Registrar"}
+                    </Button>
+                  </form>
+                </Form>
               </TabsContent>
             </Tabs>
           </CardContent>

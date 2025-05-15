@@ -1,7 +1,6 @@
 
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 type SignUpParams = {
   email: string;
@@ -14,7 +13,11 @@ type SignUpParams = {
   }
 };
 
-export function useSignUp() {
+interface SignUpHookProps {
+  setLoading: (loading: boolean) => void;
+}
+
+export function useSignUp({ setLoading }: SignUpHookProps) {
   const [error, setError] = useState<Error | null>(null);
 
   async function signUp({ email, password, options }: SignUpParams) {

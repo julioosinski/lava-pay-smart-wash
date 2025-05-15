@@ -1,24 +1,48 @@
 
-import { Input } from '@/components/ui/input';
-import { Mail } from 'lucide-react';
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
+import { Control } from 'react-hook-form';
 
 interface EmailInputProps {
-  value: string;
-  onChange: (value: string) => void;
+  control: Control<any>;
+  name: string;
+  label?: string;
+  placeholder?: string;
 }
 
-export const EmailInput = ({ value, onChange }: EmailInputProps) => {
+export function EmailInput({ 
+  control, 
+  name, 
+  label = "Email", 
+  placeholder = "Digite seu email" 
+}: EmailInputProps) {
   return (
-    <div className="relative">
-      <Input
-        type="email"
-        placeholder="Email"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        required
-        className="pl-10"
-      />
-      <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-    </div>
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{label}</FormLabel>
+          <FormControl>
+            <Input
+              {...field}
+              placeholder={placeholder}
+              type={name.includes('email') ? "email" : "text"}
+              autoCapitalize="none"
+              autoComplete={name.includes('email') ? "email" : name}
+              autoCorrect="off"
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
   );
-};
+}

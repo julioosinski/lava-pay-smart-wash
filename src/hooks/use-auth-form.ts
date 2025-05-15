@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { toast } from "./use-toast";
 import { useAuth } from "@/contexts/auth";
@@ -47,55 +48,39 @@ export function useAuthForm(type: 'login' | 'signup', role?: string) {
       if (type === 'login') {
         const { email, password } = data as LoginFormData;
         
-        // Fix the function call to match the expected signature
-        const { error } = await signIn({ email, password });
-        
-        if (error) {
+        try {
+          await signIn(email, password);
+          // Success is handled in the AuthProvider through onAuthStateChange
+          toast.success("Login bem-sucedido!");
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
           console.error("Login error:", error);
-          // Use the simplified toast interface
-          toast.error("Falha no login: " + error.message);
-          return;
-        }
-        
-        // Use the simplified toast interface
-        toast.success("Login bem-sucedido!");
-        
-        // Redirect based on role
-        if (role === 'admin') {
-          navigate('/admin');
-        } else if (role === 'business') {
-          navigate('/owner');
-        } else {
-          navigate('/');
+          toast.error("Falha no login: " + errorMessage);
         }
       } else {
         const { email, password, first_name, last_name } = data as SignUpFormData;
         
-        // Fix the function call to match the expected signature
-        const { error } = await signUp({ 
-          email, 
-          password, 
-          options: { 
-            data: { first_name, last_name } 
-          }
-        });
-        
-        if (error) {
+        try {
+          await signUp({ 
+            email, 
+            password, 
+            options: { 
+              data: { first_name, last_name } 
+            }
+          });
+          // Success message
+          toast.success("Cadastro realizado com sucesso! Verifique seu email.");
+          navigate('/auth');
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
           console.error("Signup error:", error);
-          // Use the simplified toast interface
-          toast.error("Falha no cadastro: " + error.message);
-          return;
+          toast.error("Falha no cadastro: " + errorMessage);
         }
-        
-        // Use the simplified toast interface
-        toast.success("Cadastro realizado com sucesso! Verifique seu email.");
-        
-        navigate('/auth');
       }
     } catch (error) {
       console.error("Auth error:", error);
-      // Use the simplified toast interface
-      toast.error(`Erro na autenticação: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      toast.error(`Erro na autenticação: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }

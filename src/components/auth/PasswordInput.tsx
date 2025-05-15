@@ -1,46 +1,71 @@
 
-import { Input } from '@/components/ui/input';
-import { Lock, Eye, EyeOff } from 'lucide-react';
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
+import {
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
+import { Control } from 'react-hook-form';
 
 interface PasswordInputProps {
-  value: string;
-  onChange: (value: string) => void;
+  control: Control<any>;
+  name: string;
   showPassword: boolean;
   onToggleShow: () => void;
-  label?: string; // Make label optional
-  placeholder?: string; // Add optional placeholder prop
+  placeholder?: string;
 }
 
-export const PasswordInput = ({ 
-  value, 
-  onChange, 
-  showPassword, 
+export function PasswordInput({
+  control,
+  name,
+  showPassword,
   onToggleShow,
-  label = "Senha", // Default value if not provided
-  placeholder = "Digite sua senha" // Default placeholder if not provided
-}: PasswordInputProps) => {
+  placeholder = "Digite sua senha"
+}: PasswordInputProps) {
   return (
-    <div className="relative">
-      <Input
-        type={showPassword ? "text" : "password"}
-        placeholder={placeholder} // Use the placeholder prop instead of label
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        required
-        className="pl-10 pr-10"
-      />
-      <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-      <button
-        type="button"
-        onClick={onToggleShow}
-        className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
-      >
-        {showPassword ? (
-          <EyeOff className="h-5 w-5" />
-        ) : (
-          <Eye className="h-5 w-5" />
-        )}
-      </button>
-    </div>
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>Senha</FormLabel>
+          <FormControl>
+            <div className="relative">
+              <Input
+                {...field}
+                placeholder={placeholder}
+                type={showPassword ? "text" : "password"}
+                autoComplete={name === "password" ? "current-password" : "new-password"}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-0 h-full px-3 py-2"
+                onClick={(e) => {
+                  e.preventDefault();
+                  onToggleShow();
+                }}
+              >
+                {showPassword ? (
+                  <EyeOffIcon className="h-4 w-4" aria-hidden="true" />
+                ) : (
+                  <EyeIcon className="h-4 w-4" aria-hidden="true" />
+                )}
+                <span className="sr-only">
+                  {showPassword ? "Hide password" : "Show password"}
+                </span>
+              </Button>
+            </div>
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
   );
-};
+}

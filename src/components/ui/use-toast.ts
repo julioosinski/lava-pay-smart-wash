@@ -1,5 +1,6 @@
 
 // Re-export from the hook
-import { useToast, toast, simplifiedToast } from "@/hooks/use-toast";
+import { useToast, toast, SimplifiedToast } from "@/hooks/use-toast";
 
-export { useToast, toast, simplifiedToast };
+export { useToast, toast };
+export type { SimplifiedToast };
