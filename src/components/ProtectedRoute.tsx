@@ -17,6 +17,9 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Flag to track component mount status
+    let isMounted = true;
+    
     const checkRole = async () => {
       if (authLoading) {
         // Wait for auth to complete before checking roles
@@ -29,14 +32,18 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
       
       if (directAdminAccess && requiredRole === 'admin') {
         console.log("ProtectedRoute: Direct admin access granted");
-        setRole('admin');
-        setLoading(false);
+        if (isMounted) {
+          setRole('admin');
+          setLoading(false);
+        }
         return;
       }
       
       if (!user) {
         console.log(`ProtectedRoute: No user found, role required: ${requiredRole}`);
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
         return;
       }
 
@@ -52,25 +59,33 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
         if (roleError) {
           console.error("ProtectedRoute: Error fetching user role:", roleError);
           toast.error("Erro ao verificar permissões do usuário");
-          setLoading(false);
+          if (isMounted) {
+            setLoading(false);
+          }
           return;
         }
         
         // Special admin email check
         if (user.email === 'admin@smartwash.com') {
           console.log("ProtectedRoute: Special admin user detected");
-          setRole('admin');
-          setLoading(false);
+          if (isMounted) {
+            setRole('admin');
+            setLoading(false);
+          }
           return;
         }
 
         console.log(`ProtectedRoute: User ${user.id} has role from database:`, userRole);
-        setRole(userRole);
-        setLoading(false);
+        if (isMounted) {
+          setRole(userRole);
+          setLoading(false);
+        }
       } catch (error) {
         console.error("ProtectedRoute: Error checking role:", error);
         toast.error("Erro ao verificar permissões do usuário");
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -78,13 +93,16 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     
     // Safety timeout to prevent infinite loading
     const timeout = setTimeout(() => {
-      if (loading) {
+      if (loading && isMounted) {
         console.log("ProtectedRoute: Safety timeout triggered");
         setLoading(false);
       }
     }, 3000);
     
-    return () => clearTimeout(timeout);
+    return () => {
+      isMounted = false;
+      clearTimeout(timeout);
+    };
   }, [user, requiredRole, authLoading, loading]);
 
   // If the auth context is still loading, show a loading spinner

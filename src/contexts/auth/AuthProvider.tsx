@@ -60,6 +60,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Effects come after all hooks
   useEffect(() => {
+    // A flag to track if the component is still mounted
+    let isMounted = true;
+    
     const setupAuth = async () => {
       console.log("Setting up auth state listener");
       setLoading(true);
@@ -71,8 +74,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(null);
         setUser(null);
         localStorage.removeItem('force_logout');
-        setLoading(false);
-        setInitialized(true);
+        if (isMounted) {
+          setLoading(false);
+          setInitialized(true);
+        }
         return;
       }
       
@@ -80,14 +85,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const directAdminAccess = localStorage.getItem('direct_admin') === 'true';
       if (directAdminAccess && location.pathname.startsWith('/admin')) {
         console.log("Direct admin access detected on admin page, skipping auth setup");
-        setLoading(false);
-        setInitialized(true);
+        if (isMounted) {
+          setLoading(false);
+          setInitialized(true);
+        }
         return;
       }
       
       // Set up the subscription first
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         (event, newSession) => {
+          if (!isMounted) return; // Prevent state updates on unmounted component
+          
           console.log("Auth state changed:", event, newSession ? "Session exists" : "No session");
           
           if (event === 'SIGNED_OUT' || (!newSession && event !== 'INITIAL_SESSION')) {
@@ -110,14 +119,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setSession(newSession);
             setUser(newSession.user);
             
-            // Check if we're on auth page
+            // Check if we're on auth page - delay redirect to prevent loops
             const isOnAuthPage = location.pathname === '/auth';
             
             if (isOnAuthPage) {
-              // Only redirect if on auth page, with slight delay to prevent loops
+              // Only redirect if on auth page, with significant delay to prevent loops
               setTimeout(() => {
-                redirectBasedOnRole(newSession.user.id, navigate);
-              }, 100); // Small delay to break potential loops
+                if (isMounted) {
+                  redirectBasedOnRole(newSession.user.id, navigate);
+                }
+              }, 300); // Longer delay to break potential loops
             }
           } else {
             // Update session and user for other events
@@ -126,7 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
           
           // Ensure loading is set to false after processing auth state change
-          if (!initialized) {
+          if (!initialized && isMounted) {
             setInitialized(true);
             setLoading(false);
           }
@@ -140,13 +151,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           localStorage.removeItem('force_logout');
           setSession(null);
           setUser(null);
-          setLoading(false);
-          setInitialized(true);
+          if (isMounted) {
+            setLoading(false);
+            setInitialized(true);
+          }
           return;
         }
         
         const { data: { session: currentSession } } = await supabase.auth.getSession();
         console.log("Checking for existing session:", currentSession ? "Found" : "None");
+        
+        if (!isMounted) return; // Don't update state if component unmounted
         
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
@@ -158,10 +173,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const isOnAuthPage = location.pathname === '/auth';
           
           if (isOnAuthPage) {
-            // Only redirect if on auth page, with small delay
+            // Only redirect if on auth page, with longer delay
             setTimeout(() => {
-              redirectBasedOnRole(currentSession.user.id, navigate);
-            }, 100); // Small delay to break potential loops
+              if (isMounted) {
+                redirectBasedOnRole(currentSession.user.id, navigate);
+              }
+            }, 300); // Longer delay to break potential loops
           }
         }
       } catch (error) {
@@ -171,15 +188,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
       } finally {
         // Always set initialized and loading to false after getting session
-        setInitialized(true);
-        setLoading(false);
+        if (isMounted) {
+          setInitialized(true);
+          setLoading(false);
+        }
       }
       
       return () => subscription.unsubscribe();
     };
 
+    // Set a safety timeout to prevent infinite loading state
     const safetyTimeout = setTimeout(() => {
-      if (loading && !initialized) {
+      if (loading && !initialized && isMounted) {
         console.log("Safety timeout triggered - forcing loading state to false");
         setInitialized(true);
         setLoading(false);
@@ -188,7 +208,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     setupAuth();
     
-    return () => clearTimeout(safetyTimeout);
+    // Cleanup function
+    return () => {
+      isMounted = false;
+      clearTimeout(safetyTimeout);
+    };
   }, [navigate, location.pathname]);
 
   const contextValue: AuthContextType = {
