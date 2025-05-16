@@ -24,45 +24,33 @@ export function useUpdateLaundry() {
       try {
         console.log("Atualizando lavanderia:", laundry);
         
-        // Primeiro, atualizar os dados
-        const { error: updateError } = await supabase
-          .from('laundries')
-          .update({
-            name: laundry.name,
-            address: laundry.address,
-            contact_phone: laundry.contact_phone,
-            contact_email: laundry.contact_email,
-            owner_id: laundry.owner_id,
-            updated_at: new Date().toISOString() // Forçar atualização do timestamp
-          })
-          .eq('id', laundry.id);
+        // Use edge function to bypass RLS policies
+        const { data, error } = await supabase.functions.invoke('manage-laundries', {
+          body: {
+            action: 'update',
+            laundry: {
+              id: laundry.id,
+              name: laundry.name,
+              address: laundry.address,
+              contact_phone: laundry.contact_phone,
+              contact_email: laundry.contact_email,
+              owner_id: laundry.owner_id
+            }
+          }
+        });
 
-        if (updateError) {
-          console.error("Error updating laundry:", updateError);
-          throw new Error(`Erro ao atualizar lavanderia: ${updateError.message}`);
+        if (error) {
+          console.error("Error updating laundry:", error);
+          throw new Error(`Erro ao atualizar lavanderia: ${error.message}`);
         }
         
-        console.log("Atualizou com sucesso, agora buscando os dados atualizados");
-        
-        // Depois, buscar os dados atualizados separadamente
-        const { data: fetchedData, error: fetchError } = await supabase
-          .from('laundries')
-          .select()
-          .eq('id', laundry.id)
-          .maybeSingle();
-
-        if (fetchError) {
-          console.error("Error fetching updated laundry:", fetchError);
-          throw new Error(`Erro ao buscar lavanderia atualizada: ${fetchError.message}`);
+        if (!data || data.error) {
+          console.error("Service error updating laundry:", data?.error || "Unknown error");
+          throw new Error(`Erro ao atualizar lavanderia: ${data?.error || "Erro desconhecido"}`);
         }
         
-        if (!fetchedData) {
-          console.error("No data returned after update");
-          throw new Error("Lavanderia não encontrada após atualização");
-        }
-        
-        console.log("Dados atualizados recuperados com sucesso:", fetchedData);
-        return convertToLaundry(fetchedData as LaundryDB);
+        console.log("Dados atualizados recuperados com sucesso:", data.laundry);
+        return data.laundry as LaundryLocation;
       } catch (error: any) {
         console.error("Exception in laundry update:", error);
         throw new Error(`Erro ao atualizar lavanderia: ${error.message}`);
