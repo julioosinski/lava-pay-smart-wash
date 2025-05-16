@@ -4,18 +4,21 @@ import { Machine } from "@/types";
 
 export async function getMachineStatus(machineId: string): Promise<Machine | null> {
   try {
-    const { data, error } = await supabase
-      .from('machines')
-      .select('*')
-      .eq('id', machineId)
-      .single();
-      
-    if (error) {
-      console.error('Erro ao obter status da máquina:', error);
+    // Use edge function to bypass RLS policies
+    const { data, error } = await supabase.functions.invoke('manage-machines', {
+      body: {
+        action: 'list',
+        machineId
+      }
+    });
+    
+    if (error || !data || data.error) {
+      console.error('Erro ao obter status da máquina:', error || data?.error);
       return null;
     }
     
-    return data as Machine;
+    const machines = data.machines || [];
+    return machines.length > 0 ? machines[0] as Machine : null;
   } catch (error) {
     console.error('Erro ao obter status da máquina:', error);
     return null;
@@ -28,14 +31,10 @@ export async function updateMachineStatus(machineId: string, status: 'available'
     
     if (status === 'in-use' && paymentId) {
       // Busca informações da máquina para calcular expected_end_time
-      const { data: machineData } = await supabase
-        .from('machines')
-        .select('time_minutes')
-        .eq('id', machineId)
-        .single();
+      const machineInfo = await getMachineStatus(machineId);
       
       const now = new Date();
-      const timeMinutes = machineData?.time_minutes || 30; // Default de 30 min se não encontrar
+      const timeMinutes = machineInfo?.time_minutes || 30; // Default de 30 min se não encontrar
       const endTime = new Date(now.getTime() + (timeMinutes * 60 * 1000));
       
       updateData.current_payment_id = paymentId;
@@ -47,13 +46,19 @@ export async function updateMachineStatus(machineId: string, status: 'available'
       updateData.expected_end_time = null;
     }
     
-    const { error } = await supabase
-      .from('machines')
-      .update(updateData)
-      .eq('id', machineId);
-      
-    if (error) {
-      console.error('Erro ao atualizar status da máquina:', error);
+    // Use edge function to bypass RLS policies
+    const { data, error } = await supabase.functions.invoke('manage-machines', {
+      body: {
+        action: 'update',
+        machine: {
+          id: machineId,
+          ...updateData
+        }
+      }
+    });
+    
+    if (error || !data || data.error) {
+      console.error('Erro ao atualizar status da máquina:', error || data?.error);
       return false;
     }
     
@@ -66,18 +71,20 @@ export async function updateMachineStatus(machineId: string, status: 'available'
 
 export async function getMachinesByLaundry(laundryId: string): Promise<Machine[]> {
   try {
-    const { data, error } = await supabase
-      .from('machines')
-      .select('*')
-      .eq('laundry_id', laundryId)
-      .order('machine_number', { ascending: true });
-      
-    if (error) {
-      console.error('Erro ao obter máquinas da lavanderia:', error);
+    // Use edge function to bypass RLS policies
+    const { data, error } = await supabase.functions.invoke('manage-machines', {
+      body: {
+        action: 'list',
+        laundryId
+      }
+    });
+    
+    if (error || !data || data.error) {
+      console.error('Erro ao obter máquinas da lavanderia:', error || data?.error);
       return [];
     }
     
-    return data as Machine[];
+    return (data.machines || []) as Machine[];
   } catch (error) {
     console.error('Erro ao obter máquinas da lavanderia:', error);
     return [];

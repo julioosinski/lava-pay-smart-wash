@@ -36,3 +36,6 @@ verify_jwt = true
 
 [functions.manage-laundries]
 verify_jwt = true
+
+[functions.manage-machines]
+verify_jwt = true

@@ -10,28 +10,28 @@ export const useMachines = (laundryId?: string) => {
     queryFn: async () => {
       try {
         console.log("Fetching machines for laundryId:", laundryId);
-        let query = supabase
-          .from('machines')
-          .select('*')
-          .order('machine_number', { ascending: true });
-
-        // Only filter by laundry_id if provided and not 'all'
-        if (laundryId && laundryId !== 'all') {
-          console.log("Filtering machines by laundry_id:", laundryId);
-          query = query.eq('laundry_id', laundryId);
-        } else {
-          console.log("No laundry filter applied, fetching all machines");
-        }
-
-        const { data, error } = await query;
+        
+        // Use edge function to bypass RLS policies
+        const { data, error } = await supabase.functions.invoke('manage-machines', {
+          body: {
+            action: 'list',
+            laundryId: laundryId,
+            includeAll: laundryId === 'all'
+          }
+        });
         
         if (error) {
           console.error("Error fetching machines:", error);
           throw error;
         }
         
-        console.log(`Fetched ${data?.length || 0} machines:`, data);
-        return (data || []) as Machine[];
+        if (!data || data.error) {
+          console.error("Service error fetching machines:", data?.error || "Unknown error");
+          throw new Error(`Erro ao buscar máquinas: ${data?.error || "Erro desconhecido"}`);
+        }
+        
+        console.log(`Fetched ${data.machines?.length || 0} machines:`, data.machines);
+        return (data.machines || []) as Machine[];
       } catch (error) {
         console.error("Error in useMachines hook:", error);
         throw error;
@@ -71,33 +71,35 @@ export const useCreateMachine = () => {
       const store_id = `STORE-${machine.machine_number}`;
       const machine_serial = `SERIAL-${machine.machine_number}`;
       
-      const { data, error } = await supabase
-        .from('machines')
-        .insert({
-          type: machine.type,
-          price: machine.price,
-          laundry_id: machine.laundry_id,
-          time_minutes: machine.time_minutes,
-          machine_number: machine.machine_number,
-          mqtt_broker: machine.mqtt_broker,
-          mqtt_username: machine.mqtt_username,
-          mqtt_password: machine.mqtt_password,
-          wifi_ssid: machine.wifi_ssid,
-          wifi_password: machine.wifi_password,
-          // Add required fields with default values
-          store_id: store_id,
-          machine_serial: machine_serial
-        })
-        .select()
-        .single();
-
-      if (error) {
+      try {
+        // Use edge function to bypass RLS policies
+        const { data, error } = await supabase.functions.invoke('manage-machines', {
+          body: {
+            action: 'create',
+            machine: {
+              ...machine,
+              store_id,
+              machine_serial
+            }
+          }
+        });
+        
+        if (error) {
+          console.error("Error creating machine:", error);
+          throw error;
+        }
+        
+        if (!data || data.error) {
+          console.error("Service error creating machine:", data?.error || "Unknown error");
+          throw new Error(`Erro ao criar máquina: ${data?.error || "Erro desconhecido"}`);
+        }
+        
+        console.log("Machine created successfully:", data.machine);
+        return data.machine as Machine;
+      } catch (error: any) {
         console.error("Error creating machine:", error);
         throw error;
       }
-      
-      console.log("Machine created successfully:", data);
-      return data as Machine;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['machines'] });
@@ -115,17 +117,30 @@ export const useDeleteMachine = () => {
   
   return useMutation({
     mutationFn: async ({ id, laundry_id }: { id: string, laundry_id: string }) => {
-      const { error } = await supabase
-        .from('machines')
-        .delete()
-        .eq('id', id);
-      
-      if (error) {
+      try {
+        // Use edge function to bypass RLS policies
+        const { data, error } = await supabase.functions.invoke('manage-machines', {
+          body: {
+            action: 'delete',
+            machineId: id
+          }
+        });
+        
+        if (error) {
+          console.error("Error deleting machine:", error);
+          throw error;
+        }
+        
+        if (!data || data.error) {
+          console.error("Service error deleting machine:", data?.error || "Unknown error");
+          throw new Error(`Erro ao excluir máquina: ${data?.error || "Erro desconhecido"}`);
+        }
+        
+        return id;
+      } catch (error: any) {
         console.error("Error deleting machine:", error);
         throw error;
       }
-      
-      return id;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['machines'] });
@@ -145,31 +160,31 @@ export const useUpdateMachine = () => {
     mutationFn: async (machine: Partial<Machine> & { id: string, laundry_id: string }) => {
       console.log("Updating machine with data:", machine);
       
-      const { data, error } = await supabase
-        .from('machines')
-        .update({
-          type: machine.type,
-          price: machine.price,
-          time_minutes: machine.time_minutes,
-          machine_number: machine.machine_number,
-          mqtt_broker: machine.mqtt_broker,
-          mqtt_username: machine.mqtt_username,
-          mqtt_password: machine.mqtt_password,
-          wifi_ssid: machine.wifi_ssid,
-          wifi_password: machine.wifi_password
-          // We don't need to update store_id and machine_serial as they already exist in the database
-        })
-        .eq('id', machine.id)
-        .select()
-        .single();
-
-      if (error) {
+      try {
+        // Use edge function to bypass RLS policies
+        const { data, error } = await supabase.functions.invoke('manage-machines', {
+          body: {
+            action: 'update',
+            machine
+          }
+        });
+        
+        if (error) {
+          console.error("Error updating machine:", error);
+          throw error;
+        }
+        
+        if (!data || data.error) {
+          console.error("Service error updating machine:", data?.error || "Unknown error");
+          throw new Error(`Erro ao atualizar máquina: ${data?.error || "Erro desconhecido"}`);
+        }
+        
+        console.log("Machine updated successfully:", data.machine);
+        return data.machine as Machine;
+      } catch (error: any) {
         console.error("Error updating machine:", error);
         throw error;
       }
-      
-      console.log("Machine updated successfully:", data);
-      return data as Machine;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['machines'] });
