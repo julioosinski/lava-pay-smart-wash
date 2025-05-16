@@ -27,6 +27,12 @@ enabled = true
 [auth]
 enabled = true
 site_url = "http://localhost:3000"
+additional_redirect_urls = [
+  "http://localhost:3000",
+  "http://localhost:3000/auth",
+  "http://localhost:3000/admin",
+  "http://localhost:3000/owner"
+]
 
 [analytics]
 enabled = false

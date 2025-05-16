@@ -114,10 +114,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const isOnAuthPage = location.pathname === '/auth';
             
             if (isOnAuthPage) {
-              // Only redirect if on auth page
+              // Only redirect if on auth page, with slight delay to prevent loops
               setTimeout(() => {
                 redirectBasedOnRole(newSession.user.id, navigate);
-              }, 0);
+              }, 100); // Small delay to break potential loops
             }
           } else {
             // Update session and user for other events
@@ -158,10 +158,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const isOnAuthPage = location.pathname === '/auth';
           
           if (isOnAuthPage) {
-            // Only redirect if on auth page
+            // Only redirect if on auth page, with small delay
             setTimeout(() => {
               redirectBasedOnRole(currentSession.user.id, navigate);
-            }, 0);
+            }, 100); // Small delay to break potential loops
           }
         }
       } catch (error) {
