@@ -14,8 +14,10 @@ interface LaundryInput {
 }
 
 interface ActionRequest {
-  action: 'create' | 'update' | 'delete';
-  laundry: LaundryInput;
+  action: 'create' | 'update' | 'delete' | 'list';
+  laundry?: LaundryInput;
+  ownerId?: string;
+  forceShowAll?: boolean;
 }
 
 const corsHeaders = {
@@ -57,21 +59,21 @@ serve(async (req) => {
     
     // Get the request body
     const requestData: ActionRequest = await req.json()
-    const { action, laundry } = requestData
+    const { action, laundry, ownerId, forceShowAll } = requestData
     
-    console.log(`User ${user.id} performing ${action} for laundry:`, laundry)
+    console.log(`User ${user.id} performing ${action}`)
     
     if (action === 'create') {
       // Create new laundry using service role to bypass RLS
       const { data, error } = await supabaseAdmin
         .from('laundries')
         .insert({
-          name: laundry.name,
-          address: laundry.address,
-          contact_phone: laundry.contact_phone,
-          contact_email: laundry.contact_email,
-          owner_id: laundry.owner_id,
-          status: laundry.status || 'active'
+          name: laundry?.name,
+          address: laundry?.address,
+          contact_phone: laundry?.contact_phone,
+          contact_email: laundry?.contact_email,
+          owner_id: laundry?.owner_id,
+          status: laundry?.status || 'active'
         })
         .select()
         .single();
@@ -91,7 +93,7 @@ serve(async (req) => {
     } 
     else if (action === 'update') {
       // Update existing laundry
-      if (!laundry.id) {
+      if (!laundry?.id) {
         return new Response(
           JSON.stringify({ success: false, error: "ID is required for updating laundry" }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
@@ -127,7 +129,7 @@ serve(async (req) => {
     } 
     else if (action === 'delete') {
       // Delete laundry
-      if (!laundry.id) {
+      if (!laundry?.id) {
         return new Response(
           JSON.stringify({ success: false, error: "ID is required for deleting laundry" }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
@@ -174,6 +176,33 @@ serve(async (req) => {
       
       return new Response(
         JSON.stringify({ success: true }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+    else if (action === 'list') {
+      // List laundries with admin service role to bypass RLS
+      let query = supabaseAdmin.from('laundries').select('*');
+      
+      // Only filter by owner_id if provided and not forcing to show all
+      if (ownerId && !forceShowAll) {
+        console.log(`Filtering laundries by owner_id: ${ownerId}`);
+        query = query.eq('owner_id', ownerId);
+      } else {
+        console.log("Fetching all laundries (no owner filter or force show all)");
+      }
+      
+      const { data, error } = await query;
+      
+      if (error) {
+        console.error("Error listing laundries:", error);
+        return new Response(
+          JSON.stringify({ success: false, error: error.message }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        )
+      }
+      
+      return new Response(
+        JSON.stringify({ success: true, laundries: data }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }

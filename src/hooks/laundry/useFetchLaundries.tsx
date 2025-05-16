@@ -16,27 +16,28 @@ export function useFetchLaundries(options?: UseFetchLaundriesOptions) {
     queryFn: async () => {
       try {
         console.log("Fetching laundries with options:", options);
-        let query = supabase
-          .from('laundries')
-          .select('*');
-          
-        // Only filter by owner_id if provided and not forcing to show all
-        if (options?.ownerId && !options?.forceShowAll) {
-          console.log(`Filtering laundries by owner_id: ${options.ownerId}`);
-          query = query.eq('owner_id', options.ownerId);
-        } else {
-          console.log("Fetching all laundries (no owner filter or force show all)");
-        }
         
-        const { data, error } = await query;
+        // Use edge function to bypass RLS policies
+        const { data, error } = await supabase.functions.invoke('manage-laundries', {
+          body: {
+            action: 'list',
+            ownerId: options?.ownerId,
+            forceShowAll: options?.forceShowAll
+          }
+        });
         
         if (error) {
           console.error("Error fetching laundries:", error);
-          throw error;
+          throw new Error(`Erro ao buscar lavanderias: ${error.message}`);
         }
         
-        const laundries: LaundryLocation[] = (data || []).map(laundry => convertToLaundry(laundry as LaundryDB));
-        console.log(`Successfully fetched ${laundries.length} laundries for owner ${options?.ownerId}:`, laundries);
+        if (!data || data.error) {
+          console.error("Service error fetching laundries:", data?.error || "Unknown error");
+          throw new Error(`Erro ao buscar lavanderias: ${data?.error || "Erro desconhecido"}`);
+        }
+        
+        const laundries: LaundryLocation[] = (data.laundries || []).map(laundry => convertToLaundry(laundry as LaundryDB));
+        console.log(`Successfully fetched ${laundries.length} laundries:`, laundries);
         return laundries;
       } catch (error) {
         console.error("Error in useFetchLaundries hook:", error);

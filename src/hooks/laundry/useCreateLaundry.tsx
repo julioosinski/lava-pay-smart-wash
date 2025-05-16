@@ -1,7 +1,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/auth";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { createLaundryInDB, CreateLaundryParams } from "@/services/laundry";
 
 export function useCreateLaundry() {
@@ -36,19 +36,11 @@ export function useCreateLaundry() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['laundries'] });
-      toast({
-        title: "Sucesso",
-        description: 'Lavanderia criada com sucesso',
-        variant: "default",
-      });
+      toast.success('Lavanderia criada com sucesso');
     },
     onError: (error: Error) => {
       console.error("Error in mutation:", error);
-      toast({
-        title: "Erro",
-        description: error.message || 'Erro ao criar lavanderia',
-        variant: "destructive",
-      });
+      toast.error(error.message || 'Erro ao criar lavanderia');
     }
   });
 }
