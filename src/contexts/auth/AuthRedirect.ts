@@ -27,7 +27,7 @@ export const redirectBasedOnRole = async (userId: string, navigate: (path: strin
     }
     
     // Special case for admin@smartwash.com
-    const { data: userData } = await supabase.auth
+    const { data: userData } = await supabase
       .from('profiles')
       .select('contact_email')
       .eq('id', userId)
