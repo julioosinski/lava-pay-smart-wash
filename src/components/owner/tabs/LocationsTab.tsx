@@ -10,12 +10,22 @@ import { DeleteLaundryDialog } from "@/components/admin/DeleteLaundryDialog";
 import { useDeleteLaundry } from "@/hooks/laundry/useDeleteLaundry";
 
 interface LocationsTabProps {
-  ownerLaundries: LaundryLocation[];
-  machines: Machine[];
-  onSelectLocation: (locationId: string) => void;
+  laundries: LaundryLocation[];
+  machines?: Machine[];
+  isLoading: boolean;
+  refetchLaundries: () => void;
+  isAdmin?: boolean;
+  onSelectLocation?: (locationId: string) => void;
 }
 
-export function LocationsTab({ ownerLaundries, machines, onSelectLocation }: LocationsTabProps) {
+export function LocationsTab({ 
+  laundries, 
+  machines = [], 
+  isLoading, 
+  refetchLaundries,
+  isAdmin = false,
+  onSelectLocation 
+}: LocationsTabProps) {
   const [selectedLaundry, setSelectedLaundry] = useState<LaundryLocation | null>(null);
   const [laundryToDelete, setLaundryToDelete] = useState<LaundryLocation | null>(null);
   const deleteLaundry = useDeleteLaundry();
@@ -33,7 +43,9 @@ export function LocationsTab({ ownerLaundries, machines, onSelectLocation }: Loc
   };
 
   const handleManage = (location: LaundryLocation) => {
-    onSelectLocation(location.id);
+    if (onSelectLocation) {
+      onSelectLocation(location.id);
+    }
     setSelectedLaundry(null);
   };
 
@@ -49,8 +61,15 @@ export function LocationsTab({ ownerLaundries, machines, onSelectLocation }: Loc
     if (laundryToDelete) {
       await deleteLaundry.mutateAsync(laundryToDelete.id);
       setLaundryToDelete(null);
+      if (refetchLaundries) {
+        refetchLaundries();
+      }
     }
   };
+
+  if (isLoading) {
+    return <div className="p-8 text-center">Carregando lavanderias...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -63,13 +82,13 @@ export function LocationsTab({ ownerLaundries, machines, onSelectLocation }: Loc
           <LaundryForm />
         </CardHeader>
         <CardContent>
-          {ownerLaundries.length === 0 ? (
+          {laundries.length === 0 ? (
             <div className="text-center py-8">
               <AlertCircle className="h-10 w-10 text-gray-400 mx-auto mb-3" />
               <p className="text-gray-500">Nenhuma lavanderia cadastrada.</p>
             </div>
           ) : (
-            ownerLaundries.map(location => {
+            laundries.map(location => {
               const totalCount = getMachineCount(location.id);
               const availableCount = getAvailableMachineCount(location.id);
               

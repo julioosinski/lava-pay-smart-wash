@@ -1,10 +1,9 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Layout } from "@/components/Layout";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MapPin, CreditCard, WashingMachine } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -14,43 +13,16 @@ import { PaymentsTab } from "@/components/owner/tabs/PaymentsTab";
 import { OwnerDashboardHeader } from "@/components/owner/dashboard/OwnerDashboardHeader";
 import { OwnerDashboardOverview } from "@/components/owner/dashboard/OwnerDashboardOverview";
 
-import { useOwnerDashboard } from "@/hooks/useOwnerDashboard";
-import { useLocationSelection } from "@/hooks/owner/useLocationSelection";
+import { useOwnerDashboard } from "@/hooks/owner/useOwnerDashboard";
 
 export default function Owner() {
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [isAdmin, setIsAdmin] = useState(false);
   const { user } = useAuth();
   
-  // Check if user is an admin to enable special features
-  useEffect(() => {
-    const checkIsAdmin = async () => {
-      if (!user?.id) return;
-      
-      try {
-        const { data, error } = await supabase.rpc(
-          'is_admin_safely_no_rls',
-          { user_id: user.id }
-        );
-          
-        if (error) {
-          console.error("Error checking user role:", error);
-          return;
-        }
-        
-        setIsAdmin(data === true);
-        console.log("User is admin:", data === true);
-      } catch (error) {
-        console.error("Error checking admin status:", error);
-      }
-    };
-    
-    checkIsAdmin();
-  }, [user]);
-
   // Owner dashboard data
   const {
     isLoading,
+    isAdmin,
     ownerLaundries,
     ownerMachines,
     ownerPayments,
@@ -60,18 +32,21 @@ export default function Owner() {
     availableMachines,
     inUseMachines,
     maintenanceMachines,
-    inUsePercentage
+    inUsePercentage,
+    selectedLocation,
+    setSelectedLocation
   } = useOwnerDashboard();
-
-  // Location selection for machine filtering
-  const { selectedLocation, setSelectedLocation } = useLocationSelection(ownerLaundries);
   
   const totalMachines = ownerMachines.length;
 
   return (
     <Layout>
       <div className="container mx-auto px-4 py-6">
-        <OwnerDashboardHeader isAdmin={isAdmin} />
+        <OwnerDashboardHeader 
+          title="Dashboard do Proprietário" 
+          subtitle="Gerencie suas lavanderias e máquinas"
+          isAdmin={isAdmin}
+        />
 
         <div className="mt-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -114,9 +89,11 @@ export default function Owner() {
             <TabsContent value="locations">
               <LocationsTab 
                 laundries={ownerLaundries} 
+                machines={ownerMachines}
                 isLoading={isLoading} 
                 refetchLaundries={refetchLaundries}
                 isAdmin={isAdmin}
+                onSelectLocation={setSelectedLocation}
               />
             </TabsContent>
 

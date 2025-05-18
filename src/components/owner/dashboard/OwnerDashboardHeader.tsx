@@ -5,9 +5,10 @@ import { ChevronDown } from "lucide-react";
 interface OwnerDashboardHeaderProps {
   title: string;
   subtitle: string;
+  isAdmin?: boolean;
 }
 
-export function OwnerDashboardHeader({ title, subtitle }: OwnerDashboardHeaderProps) {
+export function OwnerDashboardHeader({ title, subtitle, isAdmin }: OwnerDashboardHeaderProps) {
   return (
     <div className="mb-8">
       <div className="flex items-center gap-3 mb-2">
@@ -16,6 +17,11 @@ export function OwnerDashboardHeader({ title, subtitle }: OwnerDashboardHeaderPr
           <ChevronDown className="h-4 w-4 mr-2" />
           Lavanderias
         </Button>
+        {isAdmin && (
+          <span className="bg-lavapay-100 text-lavapay-800 text-xs px-2 py-1 rounded-full">
+            Admin
+          </span>
+        )}
       </div>
       <p className="text-gray-500">{subtitle}</p>
     </div>
