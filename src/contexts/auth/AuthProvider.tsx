@@ -47,9 +47,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Check for direct admin access
   useEffect(() => {
     const directAdminAccess = localStorage.getItem('direct_admin') === 'true';
+    const isOnAdminPath = location.pathname.startsWith('/admin');
     
-    // If on admin page with direct access, allow
-    if (directAdminAccess && location.pathname.startsWith('/admin')) {
+    // If on admin page with direct access, allow without checking auth
+    if (directAdminAccess && isOnAdminPath) {
       console.log("Direct admin access detected on admin page");
       if (loading) {
         setLoading(false);
@@ -83,7 +84,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Check for direct admin access
       const directAdminAccess = localStorage.getItem('direct_admin') === 'true';
-      if (directAdminAccess && location.pathname.startsWith('/admin')) {
+      const isOnAdminPath = location.pathname.startsWith('/admin');
+      
+      if (directAdminAccess && isOnAdminPath) {
         console.log("Direct admin access detected on admin page, skipping auth setup");
         if (isMounted) {
           setLoading(false);
@@ -99,6 +102,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           console.log("Auth state changed:", event, newSession ? "Session exists" : "No session");
           
+          // Check for direct admin access again
+          const hasDirectAdmin = localStorage.getItem('direct_admin') === 'true';
+          
           if (event === 'SIGNED_OUT' || (!newSession && event !== 'INITIAL_SESSION')) {
             // Handle both explicit signout and session expiration
             console.log("User signed out or session expired, clearing state");
@@ -106,10 +112,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(null);
             
             // Clear direct admin access on sign out
-            localStorage.removeItem('direct_admin');
+            if (event === 'SIGNED_OUT') {
+              localStorage.removeItem('direct_admin');
+            }
             
-            // Only redirect if not already on auth page
-            if (location.pathname !== '/auth') {
+            // Only redirect if not already on auth page and no direct admin access
+            if (location.pathname !== '/auth' && !hasDirectAdmin) {
               console.log("Redirecting to auth page from auth listener");
               navigate('/auth', { replace: true });
             }
@@ -122,10 +130,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Check if we're on auth page - delay redirect to prevent loops
             const isOnAuthPage = location.pathname === '/auth';
             
-            if (isOnAuthPage) {
-              // Only redirect if on auth page, with significant delay to prevent loops
+            if (isOnAuthPage && !hasDirectAdmin) {
+              // Only redirect if on auth page and no direct admin, with delay to prevent loops
               setTimeout(() => {
-                if (isMounted) {
+                if (isMounted && newSession?.user) {
                   redirectBasedOnRole(newSession.user.id, navigate);
                 }
               }, 300); // Longer delay to break potential loops
@@ -158,6 +166,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
         
+        // Check for direct admin access again
+        if (directAdminAccess && isOnAdminPath) {
+          console.log("Direct admin access detected before session check, skipping");
+          if (isMounted) {
+            setLoading(false);
+            setInitialized(true);
+          }
+          return;
+        }
+        
         const { data: { session: currentSession } } = await supabase.auth.getSession();
         console.log("Checking for existing session:", currentSession ? "Found" : "None");
         
@@ -175,7 +193,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (isOnAuthPage) {
             // Only redirect if on auth page, with longer delay
             setTimeout(() => {
-              if (isMounted) {
+              if (isMounted && !directAdminAccess) {
                 redirectBasedOnRole(currentSession.user.id, navigate);
               }
             }, 300); // Longer delay to break potential loops

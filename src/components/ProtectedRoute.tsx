@@ -15,27 +15,29 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
   const { user, loading: authLoading } = useAuth();
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [directAdminVerified, setDirectAdminVerified] = useState(false);
 
   useEffect(() => {
     // Flag to track component mount status
     let isMounted = true;
     
     const checkRole = async () => {
-      if (authLoading) {
-        // Wait for auth to complete before checking roles
-        console.log("ProtectedRoute: Waiting for auth to complete");
-        return;
-      }
-      
-      // Check for direct admin access
+      // Check for direct admin access first
       const directAdminAccess = localStorage.getItem('direct_admin') === 'true';
       
       if (directAdminAccess && requiredRole === 'admin') {
         console.log("ProtectedRoute: Direct admin access granted");
         if (isMounted) {
           setRole('admin');
+          setDirectAdminVerified(true);
           setLoading(false);
         }
+        return;
+      }
+      
+      if (authLoading) {
+        // Wait for auth to complete before checking roles
+        console.log("ProtectedRoute: Waiting for auth to complete");
         return;
       }
       
@@ -132,7 +134,12 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
   // Handle direct admin access
   const directAdminAccess = localStorage.getItem('direct_admin') === 'true';
   if (directAdminAccess && requiredRole === 'admin') {
-    console.log("ProtectedRoute: Direct admin access granted for admin route");
+    if (!directAdminVerified) {
+      console.log("ProtectedRoute: Direct admin access detected but not yet verified");
+      setDirectAdminVerified(true);
+    } else {
+      console.log("ProtectedRoute: Direct admin access granted for admin route");
+    }
     return <>{children}</>;
   }
 
