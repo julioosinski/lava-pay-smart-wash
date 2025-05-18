@@ -41,19 +41,18 @@ export function useOwnerDashboard(): UseOwnerDashboardReturn {
       if (!user?.id) return;
       
       try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .maybeSingle();
+        const { data, error } = await supabase.rpc(
+          'get_user_role_safely_no_rls',
+          { user_id: user.id }
+        );
           
         if (error) {
           console.error("Error checking user role:", error);
           return;
         }
         
-        setIsAdmin(data?.role === 'admin');
-        console.log("User is admin:", data?.role === 'admin');
+        setIsAdmin(data === 'admin');
+        console.log("User is admin:", data === 'admin');
       } catch (error) {
         console.error("Error checking admin status:", error);
       }
@@ -145,10 +144,12 @@ export function useOwnerDashboard(): UseOwnerDashboardReturn {
   }, [machinesError]);
   
   // Filter machines based on user role
-  let ownerMachines: Machine[] = allMachines;
+  let ownerMachines: Machine[] = [];
   
-  // If not admin, only show machines for owner's laundries
-  if (!isAdmin && ownerLaundryIds.length > 0) {
+  // If admin, show all machines, otherwise filter by laundry IDs
+  if (isAdmin) {
+    ownerMachines = allMachines;
+  } else if (ownerLaundryIds.length > 0) {
     ownerMachines = allMachines.filter(machine => 
       ownerLaundryIds.includes(machine.laundry_id)
     );

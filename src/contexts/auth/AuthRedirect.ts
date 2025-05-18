@@ -43,6 +43,7 @@ export const redirectBasedOnRole = async (userId: string, navigate: (path: strin
     if (userRole === 'admin') {
       navigate('/admin', { replace: true });
     } else if (userRole === 'business') {
+      // Fix: Redirect business owners to /owner page, not admin
       navigate('/owner', { replace: true });
     } else {
       navigate('/', { replace: true });
@@ -128,6 +129,7 @@ export function useAuthRedirect() {
         if (location.pathname === '/auth') {
           // Delay to prevent redirect loops
           setTimeout(() => {
+            if (!user) return;
             lastRedirectPath = 'role-based';
             redirectBasedOnRole(user.id, navigate);
           }, 200);
