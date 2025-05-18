@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
 
-interface OwnerDashboardHeaderProps {
+export interface OwnerDashboardHeaderProps {
   title: string;
   subtitle: string;
   isAdmin?: boolean;

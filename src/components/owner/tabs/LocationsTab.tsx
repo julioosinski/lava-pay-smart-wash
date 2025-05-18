@@ -9,7 +9,7 @@ import { EditLaundryDialog } from "@/components/admin/EditLaundryDialog";
 import { DeleteLaundryDialog } from "@/components/admin/DeleteLaundryDialog";
 import { useDeleteLaundry } from "@/hooks/laundry/useDeleteLaundry";
 
-interface LocationsTabProps {
+export interface LocationsTabProps {
   laundries: LaundryLocation[];
   machines?: Machine[];
   isLoading: boolean;
