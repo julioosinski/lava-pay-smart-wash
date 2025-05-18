@@ -18,9 +18,8 @@ export function useAdminStatus() {
       
       try {
         // Use the security definer function to safely check if user is admin
-        // This avoids the infinite recursion issue
         const { data, error } = await supabase.rpc(
-          'get_user_role_safely_no_rls',
+          'is_admin_safely_no_rls',
           { user_id: user.id }
         );
           
@@ -31,8 +30,8 @@ export function useAdminStatus() {
           return;
         }
         
-        setIsAdmin(data === 'admin');
-        console.log("User is admin:", data === 'admin');
+        setIsAdmin(data === true);
+        console.log("User is admin:", data === true);
       } catch (error) {
         console.error("Error checking admin status:", error);
         toast.error("Erro ao verificar status de administrador");

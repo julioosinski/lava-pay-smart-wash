@@ -21,7 +21,7 @@ export function useOwnerData() {
       try {
         // Use RPC to safely check if user is admin
         const { data, error } = await supabase.rpc(
-          'is_admin_safely_no_rls',
+          'get_user_role_safely_no_rls',
           { user_id: user.id }
         );
           
@@ -30,8 +30,8 @@ export function useOwnerData() {
           return setIsLoading(false);
         }
         
-        setIsAdmin(data === true);
-        console.log("User is admin:", data === true);
+        setIsAdmin(data === 'admin');
+        console.log("User is admin:", data === 'admin');
       } catch (error) {
         console.error("Error checking admin status:", error);
       } finally {

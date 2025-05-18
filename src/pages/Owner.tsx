@@ -37,19 +37,18 @@ export default function Owner() {
       if (!user?.id) return;
       
       try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .maybeSingle();
+        const { data, error } = await supabase.rpc(
+          'is_admin_safely_no_rls',
+          { user_id: user.id }
+        );
           
         if (error) {
           console.error("Error checking user role:", error);
           return;
         }
         
-        setIsAdmin(data?.role === 'admin');
-        console.log("User is admin:", data?.role === 'admin');
+        setIsAdmin(data === true);
+        console.log("User is admin:", data === true);
       } catch (error) {
         console.error("Error checking admin status:", error);
       }

@@ -14,12 +14,11 @@ export const redirectBasedOnRole = async (userId: string, navigate: (path: strin
       return;
     }
     
-    // Otherwise check profile in database
-    const { data: userData, error } = await supabase
-      .from('profiles')
-      .select('contact_email, role')
-      .eq('id', userId)
-      .single();
+    // Otherwise check profile in database using our security definer function
+    const { data: userRole, error } = await supabase.rpc(
+      'get_user_role_safely_no_rls',
+      { user_id: userId }
+    );
       
     if (error) {
       console.error("Error fetching user role:", error);
@@ -28,6 +27,12 @@ export const redirectBasedOnRole = async (userId: string, navigate: (path: strin
     }
     
     // Special case for admin@smartwash.com
+    const { data: userData } = await supabase
+      .from('profiles')
+      .select('contact_email')
+      .eq('id', userId)
+      .maybeSingle();
+      
     if (userData?.contact_email === 'admin@smartwash.com') {
       console.log("redirectBasedOnRole: admin@smartwash.com detected, redirecting to admin panel");
       navigate('/admin', { replace: true });
@@ -35,8 +40,6 @@ export const redirectBasedOnRole = async (userId: string, navigate: (path: strin
     }
     
     // Choose redirection based on user role
-    const userRole = userData?.role;
-    
     console.log("redirectBasedOnRole: redirecting based on role:", userRole);
     
     if (userRole === 'admin') {
