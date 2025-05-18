@@ -27,7 +27,7 @@ export const redirectBasedOnRole = async (userId: string, navigate: (path: strin
     }
     
     // Special case for admin@smartwash.com
-    const { data: userData } = await supabase
+    const { data: userData } = await supabase.auth
       .from('profiles')
       .select('contact_email')
       .eq('id', userId)
@@ -46,6 +46,7 @@ export const redirectBasedOnRole = async (userId: string, navigate: (path: strin
       navigate('/admin', { replace: true });
     } else if (userRole === 'business') {
       // Business owners should go to /owner page
+      console.log("Redirecting business user to /owner page");
       navigate('/owner', { replace: true });
     } else {
       navigate('/', { replace: true });
@@ -84,7 +85,10 @@ export function useAuthRedirect() {
     
     const redirectUser = async () => {
       // Wait for auth to finish loading
-      if (loading) return;
+      if (loading) {
+        console.log("Auth still loading, delaying redirect");
+        return;
+      }
 
       // Reset redirect counter if user auth state changed or path changed
       const userKey = user ? user.id : directAdminAccess ? "direct-admin" : "no-user";
@@ -139,13 +143,17 @@ export function useAuthRedirect() {
       
       // Authenticated user flow
       if (user) {
+        // Check if user is on auth page and needs redirecting
         if (location.pathname === '/auth') {
+          console.log("User logged in and on auth page, redirecting based on role");
           // Delay to prevent redirect loops
           setTimeout(() => {
             if (!user) return;
             lastRedirectPath = 'role-based';
             redirectBasedOnRole(user.id, navigate);
           }, 300); // Slightly longer delay
+        } else {
+          console.log("User is authenticated and not on auth page, no redirect needed");
         }
         // Otherwise let protected routes handle their own redirects
       } else if (location.pathname === '/auth') {

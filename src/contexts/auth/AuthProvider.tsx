@@ -7,7 +7,7 @@ import { Loader2 } from 'lucide-react';
 import { AuthContext, type AuthContextType, type SignUpParams } from './AuthContext';
 import { redirectBasedOnRole } from './AuthRedirect';
 import { useAuthMethods } from './useAuthMethods';
-import { toast } from '@/components/ui/sonner';
+import { toast } from 'sonner';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Initialize all state hooks first, before any other hooks
@@ -127,16 +127,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setSession(newSession);
             setUser(newSession.user);
             
-            // Check if we're on auth page - delay redirect to prevent loops
-            const isOnAuthPage = location.pathname === '/auth';
-            
-            if (isOnAuthPage && !hasDirectAdmin) {
-              // Only redirect if on auth page and no direct admin, with delay to prevent loops
-              setTimeout(() => {
-                if (isMounted && newSession?.user) {
-                  redirectBasedOnRole(newSession.user.id, navigate);
-                }
-              }, 300); // Longer delay to break potential loops
+            // Check if we're on auth page - immediately redirect to role-based page
+            if (location.pathname === '/auth') {
+              console.log("User logged in and on auth page, redirecting based on role");
+              // Get user role and redirect accordingly
+              redirectBasedOnRole(newSession.user.id, navigate);
             }
           } else {
             // Update session and user for other events
@@ -187,16 +182,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (currentSession?.user) {
           console.log("Session found during initialization for user:", currentSession.user.id);
           
-          // Check if we're on auth page
-          const isOnAuthPage = location.pathname === '/auth';
-          
-          if (isOnAuthPage) {
-            // Only redirect if on auth page, with longer delay
-            setTimeout(() => {
-              if (isMounted && !directAdminAccess) {
-                redirectBasedOnRole(currentSession.user.id, navigate);
-              }
-            }, 300); // Longer delay to break potential loops
+          // If on auth page and we have a valid session, redirect based on role
+          if (location.pathname === '/auth') {
+            console.log("Found existing session on auth page, redirecting");
+            redirectBasedOnRole(currentSession.user.id, navigate);
           }
         }
       } catch (error) {

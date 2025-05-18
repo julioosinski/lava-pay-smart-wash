@@ -117,6 +117,10 @@ export const useSignIn = ({ setUser, setSession, setLoading }: SignInProps) => {
                   setUser(loginData.user);
                   setSession(loginData.session);
                   toast.success("Login de proprietário bem-sucedido!");
+                  
+                  // Update role to business if not already set
+                  console.log("Ensuring business role is set");
+                  await updateUserRole(loginData.user.id, 'business');
                   return;
                 }
               }
