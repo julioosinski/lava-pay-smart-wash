@@ -2,7 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { LaundryForm } from "@/components/admin/LaundryForm";
 import { LaundryLocation, Machine } from "@/types";
-import { AlertCircle, WashingMachine, CheckCircle } from "lucide-react";
+import { AlertCircle, WashingMachine, CheckCircle, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { EditLaundryDialog } from "@/components/admin/EditLaundryDialog";
@@ -33,6 +33,11 @@ export function LocationsTab({ ownerLaundries, machines, onSelectLocation }: Loc
   };
 
   const handleManage = (location: LaundryLocation) => {
+    onSelectLocation(location.id);
+    setSelectedLaundry(null);
+  };
+
+  const handleEdit = (location: LaundryLocation) => {
     setSelectedLaundry(location);
   };
 
@@ -89,12 +94,19 @@ export function LocationsTab({ ownerLaundries, machines, onSelectLocation }: Loc
                     </div>
                     
                     <div className="bg-gray-50 p-6 flex items-center justify-center md:justify-end">
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 flex-wrap">
                         <Button 
                           variant="outline"
                           onClick={() => handleManage(location)}
                         >
                           Gerenciar
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          className="flex gap-1 items-center"
+                          onClick={() => handleEdit(location)}
+                        >
+                          <Edit className="h-4 w-4" /> Editar
                         </Button>
                         <Button 
                           variant="outline" 
